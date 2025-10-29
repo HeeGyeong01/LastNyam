@@ -33,12 +33,12 @@ public class Shop {
     @Column(name = "shop_banner", length = 255)
     private String shopBanner;
     
-    @Column(name = "shop_closes", length = 255)
-    private String shopCloses;
+    @Column(name = "shop_closes", nullable = false)
+    private LocalTime shopCloses;
     
     @Column(name = "category_id", nullable = false)
     private Integer categoryId;
     
-    @Column(name = "shopkeeper_id", nullable = false)
-    private Integer shopkeeperId;
+    @Column(name = "owner_id", nullable = false)
+    private Integer ownerId;
 }
