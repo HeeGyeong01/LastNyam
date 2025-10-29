@@ -16,15 +16,15 @@ public class ApiResponse<T>{
     private String message;
 
 
-    public ApiResponse<T> ofSuccess(T data, String message){
+    public static <T> ApiResponse<T> ofSuccess(T data, String message){
         return new ApiResponse<>(data,ApiStatus.SUCCESS,0,message);
     }
 
-    public ApiResponse<T> ofFail(int code, String message){
+    public static <T> ApiResponse<T> ofFail(int code, String message){
         return new ApiResponse<>(null,ApiStatus.FAIL,code,message);
     }
 
-    public ApiResponse<T> ofError(int code, String message){
+    public static <T> ApiResponse<T> ofError(int code, String message){
         return new ApiResponse<>(null,ApiStatus.ERROR,code,message);
     }
 }
