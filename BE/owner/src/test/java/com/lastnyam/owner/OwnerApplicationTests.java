@@ -1,10 +1,10 @@
-package com.lastnyam.authentication;
+package com.lastnyam.owner;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AuthenticationApplicationTests {
+class OwnerApplicationTests {
 
 	@Test
 	void contextLoads() {

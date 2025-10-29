@@ -2,3 +2,11 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 rootProject.name = 'lastnyam'
+
+include 'authentication'
+include 'common'
+include 'core'
+include 'database'
+include 'messaging'
+include 'redis'
+include 'owner'
