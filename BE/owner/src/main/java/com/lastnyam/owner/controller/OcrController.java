@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * OCR API 컨트롤러
- *
+ * <p>
  * 사업자등록증 이미지 OCR 처리
  */
 @Slf4j
@@ -36,8 +36,7 @@ public class OcrController {
     public ResponseEntity<ApiResponse<BusinessLicenseOcrResponse>> processBusinessLicense(
             @RequestParam("file") MultipartFile file) {
 
-        log.info("■■■■■■■■ 사업자등록증 OCR API 호출 - 파일명: {} ■■■■■■■■",
-                file.getOriginalFilename());
+        log.info("■■■■■■■■ 사업자등록증 OCR API 호출 - 파일명: {} ■■■■■■■■", file.getOriginalFilename());
 
         try {
             // 입력 검증
