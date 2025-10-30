@@ -15,20 +15,15 @@ import lombok.NoArgsConstructor;
 public class UserFavorite {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_favorite_id")
     private Integer userFavoriteId;
     
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
-    
-    @Column(name = "category_id", nullable = false)
-    private Integer categoryId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    @JoinColumn(name = "category_id")
     private FoodCategory foodCategory;
 }

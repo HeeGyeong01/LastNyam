@@ -1,5 +1,6 @@
 package com.lastnyam.database.entity;
 
+import com.lastnyam.database.entity.enums.TransactionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 public class DiscountTransaction {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "transaction_id")
     private Integer transactionId;
     
@@ -28,26 +30,16 @@ public class DiscountTransaction {
     private TransactionStatus transactionStatus;
     
     @Column(name = "transaction_qr_image")
-    private Integer transactionQrImage;
+    private String transactionQrImage;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "discount_id", nullable = false)
-    private Integer discountId;
-    
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_id", insertable = false, updatable = false)
+    @JoinColumn(name = "discount_id")
     private Discount discount;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
-    
-    public enum TransactionStatus {
-        PENDING, COMPLETED, CANCELLED
-    }
 }

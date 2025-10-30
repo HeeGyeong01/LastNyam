@@ -17,14 +17,12 @@ import java.util.List;
 public class Cart {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_id")
     private Integer cartId;
     
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
     
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

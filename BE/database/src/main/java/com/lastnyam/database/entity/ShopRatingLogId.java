@@ -1,18 +1,14 @@
 package com.lastnyam.database.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.io.Serializable;
 
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class ShopRatingLogId implements Serializable {
-    
-    private Integer userId;
-    private Integer shopId;
+
+    private Integer user;
+    private Integer shop;
 }

@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class FookectingLog {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "log_id")
     private Integer logId;
     
@@ -26,17 +27,11 @@ public class FookectingLog {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "fookecting_id", nullable = false)
-    private Integer fookectingId;
-    
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fookecting_id", insertable = false, updatable = false)
+    @JoinColumn(name = "fookecting_id")
     private Fookecting fookecting;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 }

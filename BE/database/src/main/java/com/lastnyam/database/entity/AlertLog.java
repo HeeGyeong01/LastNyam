@@ -17,23 +17,18 @@ import java.time.LocalDateTime;
 public class AlertLog {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "alert_log_id")
     private Integer alertLogId;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "shop_id", nullable = false)
-    private Integer shopId;
-    
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", insertable = false, updatable = false)
+    @JoinColumn(name = "shop_id")
     private Shop shop;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 }

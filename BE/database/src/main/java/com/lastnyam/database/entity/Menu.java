@@ -17,6 +17,7 @@ import java.util.List;
 public class Menu {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "menu_id")
     private Integer menuId;
     
@@ -32,18 +33,12 @@ public class Menu {
     @Column(name = "menu_price", nullable = false)
     private Integer menuPrice;
     
-    @Column(name = "shop_id", nullable = false)
-    private Integer shopId;
-    
-    @Column(name = "category_id", nullable = false)
-    private Integer categoryId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", insertable = false, updatable = false)
+    @JoinColumn(name = "shop_id")
     private Shop shop;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    @JoinColumn(name = "category_id")
     private FoodCategory foodCategory;
     
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
