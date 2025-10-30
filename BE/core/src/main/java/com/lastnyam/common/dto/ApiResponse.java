@@ -16,8 +16,8 @@ public class ApiResponse<T>{
     private String message;
 
 
-    public static <T> ApiResponse<T> ofSuccess(T data, String message){
-        return new ApiResponse<>(data,ApiStatus.SUCCESS,0,message);
+    public static <T> ApiResponse<T> ofSuccess(T data){
+        return new ApiResponse<>(data,ApiStatus.SUCCESS,0,"요청 성공");
     }
 
     public static <T> ApiResponse<T> ofFail(int code, String message){
