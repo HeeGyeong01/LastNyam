@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class Shop {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "shop_id")
     private Integer shopId;
 
@@ -37,9 +38,14 @@ public class Shop {
     @Column(name = "shop_closes", nullable = false)
     private LocalTime shopCloses;
 
-    @Column(name = "category_id", nullable = false)
-    private Integer categoryId;
+    @Column(name = "shop_pickup_end_time", nullable = false)
+    private LocalTime shopPickupEndTime;
 
-    @Column(name = "owner_id", nullable = false)
-    private Integer ownerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private FoodCategory foodCategory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private Owner owner;
 }

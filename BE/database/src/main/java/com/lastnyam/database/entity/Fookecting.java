@@ -18,6 +18,7 @@ import java.util.List;
 public class Fookecting {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "fookecting_id")
     private Integer fookectingId;
     
@@ -26,12 +27,15 @@ public class Fookecting {
     
     @Column(name = "foocketing_amount", nullable = false)
     private Integer fookectingAmount;
-    
-    @Column(name = "menu_id", nullable = false)
-    private Integer menuId;
+
+    @Column(name = "foocketing_close_time", nullable = false)
+    private LocalDateTime foocketingCloseTime;
+
+    @Column(name = "foocketing_pickup_end_time", nullable = false)
+    private LocalDateTime foocketingPickupEndTime;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id", insertable = false, updatable = false)
+    @JoinColumn(name = "menu_id")
     private Menu menu;
     
     @OneToMany(mappedBy = "fookecting", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
