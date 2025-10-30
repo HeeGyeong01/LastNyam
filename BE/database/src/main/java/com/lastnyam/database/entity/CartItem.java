@@ -15,23 +15,18 @@ import lombok.NoArgsConstructor;
 public class CartItem {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_item_id")
     private Integer cartItemId;
     
     @Column(name = "cart_item_amount", nullable = false)
     private Integer cartItemAmount;
     
-    @Column(name = "cart_id", nullable = false)
-    private Integer cartId;
-    
-    @Column(name = "discount_id", nullable = false)
-    private Integer discountId;
-    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id", insertable = false, updatable = false)
+    @JoinColumn(name = "cart_id")
     private Cart cart;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_id", insertable = false, updatable = false)
+    @JoinColumn(name = "discount_id")
     private Discount discount;
 }
