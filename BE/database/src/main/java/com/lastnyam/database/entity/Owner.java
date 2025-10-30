@@ -15,12 +15,13 @@ import lombok.NoArgsConstructor;
 public class Owner {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "owner_id")
     private Integer ownerId;
     
     @Column(name = "owner_email", length = 50, nullable = false)
     private String ownerEmail;
     
-    @Column(name = "owner_password", length = 20, nullable = false)
+    @Column(name = "owner_password", length = 100, nullable = false)
     private String ownerPassword;
 }
