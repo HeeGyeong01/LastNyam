@@ -33,7 +33,7 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(decoded);
     }
 
-    public String generateAccessToken(UserRole role, long id, String version) {
+    public String generateAccessToken(UserRole role, int id, String version) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .issuer("lastnyam")
@@ -47,7 +47,7 @@ public class JwtProvider {
                 .compact();
     }
 
-    public String generateRefreshToken(UserRole role, long id, String version) {
+    public String generateRefreshToken(UserRole role, int id, String version) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .issuer("lastnyam")
@@ -82,8 +82,8 @@ public class JwtProvider {
         return getClaims(token).get("role", UserRole.class);
     }
 
-    public Long extractId(String token) {
-        return getClaims(token).get("id", Long.class);
+    public Integer extractId(String token) {
+        return getClaims(token).get("id", Integer.class);
     }
 
     public String extractVersion(String token) {
