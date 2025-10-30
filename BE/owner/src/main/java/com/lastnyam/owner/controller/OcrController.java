@@ -51,9 +51,7 @@ public class OcrController {
             BusinessLicenseOcrResponse businessInfo = ocrService.processBusinessLicense(file);
 
             // 성공 응답
-            ApiResponse<BusinessLicenseOcrResponse> response = ApiResponse.ofSuccess(
-                    businessInfo,
-                    "사업자등록증 OCR 처리가 완료되었습니다.");
+            ApiResponse<BusinessLicenseOcrResponse> response = ApiResponse.ofSuccess(businessInfo);
 
             log.info("■■■■■■■■ 사업자등록증 OCR API 완료 - 상호명: {} ■■■■■■■■",
                     businessInfo.getCompanyName());
