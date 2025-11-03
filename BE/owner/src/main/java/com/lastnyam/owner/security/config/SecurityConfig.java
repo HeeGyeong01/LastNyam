@@ -63,6 +63,8 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginProcessingUrl("/api/owner/auth/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
                         .successHandler(jwtAuthenticationSuccessHandler)
                         .failureHandler(jwtAuthenticationFailureHandler)
                         .permitAll()

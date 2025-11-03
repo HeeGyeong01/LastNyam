@@ -30,7 +30,7 @@ public class JwtRefreshFilter extends OncePerRequestFilter {
 
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
-    @Value("security.jwt.refresh-token.key")
+    @Value("${security.jwt.refresh-token.key}")
     private String refreshTokenName;
 
     @Override

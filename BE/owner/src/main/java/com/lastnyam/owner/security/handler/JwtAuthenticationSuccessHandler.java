@@ -8,10 +8,13 @@ import com.lastnyam.common.enums.ApiStatus;
 import com.lastnyam.owner.dto.TokenData;
 import com.lastnyam.owner.security.entity.CustomUserDetails;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -21,7 +24,9 @@ import org.springframework.stereotype.Component;
 public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtService jwtService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    @Value("${security.jwt.refresh-token.key}")
+    private String refreshTokenName;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -33,19 +38,23 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
         }
 
         Integer ownerId = userDetails.getOwnerId();
-        String accessToken = jwtService.generateAccessToken(UserRole.OWNER, ownerId);
-        String refreshToken = jwtService.generateRefreshToken(UserRole.OWNER, ownerId);
 
-        TokenData tokenData = TokenData.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-
-        ApiResponse<TokenData> apiResponse = new ApiResponse<>(tokenData, ApiStatus.SUCCESS, 200, "로그인 성공");
+        issueToken(response, ownerId);
+        ApiResponse<TokenData> apiResponse = new ApiResponse<>(null, ApiStatus.SUCCESS, 200, "로그인 성공");
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
         objectMapper.writeValue(response.getWriter(), apiResponse);
+    }
+
+    public void issueToken(HttpServletResponse response, Integer id) {
+        String reIssuedRefreshToken = jwtService.generateRefreshToken(UserRole.OWNER, id);
+        String reIssuedAccessToken = jwtService.generateAccessToken(UserRole.OWNER, id);
+
+        response.setHeader(HttpHeaders.AUTHORIZATION, reIssuedAccessToken);
+
+        Cookie cookie = new Cookie(refreshTokenName, reIssuedRefreshToken);
+        response.addCookie(cookie);
     }
 }
 
