@@ -1,7 +1,8 @@
-package com.lastnyam.owner.security;
+package com.lastnyam.owner.security.service;
 
 import com.lastnyam.database.entity.Owner;
 import com.lastnyam.owner.repository.OwnerRepository;
+import com.lastnyam.owner.security.entity.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

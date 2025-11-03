@@ -1,4 +1,4 @@
-package com.lastnyam.owner.controller;
+package com.lastnyam.owner.external.s3.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.owner.external.s3.dto.PresignedUrlRequest;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * S3 파일 업로드 컨트롤러
- *
+ * <p>
  * Pre-Signed URL 방식으로 클라이언트가 S3에 직접 업로드할 수 있도록 지원합니다.
  */
 @Slf4j
@@ -27,9 +27,8 @@ public class S3Controller {
 
     /**
      * Pre-Signed URL 생성
-     *
-     * 클라이언트가 S3에 직접 업로드할 수 있는 임시 URL을 생성합니다.
-     * 응답에 포함된 fileUrl을 DB에 저장하여 사용합니다.
+     * <p>
+     * 클라이언트가 S3에 직접 업로드할 수 있는 임시 URL을 생성합니다. 응답에 포함된 fileUrl을 DB에 저장하여 사용합니다.
      *
      * @param request Pre-Signed URL 요청 정보
      * @return Pre-Signed URL 응답 (uploadUrl로 파일 업로드, fileUrl을 DB에 저장)

@@ -1,8 +1,8 @@
-package com.lastnyam.owner.controller;
+package com.lastnyam.owner.external.ocr.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.owner.dto.BusinessLicenseOcrResponse;
-import com.lastnyam.owner.service.OcrService;
+import com.lastnyam.owner.external.ocr.service.OcrService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * OCR API 컨트롤러
- *
+ * <p>
  * 사업자등록증 이미지 OCR 처리
  */
 @Slf4j
