@@ -3,10 +3,12 @@ package com.lastnyam.owner.service;
 import com.lastnyam.authentication.dto.TokenDto;
 import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.service.JwtService;
+import com.lastnyam.common.dto.ApiResponse;
+import com.lastnyam.common.enums.ApiStatus;
 import com.lastnyam.database.entity.Owner;
-import com.lastnyam.owner.dto.AuthResponse;
 import com.lastnyam.owner.dto.OwnerLoginRequest;
 import com.lastnyam.owner.dto.OwnerRegisterRequest;
+import com.lastnyam.owner.dto.TokenData;
 import com.lastnyam.owner.repository.OwnerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +24,7 @@ public class OwnerService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     
-    public AuthResponse register(OwnerRegisterRequest request) {
+    public ApiResponse<TokenData> register(OwnerRegisterRequest request) {
         // 이메일 중복 확인
         if (ownerRepository.existsByOwnerEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
@@ -43,27 +45,37 @@ public class OwnerService {
         String accessToken = jwtService.generateAccessToken(UserRole.OWNER, savedOwner.getOwnerId());
         String refreshToken = jwtService.generateRefreshToken(UserRole.OWNER, savedOwner.getOwnerId());
         
-        return AuthResponse.success(accessToken, refreshToken);
+        TokenData tokenData = TokenData.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+        
+        return new ApiResponse<>(tokenData, ApiStatus.SUCCESS, 200, "회원가입 성공");
     }
     
-    public AuthResponse login(OwnerLoginRequest request) {
+    public ApiResponse<TokenData> login(OwnerLoginRequest request) {
         // 이메일로 Owner 조회
         Owner owner = ownerRepository.findByOwnerEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 잘못되었습니다."));
         
         // 비밀번호 확인
         if (!passwordEncoder.matches(request.getPassword(), owner.getOwnerPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
         
         // JWT 토큰 생성
         String accessToken = jwtService.generateAccessToken(UserRole.OWNER, owner.getOwnerId());
         String refreshToken = jwtService.generateRefreshToken(UserRole.OWNER, owner.getOwnerId());
         
-        return AuthResponse.success(accessToken, refreshToken);
+        TokenData tokenData = TokenData.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+        
+        return new ApiResponse<>(tokenData, ApiStatus.SUCCESS, 200, "로그인 성공");
     }
     
-    public AuthResponse refreshToken(String refreshToken) {
+    public ApiResponse<TokenData> refreshToken(String refreshToken) {
         // 토큰 유효성 검증
         if (!jwtService.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
@@ -75,6 +87,11 @@ public class OwnerService {
         // 새로운 액세스 토큰 생성
         String newAccessToken = jwtService.generateAccessToken(UserRole.OWNER, tokenDto.getId());
         
-        return AuthResponse.success(newAccessToken, refreshToken);
+        TokenData tokenData = TokenData.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken)
+                .build();
+        
+        return new ApiResponse<>(tokenData, ApiStatus.SUCCESS, 200, "토큰 갱신 성공");
     }
 }

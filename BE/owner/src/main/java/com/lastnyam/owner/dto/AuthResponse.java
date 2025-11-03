@@ -28,4 +28,12 @@ public class AuthResponse {
                 .message(message)
                 .build();
     }
+    
+    public static AuthResponse registerSuccess(String accessToken, String refreshToken) {
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .message("회원원가입 성공")
+                .build();
+    }
 }

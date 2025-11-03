@@ -3,6 +3,9 @@ package com.lastnyam.owner.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.service.JwtService;
+import com.lastnyam.common.dto.ApiResponse;
+import com.lastnyam.common.enums.ApiStatus;
+import com.lastnyam.owner.dto.TokenData;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,8 +15,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -34,14 +35,16 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
         String accessToken = jwtService.generateAccessToken(UserRole.OWNER, ownerId);
         String refreshToken = jwtService.generateRefreshToken(UserRole.OWNER, ownerId);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("accessToken", accessToken);
-        body.put("refreshToken", refreshToken);
-        body.put("message", "login success");
+        TokenData tokenData = TokenData.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+        
+        ApiResponse<TokenData> apiResponse = new ApiResponse<>(tokenData, ApiStatus.SUCCESS, 200, "로그인 성공");
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
-        objectMapper.writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), apiResponse);
     }
 }
 

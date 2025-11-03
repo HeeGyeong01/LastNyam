@@ -1,8 +1,9 @@
 package com.lastnyam.owner.controller;
 
-import com.lastnyam.owner.dto.AuthResponse;
+import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.owner.dto.OwnerLoginRequest;
 import com.lastnyam.owner.dto.OwnerRegisterRequest;
+import com.lastnyam.owner.dto.TokenData;
 import com.lastnyam.owner.service.OwnerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,42 +18,36 @@ public class AuthController {
     private final OwnerService ownerService;
     
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody OwnerRegisterRequest request) {
+    public ResponseEntity<ApiResponse<TokenData>> register(@Valid @RequestBody OwnerRegisterRequest request) {
         try {
-            AuthResponse response = ownerService.register(request);
+            ApiResponse<TokenData> response = ownerService.register(request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(AuthResponse.builder()
-                            .message(e.getMessage())
-                            .build());
+            ApiResponse<TokenData> failResponse = ApiResponse.ofFail(400, e.getMessage());
+            return ResponseEntity.badRequest().body(failResponse);
         }
     }
     
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody OwnerLoginRequest request) {
+    public ResponseEntity<ApiResponse<TokenData>> login(@Valid @RequestBody OwnerLoginRequest request) {
         try {
-            AuthResponse response = ownerService.login(request);
+            ApiResponse<TokenData> response = ownerService.login(request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(AuthResponse.builder()
-                            .message(e.getMessage())
-                            .build());
+            ApiResponse<TokenData> failResponse = ApiResponse.ofFail(400, e.getMessage());
+            return ResponseEntity.badRequest().body(failResponse);
         }
     }
     
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestHeader("Authorization") String refreshToken) {
+    public ResponseEntity<ApiResponse<TokenData>> refreshToken(@RequestHeader("Authorization") String refreshToken) {
         try {
             String token = refreshToken.replace("Bearer ", "");
-            AuthResponse response = ownerService.refreshToken(token);
+            ApiResponse<TokenData> response = ownerService.refreshToken(token);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(AuthResponse.builder()
-                            .message(e.getMessage())
-                            .build());
+            ApiResponse<TokenData> failResponse = ApiResponse.ofFail(400, e.getMessage());
+            return ResponseEntity.badRequest().body(failResponse);
         }
     }
     
