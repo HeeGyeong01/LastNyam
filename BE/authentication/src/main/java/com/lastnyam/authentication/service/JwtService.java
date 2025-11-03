@@ -4,9 +4,8 @@ import com.lastnyam.authentication.dto.TokenDto;
 import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.provider.JwtProvider;
 import com.lastnyam.redis.service.RedisService;
-import org.springframework.stereotype.Service;
-
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
@@ -52,4 +51,7 @@ public class JwtService {
                 .build();
     }
 
+    public String extractVersionOf(String token) {
+        return jwtProvider.extractVersion(token);
+    }
 }
