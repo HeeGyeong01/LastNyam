@@ -37,12 +37,12 @@ public class OwnerController {
     }
 
     // 푸켓팅 등록
-    @PostMapping("/{ownerId}/shops/{shopId}/fookectings")
-    public ResponseEntity<ApiResponse<FookectingCreateResponseDto>> createFookecting(
+    @PostMapping("/{ownerId}/shops/{shopId}/foocketings")
+    public ResponseEntity<ApiResponse<FoocketingCreateResponseDto>> createFoocketing(
             @PathVariable("ownerId") Integer ownerId,
             @PathVariable("shopId") Integer shopId,
-            @RequestBody FookectingCreateRequestDto request) {
-        FookectingCreateResponseDto result = shopService.createFookecting(ownerId, shopId, request);
+            @RequestBody FoocketingCreateRequestDto request) {
+        FoocketingCreateResponseDto result = shopService.createFoocketing(ownerId, shopId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(result));
     }
 

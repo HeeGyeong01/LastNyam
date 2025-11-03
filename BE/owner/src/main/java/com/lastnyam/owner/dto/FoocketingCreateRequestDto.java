@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FookectingCreateRequestDto {
-    private LocalDateTime fookectingTime;
-    private Integer fookectingAmount;
+public class FoocketingCreateRequestDto {
+    private LocalDateTime foocketingTime;
+    private Integer foocketingAmount;
     private Integer menuId;
 }

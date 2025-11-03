@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FookectingTransaction {
+public class FoocketingTransaction {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +35,7 @@ public class FookectingTransaction {
     private User user;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fookecting_id")
-    private Fookecting fookecting;
+    @JoinColumn(name = "foocketing_id")
+    private Foocketing foocketing;
 
 }

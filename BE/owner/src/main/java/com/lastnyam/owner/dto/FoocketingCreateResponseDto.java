@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FookectingCreateResponseDto {
-    private Integer fookectingId;
+public class FoocketingCreateResponseDto {
+    private Integer foocketingId;
 }

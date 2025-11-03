@@ -10,23 +10,23 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "fookectings")
+@Table(name = "foocketings")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Fookecting {
+public class Foocketing {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "fookecting_id")
-    private Integer fookectingId;
+    @Column(name = "foocketing_id")
+    private Integer foocketingId;
     
-    @Column(name = "fookecting_time", nullable = false)
-    private LocalDateTime fookectingTime;
+    @Column(name = "foocketing_time", nullable = false)
+    private LocalDateTime foocketingTime;
     
     @Column(name = "foocketing_amount", nullable = false)
-    private Integer fookectingAmount;
+    private Integer foocketingAmount;
 
     @Column(name = "foocketing_close_time", nullable = false)
     private LocalDateTime foocketingCloseTime;
@@ -38,9 +38,9 @@ public class Fookecting {
     @JoinColumn(name = "menu_id")
     private Menu menu;
     
-    @OneToMany(mappedBy = "fookecting", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<FookectingTransaction> fookectingTransactions;
+    @OneToMany(mappedBy = "foocketing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<FoocketingTransaction> foocketingTransactions;
     
-    @OneToMany(mappedBy = "fookecting", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<FookectingLog> fookectingLogs;
+    @OneToMany(mappedBy = "foocketing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<FoocketingLog> foocketingLogs;
 }

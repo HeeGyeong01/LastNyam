@@ -19,7 +19,7 @@ public class ShopService {
     private final OwnerRepository ownerRepository;
     private final ShopRepository shopRepository;
     private final MenuRepository menuRepository;
-    private final FookectingRepository fookectingRepository;
+    private final FoocketingRepository foocketingRepository;
     private final DiscountRepository discountRepository;
     private final FoodCategoryRepository foodCategoryRepository;
 
@@ -83,7 +83,7 @@ public class ShopService {
     }
 
     @Transactional
-    public FookectingCreateResponseDto createFookecting(Integer ownerId, Integer shopId, FookectingCreateRequestDto request) {
+    public FoocketingCreateResponseDto createFoocketing(Integer ownerId, Integer shopId, FoocketingCreateRequestDto request) {
         // 가게 확인 및 점주 권한 확인
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new ShopException("가게를 찾을 수 없습니다.", 404));
@@ -104,18 +104,18 @@ public class ShopService {
         LocalDateTime closeTime = nextDateTimeAt(now, shop.getShopCloses());
         LocalDateTime pickupEndTime = nextDateTimeAt(now, shop.getShopPickupEndTime());
 
-        Fookecting fookecting = Fookecting.builder()
-                .fookectingTime(request.getFookectingTime())
-                .fookectingAmount(request.getFookectingAmount())
+        Foocketing foocketing = Foocketing.builder()
+                .foocketingTime(request.getFoocketingTime())
+                .foocketingAmount(request.getFoocketingAmount())
                 .foocketingCloseTime(closeTime)
                 .foocketingPickupEndTime(pickupEndTime)
                 .menu(menu)
                 .build();
         
-        fookectingRepository.save(fookecting);
+        foocketingRepository.save(foocketing);
 
-        return FookectingCreateResponseDto.builder()
-                .fookectingId(fookecting.getFookectingId())
+        return FoocketingCreateResponseDto.builder()
+                .foocketingId(foocketing.getFoocketingId())
                 .build();
     }
 
