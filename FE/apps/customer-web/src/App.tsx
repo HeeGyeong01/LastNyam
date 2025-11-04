@@ -8,26 +8,13 @@ function App() {
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="bg-bg-1">
+        <h1 className="font-kr-h1 text-kr-h1 text-brand">브랜드 kr 폰트 + 브랜드 색상</h1>
+        <h1 className="font-en-h1 text-en-h1 text-brand">브랜드 en 폰트 + 브랜드 색상</h1>
+        <h1 className="text-h1 text-primary">h1 폰트 + primary 색상</h1>
+        <h2 className="text-h2-b text-brand">h2-b 폰트 + brand 색상</h2>
+        <p className="text-p1 text-tertiary">p1 폰트 + tertiary 색상</p>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
