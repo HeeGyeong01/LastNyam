@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "shared"
+  ],
+  "scripts": {
+    "build:customer": "cd apps/customer-web && npm run build",
+    "build:owner": "cd apps/owner-web && npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.35",
+    "autoprefixer": "^10.4.16"
+  }
+}
