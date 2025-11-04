@@ -283,15 +283,16 @@ pipeline {
         stage('Build FE Owner') {
           when { expression { return env.BUILD_FE_OWNER == 'true' } }
           steps {
-            dir('FE/owner') {
+            dir('FE/apps/owner-web') {
               echo '🔨 Building FE Owner...'
               sh 'npm install'
               sh 'npm run build'
               // Docker 빌드 또는 정적 파일 배포
               sh """
-                docker build \
-                  -t ${REGISTRY}/fe-owner:${TAG} \
-                  -f Dockerfile .
+                echo "📦 Copying build artifacts to Nginx..."
+                rm -rf /var/jenkins_home/nginx-build/owner/*
+                cp -r ./dist/* /var/jenkins_home/nginx-build/owner/
+                echo "✅ Build artifacts copied successfully"
               """
             }
           }
@@ -300,14 +301,15 @@ pipeline {
         stage('Build FE Customer') {
           when { expression { return env.BUILD_FE_CUSTOMER == 'true' } }
           steps {
-            dir('FE/customer') {
+            dir('FE/apps/customer-web') {
               echo '🔨 Building FE Customer...'
               sh 'npm install'
               sh 'npm run build'
               sh """
-                docker build \
-                  -t ${REGISTRY}/fe-customer:${TAG} \
-                  -f Dockerfile .
+                echo "📦 Copying build artifacts to Nginx..."
+                rm -rf /var/jenkins_home/nginx-build/customer/*
+                cp -r ./dist/* /var/jenkins_home/nginx-build/customer/
+                echo "✅ Build artifacts copied successfully"
               """
             }
           }
