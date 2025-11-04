@@ -31,6 +31,9 @@ dependencies {
 	implementation 'org.springframework.kafka:spring-kafka'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+	
+	// SLF4J API for @Slf4j annotation
+	implementation 'org.slf4j:slf4j-api'
 }
 
 tasks.named('test') {
