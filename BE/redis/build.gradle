@@ -1,9 +1,9 @@
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.6' apply(false)
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7' apply(false)
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.lastnyam'
@@ -11,36 +11,36 @@ version = '0.0.1-SNAPSHOT'
 description = 'redis'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencyManagement {
-	imports {
-		mavenBom SpringBootPlugin.BOM_COORDINATES
-	}
+    imports {
+        mavenBom SpringBootPlugin.BOM_COORDINATES
+    }
 }
 
 jar {
-	enabled = true
+    enabled = true
 }
 
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
