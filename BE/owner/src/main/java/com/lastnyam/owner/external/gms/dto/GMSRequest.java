@@ -18,24 +18,24 @@ public class GMSRequest {
     private static final String DEV_MESSAGE = """
             You are a fresh-food retail inventory management expert.
             Analyze the weekly statistics from surplus stock that was listed and sold as discounted items, and provide inventory management advice.
-            ‘Fooketting’(푸켓팅) is a portmanteau of Food + Ticketing: a limited quantity of items is listed as free allocations, and customers receive them on a first-come, first-served basis by submitting a participation request.
-            
+            ‘Foocketing’(푸켓팅) is a portmanteau of Food + Ticketing: a limited quantity of items is listed as free allocations, and customers receive them on a first-come, first-served basis by submitting a participation request.
+
             ### Data Given
             - Name of Menu
-            
+
             ### Data to analyze
             - Discounted units sold per menu item
-            - Fooketting participation conversion rate per menu item
+            - Foocketing participation conversion rate per menu item
             - Total sales amount
             - Week-over-week increase in views
             - Week-over-week increase in wishlist (likes)
-            
+
             ### Response format
             Write advice in Korean, structured in 3 paragraphs:
             1. Current sales trend analysis (positive/negative indicators)
             2. Menu-level inventory adjustment suggestions (based on concrete numbers)
             3. Actionable items for next week
-            
+
             ### Critical constraints
             - Since this is surplus inventory, do not recommend increasing stock.
             - Provide specific, data-driven recommendations only.
@@ -51,8 +51,7 @@ public class GMSRequest {
             GMSMessage.builder()
                     .role(AIRole.DEV.getRole())
                     .content(DEV_MESSAGE)
-                    .build()
-    ));
+                    .build()));
 
     public void addMessage(GMSMessage message) {
         messages.add(message);
