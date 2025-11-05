@@ -4,33 +4,41 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   // 기본 스타일
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-1 px-3.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
-      variant: {
+      btnStyle: {
         // Filled 버튼
-        default: 'bg-primary text-inverse hover:bg-primary/90',
-        brand: 'bg-brand text-inverse hover:bg-brand-strong',
-        error: 'bg-error text-inverse hover:bg-error/90',
-        success: 'bg-success text-inverse hover:bg-success/90',
+        'filled-default': 'bg-bg-2 p2-b text-secondary',
+        'filled-red': 'bg-brand p2-b text-inverse',
+        'filled-yellow': 'bg-brand-bg-3 p2-b text-primary',
+        'filled-gray': 'bg-bg-2 p2-b text-primary',
         
         // Outlined 버튼
-        outline: 'border border-stroke-2 text-primary hover:bg-bg-1',
-        'outline-brand': 'border border-brand text-brand hover:bg-brand-bg-1',
+        'outlined-default': 'border border-stroke-3 p2-b text-secondary',
+        'outlined-red': 'border border-brand p2-b text-brand',
         
         // Ghost 버튼
-        ghost: 'text-primary hover:bg-bg-1',
-        'ghost-brand': 'text-brand hover:bg-brand-bg-1',
-      },
+        ghost: 'p2-b text-secondary px-0 py-0',
+
+        // underline 버튼
+        'underline-default': 'p2-b text-secondary border-b border-stroke-3 px-3.5 py-2.5 rounded-none',
+        'underline-red': 'p2-b text-brand border-b-2 border-brand px-3.5 py-2.5 rounded-none',
+      }, 
+
+      // 버튼 크기
       size: {
-        sm: 'h-8 px-3 text-p3',
-        md: 'h-10 px-4 text-p2',
-        lg: 'h-12 px-6 text-p1',
+        'lg': 'px-5 py-2.5',
+      },
+
+      // 버튼 모양
+      btnShape: {
+        'rounded': 'rounded-full',
       },
     },
+
     defaultVariants: {
-      variant: 'default',
-      size: 'md',
+      btnStyle: 'filled-default',
     },
   }
 );
@@ -42,10 +50,10 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, btnStyle, size, btnShape, asChild = false, ...props }, ref) => {
     return (
       <button
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ btnStyle, size, btnShape, className }))}
         ref={ref}
         {...props}
       />
