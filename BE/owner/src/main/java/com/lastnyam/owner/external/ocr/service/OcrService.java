@@ -1,6 +1,6 @@
 package com.lastnyam.owner.external.ocr.service;
 
-import com.lastnyam.owner.dto.BusinessLicenseOcrResponse;
+import com.lastnyam.owner.external.ocr.dto.BusinessLicenseOcrResponse;
 import com.lastnyam.owner.external.ocr.client.ClovaApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

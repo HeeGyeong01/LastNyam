@@ -2,7 +2,7 @@ package com.lastnyam.owner.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lastnyam.common.dto.ApiResponse;
-import com.lastnyam.owner.dto.TokenData;
+import com.lastnyam.owner.owner.dto.TokenData;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
