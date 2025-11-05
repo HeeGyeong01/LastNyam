@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 public class FoocketingEntryPayload {
     
     private Integer foocketingId;
-    private String userId;
+    private Integer userId;
 }
 

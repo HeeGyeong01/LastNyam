@@ -79,7 +79,8 @@ public class JwtProvider {
     }
 
     public UserRole extractRole(String token) {
-        return getClaims(token).get("role", UserRole.class);
+        String roleString = getClaims(token).get("role", String.class);
+        return UserRole.valueOf(roleString);
     }
 
     public Integer extractId(String token) {

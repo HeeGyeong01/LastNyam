@@ -23,6 +23,7 @@ dependencies {
 	implementation project(':common')
 	implementation project(':redis')
 	implementation project(':messaging')
+	implementation project(':authentication')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'

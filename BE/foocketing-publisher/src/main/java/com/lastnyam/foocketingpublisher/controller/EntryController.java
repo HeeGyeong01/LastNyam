@@ -1,6 +1,7 @@
 package com.lastnyam.foocketingpublisher.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
+import com.lastnyam.foocketingpublisher.annotation.UserId;
 import com.lastnyam.foocketingpublisher.dto.FoocketingEntryResponseDto;
 import com.lastnyam.foocketingpublisher.service.EntryService;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +22,15 @@ public class EntryController {
      * 푸켓팅 참여
      * 
      * @param foocketingId 푸켓팅 ID
+     * @param userId JWT에서 추출한 사용자 ID
      * @return 성공 여부
      */
     @PostMapping("/foocketing/{foocketingId}")
     public ResponseEntity<ApiResponse<FoocketingEntryResponseDto>> entryFoocketing(
-            @PathVariable("foocketingId") Integer foocketingId) {
+            @PathVariable("foocketingId") Integer foocketingId,
+            @UserId Integer userId) {
         
-        FoocketingEntryResponseDto response = entryService.sendFoocketingEntry(foocketingId);
+        FoocketingEntryResponseDto response = entryService.sendFoocketingEntry(foocketingId, userId);
         
         return ResponseEntity.ok(ApiResponse.ofSuccess(response));
     }
