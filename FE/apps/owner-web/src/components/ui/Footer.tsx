@@ -13,32 +13,32 @@ const footerItems: FooterItem[] = [
   {
     icon: Home,
     label: "주문리스트",
-    path: "/orders/list",
-    activePaths: ["/orders/list", "/orders/qr-scan", "/orders/receipt-confirm"],
+    path: "/owner/orders/list",
+    activePaths: ["/owner/orders/list", "/owner/orders/qr-scan", "/owner/orders/receipt-confirm"],
   },
   {
     icon: Clock,
     label: "마감세일",
-    path: "/catalog/closeout-sale",
-    activePaths: ["/catalog/closeout-sale"],
+    path: "/owner/catalog/closeout-sale",
+    activePaths: ["/owner/catalog/closeout-sale"],
   },
   {
     icon: Ticket,
     label: "푸켓팅",
-    path: "/catalog/foocketing",
-    activePaths: ["/catalog/foocketing"],
+    path: "/owner/catalog/foocketing",
+    activePaths: ["/owner/catalog/foocketing"],
   },
   {
     icon: FileText,
     label: "주간레포트",
-    path: "/insights/report",
-    activePaths: ["/insights/report"],
+    path: "/owner/insights/report",
+    activePaths: ["/owner/insights/report"],
   },
   {
     icon: Settings,
     label: "가게관리",
-    path: "/settings",
-    activePaths: ["/settings", "/catalog/menu"],
+    path: "/owner/settings",
+    activePaths: ["/owner/settings", "/owner/catalog/menu"],
   },
 ];
 
@@ -52,7 +52,7 @@ export default function Footer() {
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-50 w-full bg-bg-0">
-      <div className="w-full flex items-center justify-around py-2">
+      <div className="w-full flex items-center justify-around py-6 px-4">
         {footerItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.activePaths);

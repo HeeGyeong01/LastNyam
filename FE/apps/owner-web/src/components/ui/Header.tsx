@@ -4,12 +4,12 @@ import { IconButton } from "./IconButton";
 
 // 경로별 제목 매핑
 const pageTitles: Record<string, string> = {
-  '/orders/qr-scan': 'QR 스캔',
-  '/catalog/menu': '메뉴 관리',
-  '/catalog/foocketing': '푸켓팅',
-  '/catalog/closeout-sale': '마감세일',
-  '/insights/report': '주간 레포트',
-  '/settings': '가게 설정',
+  '/owner/orders/qr-scan': 'QR 스캔',
+  '/owner/catalog/menu': '메뉴 관리',
+  '/owner/catalog/foocketing': '푸켓팅',
+  '/owner/catalog/closeout-sale': '마감세일',
+  '/owner/insights/report': '주간 레포트',
+  '/owner/settings': '가게 설정',
 };
 
 export default function Header() {
@@ -20,7 +20,7 @@ export default function Header() {
     navigate(-1);
   };
   const handleMenu = () => {
-    navigate('/settings');
+    navigate('/owner/settings');
   };
 
   // 현재 경로에 해당하는 제목 가져오기, 없으면 기본값 '헤더'

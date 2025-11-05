@@ -58,10 +58,10 @@ export default function OwnerLayout() {
           <div>
             <h2 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>인증</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link to="/login" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/login" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 로그인
               </Link>
-              <Link to="/signup" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/signup" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 회원가입
               </Link>
             </div>
@@ -70,13 +70,13 @@ export default function OwnerLayout() {
           <div>
             <h2 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>주문 관리</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link to="/orders/list" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/orders/list" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 주문 목록
               </Link>
-              <Link to="/orders/qr-scan" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/orders/qr-scan" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 QR 스캔
               </Link>
-              <Link to="/orders/receipt-confirm" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/orders/receipt-confirm" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 영수증 확인
               </Link>
             </div>
@@ -85,13 +85,13 @@ export default function OwnerLayout() {
           <div>
             <h2 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>카탈로그 관리</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link to="/catalog/menu" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/catalog/menu" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 메뉴 관리
               </Link>
-              <Link to="/catalog/foocketing" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/catalog/foocketing" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 푸켓팅 관리
               </Link>
-              <Link to="/catalog/closeout-sale" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/catalog/closeout-sale" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 마감 세일 관리
               </Link>
             </div>
@@ -100,7 +100,7 @@ export default function OwnerLayout() {
           <div>
             <h2 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>인사이트</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link to="/insights/report" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/insights/report" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 리포트
               </Link>
             </div>
@@ -109,7 +109,7 @@ export default function OwnerLayout() {
           <div>
             <h2 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>설정</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link to="/settings" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+              <Link to="/owner/settings" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 설정
               </Link>
             </div>

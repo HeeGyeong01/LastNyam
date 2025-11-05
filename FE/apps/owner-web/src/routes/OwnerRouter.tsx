@@ -14,7 +14,7 @@ import LoginPage from '../domains/auth/pages/LoginPage';
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: '/owner',
     element: <App />,
     children: [
       {
