@@ -59,9 +59,9 @@ pipeline {
           }
           // FE/master 브랜치 로직
           else if (branchName == 'FE/master' || branchName == 'origin/FE/master') {
-            def isSharedChanged = changes.contains('shared/')
-            def isOwnerChanged = changes.contains('owner-web/')
-            def isCustomerChanged = changes.contains('customer-web/')
+            def isSharedChanged = changes.contains('FE/shared/')
+            def isOwnerChanged = changes.contains('FE/apps/owner-web/')
+            def isCustomerChanged = changes.contains('FE/apps/customer-web/')
             
             // shared 변경 시 둘 다 빌드
             env.BUILD_FE_OWNER = (isOwnerChanged || isSharedChanged).toString()
