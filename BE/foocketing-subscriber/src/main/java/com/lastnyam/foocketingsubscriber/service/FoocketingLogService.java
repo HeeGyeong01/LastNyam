@@ -4,6 +4,7 @@ import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingLog;
 import com.lastnyam.database.entity.User;
 import com.lastnyam.foocketingsubscriber.dto.FoocketingEntryPayload;
+import com.lastnyam.foocketingsubscriber.exception.FoocketingEntryErrorCode;
 import com.lastnyam.foocketingsubscriber.exception.FoocketingEntryException;
 import com.lastnyam.foocketingsubscriber.repository.FoocketingLogRepository;
 import com.lastnyam.foocketingsubscriber.repository.FoocketingRepository;
@@ -32,13 +33,13 @@ public class FoocketingLogService {
                 .orElse(null);
 
         if(foocketing == null){
-            throw new FoocketingEntryException("존재하지 않는 푸켓팅입니다.",400);
+            throw new FoocketingEntryException(FoocketingEntryErrorCode.FOOCKETING_NOT_FOUND);
         }
 
         User user = userRepository.findById(entry.getUserId()).orElse(null);
 
         if(user == null){
-            throw new FoocketingEntryException("존재하지 않는 사용자입니다.",400);
+            throw new FoocketingEntryException(FoocketingEntryErrorCode.USER_NOT_FOUND);
         }
 
         Integer currentRank = getCurrentRank(entry.getFoocketingId());
