@@ -45,5 +45,5 @@ public class Menu {
     private List<Discount> discounts;
     
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Fookecting> fookectings;
+    private List<Foocketing> foocketings;
 }
