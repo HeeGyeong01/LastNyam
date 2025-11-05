@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "fookecting_log")
+@Table(name = "foocketing_log")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FookectingLog {
+public class FoocketingLog {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,8 +28,8 @@ public class FookectingLog {
     private LocalDateTime createdAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fookecting_id")
-    private Fookecting fookecting;
+    @JoinColumn(name = "foocketing_id")
+    private Foocketing foocketing;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

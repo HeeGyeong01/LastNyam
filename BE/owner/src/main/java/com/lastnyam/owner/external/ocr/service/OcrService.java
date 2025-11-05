@@ -1,4 +1,4 @@
-package com.lastnyam.owner.service;
+package com.lastnyam.owner.external.ocr.service;
 
 import com.lastnyam.owner.dto.BusinessLicenseOcrResponse;
 import com.lastnyam.owner.external.ocr.client.ClovaApiClient;
@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * OCR 서비스
- * 사업자등록증 이미지를 처리하여 정보를 추출합니다.
+ * OCR 서비스 사업자등록증 이미지를 처리하여 정보를 추출합니다.
  */
 @Slf4j
 @Service

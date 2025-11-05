@@ -4,9 +4,8 @@ import com.lastnyam.authentication.dto.TokenDto;
 import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.provider.JwtProvider;
 import com.lastnyam.redis.service.RedisService;
-import org.springframework.stereotype.Service;
-
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
@@ -19,11 +18,11 @@ public class JwtService {
         this.redisService = redisService;
     }
 
-    public String generateAccessToken(UserRole role, Long id) {
+    public String generateAccessToken(UserRole role, Integer id) {
         return jwtProvider.generateAccessToken(role, id, UUID.randomUUID().toString());
     }
 
-    public String generateRefreshToken(UserRole role, Long id) {
+    public String generateRefreshToken(UserRole role, Integer id) {
         return jwtProvider.generateRefreshToken(role, id, UUID.randomUUID().toString());
     }
 
@@ -43,7 +42,7 @@ public class JwtService {
     }
 
     public TokenDto getClaimsFromToken(String token) {
-        Long id = jwtProvider.extractId(token);
+        Integer id = jwtProvider.extractId(token);
         UserRole role = jwtProvider.extractRole(token);
 
         return TokenDto.builder()
@@ -52,4 +51,7 @@ public class JwtService {
                 .build();
     }
 
+    public String extractVersionOf(String token) {
+        return jwtProvider.extractVersion(token);
+    }
 }
