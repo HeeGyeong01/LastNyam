@@ -61,7 +61,7 @@ export default {
         'en-h5': ['Modak', 'sans-serif'],
       },
       fontSize: {
-        // 기본 타이포그래피 (Pretendard)
+        // 기본 타이포그래피 (Pretendard) - fontWeight 포함
         'h1': ['48px', { lineHeight: '48px', fontWeight: '800' }],
         'h2': ['30px', { lineHeight: '36px', fontWeight: '500' }],
         'h2-b': ['30px', { lineHeight: '36px', fontWeight: '700' }],
@@ -127,5 +127,21 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities, theme }) {
+      const typographyUtilities = {};
+      const fontSizes = theme('fontSize');
+      
+      Object.keys(fontSizes).forEach((key) => {
+        const [size, config] = fontSizes[key];
+        typographyUtilities[`.${key}`] = {
+          fontSize: size,
+          lineHeight: config.lineHeight,
+          fontWeight: config.fontWeight,
+        };
+      });
+      
+      addUtilities(typographyUtilities);
+    },
+  ],
 }
