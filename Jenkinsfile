@@ -279,12 +279,13 @@ pipeline {
     // ==================== FE 빌드/배포 ====================
     stage('FE - Build & Deploy') {
       when { expression { return env.IS_FE == 'true' } }
-      tools{
-          nodejs 'NodeJS25'
-      }
+      
       parallel {
         stage('Build FE Owner') {
           when { expression { return env.BUILD_FE_OWNER == 'true' } }
+          tools{
+            nodejs 'NodeJS25'
+          }
           steps {
             dir('FE/apps/owner-web') {
               echo '🔨 Building FE Owner...'
@@ -303,6 +304,9 @@ pipeline {
         
         stage('Build FE Customer') {
           when { expression { return env.BUILD_FE_CUSTOMER == 'true' } }
+          tools{
+            nodejs 'NodeJS25'
+          }
           steps {
             dir('FE/apps/customer-web') {
               echo '🔨 Building FE Customer...'
