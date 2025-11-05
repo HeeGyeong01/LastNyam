@@ -4,22 +4,22 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   // 기본 스타일
-  'inline-flex items-center justify-center gap-1 px-3.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-1 rounded-lg whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       btnStyle: {
         // Filled 버튼
-        'filled-default': 'bg-bg-2 p2-b text-secondary',
-        'filled-red': 'bg-brand p2-b text-inverse',
-        'filled-yellow': 'bg-brand-bg-3 p2-b text-primary',
-        'filled-gray': 'bg-bg-2 p2-b text-primary',
+        'filled-default': 'bg-bg-2 text-secondary',
+        'filled-red': 'bg-brand text-inverse',
+        'filled-yellow': 'bg-brand-bg-3 text-primary',
+        'filled-gray': 'bg-bg-2 text-primary',
         
         // Outlined 버튼
-        'outlined-default': 'border border-stroke-3 p2-b text-secondary',
-        'outlined-red': 'border border-brand p2-b text-brand',
+        'outlined-default': 'border border-stroke-3 text-secondary',
+        'outlined-red': 'border border-brand text-brand',
         
         // Ghost 버튼
-        ghost: 'p2-b text-secondary px-0 py-0',
+        ghost: 'text-secondary px-0 py-0',
 
         // underline 버튼
         'underline-default': 'p2-b text-secondary border-b border-stroke-3 px-3.5 py-2.5 rounded-none',
@@ -28,7 +28,8 @@ const buttonVariants = cva(
 
       // 버튼 크기
       size: {
-        'lg': 'px-5 py-2.5',
+        'default': 'p2-b px-3.5 py-1.5',
+        'lg': 'p1-b px-5 py-2.5',
       },
 
       // 버튼 모양
@@ -39,6 +40,7 @@ const buttonVariants = cva(
 
     defaultVariants: {
       btnStyle: 'filled-default',
+      size: 'default',
     },
   }
 );
