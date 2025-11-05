@@ -29,6 +29,11 @@ public class ExceptionAdvice {
 	@ExceptionHandler(BusinessException.class)
 	public ResponseEntity<ApiResponse<String>> handleCustomException(BusinessException ex) {
 		BaseErrorCode code = ex.getCode();
+		// 500 에러는 Error status로 반환
+		if (ex.getCode().getStatus().is5xxServerError()) {
+			return ResponseEntity.status(code.getStatus())
+					.body(ApiResponse.ofError(code.getCode(), code.getMessage()));
+		}
 		return ResponseEntity.status(code.getStatus())
 			.body(ApiResponse.ofFail(code.getCode(), code.getMessage()));
 	}
