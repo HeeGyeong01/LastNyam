@@ -60,8 +60,8 @@ pipeline {
           // FE/master 브랜치 로직
           else if (branchName == 'FE/master' || branchName == 'origin/FE/master') {
             def isSharedChanged = changes.contains('FE/shared/')
-            def isOwnerChanged = changes.contains('FE/owner/')
-            def isCustomerChanged = changes.contains('FE/customer/')
+            def isOwnerChanged = changes.contains('FE/apps/owner-web/')
+            def isCustomerChanged = changes.contains('FE/apps/customer-web/')
             
             // shared 변경 시 둘 다 빌드
             env.BUILD_FE_OWNER = (isOwnerChanged || isSharedChanged).toString()
@@ -279,9 +279,13 @@ pipeline {
     // ==================== FE 빌드/배포 ====================
     stage('FE - Build & Deploy') {
       when { expression { return env.IS_FE == 'true' } }
+      
       parallel {
         stage('Build FE Owner') {
           when { expression { return env.BUILD_FE_OWNER == 'true' } }
+          tools{
+            nodejs 'NodeJS25'
+          }
           steps {
             dir('FE/apps/owner-web') {
               echo '🔨 Building FE Owner...'
@@ -300,6 +304,9 @@ pipeline {
         
         stage('Build FE Customer') {
           when { expression { return env.BUILD_FE_CUSTOMER == 'true' } }
+          tools{
+            nodejs 'NodeJS25'
+          }
           steps {
             dir('FE/apps/customer-web') {
               echo '🔨 Building FE Customer...'
