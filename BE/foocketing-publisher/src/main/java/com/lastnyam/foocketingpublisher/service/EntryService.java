@@ -2,7 +2,8 @@ package com.lastnyam.foocketingpublisher.service;
 
 import com.lastnyam.foocketingpublisher.dto.FoocketingEntryPayload;
 import com.lastnyam.foocketingpublisher.dto.FoocketingEntryResponseDto;
-import com.lastnyam.foocketingpublisher.exception.UnauthorizedException;
+import com.lastnyam.foocketingpublisher.exception.FoocketingPublisherException;
+import com.lastnyam.foocketingpublisher.exception.FoocketingPublisherErrorCode;
 import com.lastnyam.messaging.producer.DynamicEventProducer;
 
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ public class EntryService {
                 .success(true)
                 .build();
             
-        } catch (UnauthorizedException e) {
+        } catch (FoocketingPublisherException e) {
             log.warn("권한이 없습니다 - foocketingId: {}, userId: {}, error: {}", 
                     foocketingId, userId, e.getMessage());
             throw e;
@@ -69,13 +70,11 @@ public class EntryService {
      * 
      * @param entryUserId Entry에 포함된 userId
      * @param claimUserId JWT claim에서 추출한 userId
-     * @throws UnauthorizedException 권한이 없는 경우
+     * @throws FoocketingPublisherException 권한이 없는 경우
      */
     private void validateUserAuthorization(Integer entryUserId, Integer claimUserId) {
         if (!entryUserId.equals(claimUserId)) {
-            throw new UnauthorizedException(
-                String.format("권한이 없습니다. Entry userId: %d, Claim userId: %d", 
-                    entryUserId, claimUserId));
+            throw new FoocketingPublisherException(FoocketingPublisherErrorCode.UNAUTHORIZED);
         }
     }
 }

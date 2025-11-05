@@ -2,7 +2,8 @@ package com.lastnyam.foocketingpublisher.resolver;
 
 import com.lastnyam.authentication.service.JwtService;
 import com.lastnyam.foocketingpublisher.annotation.UserId;
-import com.lastnyam.foocketingpublisher.exception.UnauthorizedException;
+import com.lastnyam.foocketingpublisher.exception.FoocketingPublisherException;
+import com.lastnyam.foocketingpublisher.exception.FoocketingPublisherErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,19 +46,19 @@ public class UserIdArgumentResolver implements HandlerMethodArgumentResolver {
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            throw new UnauthorizedException("JWT 토큰이 없습니다.");
+            throw new FoocketingPublisherException(FoocketingPublisherErrorCode.JWT_TOKEN_NOT_FOUND);
         }
 
         // 토큰 검증
         if (!jwtService.validateToken(token)) {
-            throw new UnauthorizedException("유효하지 않은 JWT 토큰입니다.");
+            throw new FoocketingPublisherException(FoocketingPublisherErrorCode.INVALID_JWT_TOKEN);
         }
 
         // Claim에서 userId 추출
         Integer userId = jwtService.getClaimsFromToken(token).getId();
         
         if (userId == null) {
-            throw new UnauthorizedException("JWT 토큰에서 userId를 추출할 수 없습니다.");
+            throw new FoocketingPublisherException(FoocketingPublisherErrorCode.USER_ID_NOT_FOUND_IN_TOKEN);
         }
 
         return userId;
