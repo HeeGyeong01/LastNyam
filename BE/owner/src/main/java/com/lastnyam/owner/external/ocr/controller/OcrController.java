@@ -1,7 +1,7 @@
 package com.lastnyam.owner.external.ocr.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
-import com.lastnyam.owner.dto.BusinessLicenseOcrResponse;
+import com.lastnyam.owner.external.ocr.dto.BusinessLicenseOcrResponse;
 import com.lastnyam.owner.external.ocr.service.OcrService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,8 @@ public class OcrController {
     public ResponseEntity<ApiResponse<BusinessLicenseOcrResponse>> processBusinessLicense(
             @RequestParam("file") MultipartFile file) {
 
-        log.info("■■■■■■■■ 사업자등록증 OCR API 호출 - 파일명: {} ■■■■■■■■", file.getOriginalFilename());
+        log.info("■■■■■■■■ 사업자등록증 OCR API 호출 - 파일명: {} ■■■■■■■■",
+                file.getOriginalFilename());
 
         try {
             // 입력 검증

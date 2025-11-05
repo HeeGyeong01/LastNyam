@@ -22,6 +22,6 @@ public class Owner {
     @Column(name = "owner_email", length = 50, nullable = false)
     private String ownerEmail;
     
-    @Column(name = "owner_password", length = 100, nullable = false)
+    @Column(name = "owner_password", length = 255, nullable = false)
     private String ownerPassword;
 }
