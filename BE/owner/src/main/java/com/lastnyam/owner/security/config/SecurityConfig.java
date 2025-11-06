@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/owner/auth/register").permitAll()
                         .requestMatchers("/api/owner/auth/refresh").permitAll()
                         .requestMatchers("/watcher/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().hasAnyRole("OWNER", "ADMIN")
                 )
                 .formLogin(form -> form
                         .loginProcessingUrl("/api/owner/auth/login")
