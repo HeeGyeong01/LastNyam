@@ -12,6 +12,7 @@ import ManageCloseoutSalePage from '../domains/catalog/pages/ManageCloseoutSaleP
 import SignUpPage from '../domains/auth/pages/SignUpPage';
 import LoginPage from '../domains/auth/pages/LoginPage';
 import ComponentTestPage from '../domains/test/pages/ComponentTestPage';
+import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
 
 const router = createBrowserRouter([
   {
@@ -19,7 +20,8 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        element: <OwnerLayout />,
+        element: <HeaderFooterLayout />,
+        // element: <OwnerLayout />,
         children: [
           {
             path: 'login',

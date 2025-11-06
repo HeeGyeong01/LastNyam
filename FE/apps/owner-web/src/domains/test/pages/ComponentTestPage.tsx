@@ -5,6 +5,7 @@ import { DescriptionInput } from '../../../components/ui/descriptionInput';
 import { TimeInput } from '../../../components/ui/timeInput';
 import { ImageUpload } from '../../../components/ui/imageUpload';
 import { Spinner } from '../../../components/ui/spinner';
+import { Modal } from '../../../components/ui/modal';
 
 // 메뉴 타입 정의
 interface Menu {
@@ -28,6 +29,12 @@ export default function ComponentTestPage() {
   const [timeValue, setTimeValue] = useState('');
   const [timeValue30, setTimeValue30] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [modalOpen1, setModalOpen1] = useState(false);
+  const [modalOpen2, setModalOpen2] = useState(false);
+  const [modalOpen3, setModalOpen3] = useState(false);
+  const [modalOpen4, setModalOpen4] = useState(false);
+  const [loadingModalOpen, setLoadingModalOpen] = useState(false);
+  const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
 
   // 예시 메뉴 데이터 (API 응답 형태)
   const menuData: Menu[] = [
@@ -599,6 +606,156 @@ export default function ComponentTestPage() {
                 <span>저장하기</span>
               </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Modal 컴포넌트 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">Modal 컴포넌트</h2>
+        <div className="border rounded-lg p-6 space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">단일 버튼 모달</h3>
+            <button
+              onClick={() => setModalOpen1(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              모달 열기 (단일 버튼)
+            </button>
+            <Modal
+              open={modalOpen1}
+              onClose={() => setModalOpen1(false)}
+              title="회원가입 완료"
+              detail="가게를 등록한 뒤 서비스 이용이 가능합니다."
+              variant="single-button"
+              primaryButtonText="등록하기"
+              icon="check-circle"
+              iconShow={true}
+              xButtonShow={true}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">두 개 버튼 모달</h3>
+            <button
+              onClick={() => setModalOpen2(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              모달 열기 (두 개 버튼)
+            </button>
+            <Modal
+              open={modalOpen2}
+              onClose={() => setModalOpen2(false)}
+              title="회원가입 완료"
+              detail="가게를 등록한 뒤 서비스 이용이 가능합니다. 가게를 바로 등록하시겠어요?"
+              variant="two-button"
+              primaryButtonText="확인"
+              secondaryButtonText="취소"
+              icon="check-circle"
+              iconShow={true}
+              xButtonShow={true}
+              onPrimaryClick={() => {
+                console.log('확인 버튼 클릭');
+                setModalOpen2(false);
+              }}
+              onSecondaryClick={() => {
+                console.log('취소 버튼 클릭');
+                setModalOpen2(false);
+              }}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">아이콘 없는 모달</h3>
+            <button
+              onClick={() => setModalOpen3(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              모달 열기 (아이콘 없음)
+            </button>
+            <Modal
+              open={modalOpen3}
+              onClose={() => setModalOpen3(false)}
+              title="알림"
+              detail="이 작업을 계속하시겠습니까?"
+              variant="two-button"
+              primaryButtonText="확인"
+              secondaryButtonText="취소"
+              iconShow={false}
+              xButtonShow={true}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">X 버튼 없는 모달</h3>
+            <button
+              onClick={() => setModalOpen4(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              모달 열기 (X 버튼 없음)
+            </button>
+            <Modal
+              open={modalOpen4}
+              onClose={() => setModalOpen4(false)}
+              title="중요 알림"
+              detail="이 작업은 되돌릴 수 없습니다. 정말로 진행하시겠습니까?"
+              variant="two-button"
+              primaryButtonText="진행"
+              secondaryButtonText="취소"
+              icon="check-circle"
+              iconShow={true}
+              xButtonShow={false}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">로딩 모달 (버튼 없음)</h3>
+            <button
+              onClick={() => {
+                setLoadingModalOpen(true);
+                // 3초 후 자동으로 닫히는 예시
+                setTimeout(() => {
+                  setLoadingModalOpen(false);
+                }, 3000);
+              }}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              로딩 모달 열기
+            </button>
+            <Modal
+              open={loadingModalOpen}
+              onClose={() => setLoadingModalOpen(false)}
+              title="처리 중..."
+              detail="잠시만 기다려주세요."
+              icon="loading"
+              iconShow={true}
+              xButtonShow={false}
+              buttonShow={false}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">로딩 모달 (제목/설명 없음)</h3>
+            <button
+              onClick={() => {
+                setLoadingModalOpen2(true);
+                setTimeout(() => {
+                  setLoadingModalOpen2(false);
+                }, 3000);
+              }}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              로딩 모달 열기 (제목/설명 없음)
+            </button>
+            <Modal
+              open={loadingModalOpen2}
+              onClose={() => setLoadingModalOpen2(false)}
+              icon="loading"
+              iconShow={true}
+              xButtonShow={false}
+              buttonShow={false}
+              modalBodyShow={false}
+            />
           </div>
         </div>
       </section>
