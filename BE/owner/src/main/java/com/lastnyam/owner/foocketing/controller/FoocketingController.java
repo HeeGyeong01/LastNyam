@@ -19,7 +19,7 @@ public class FoocketingController {
     private final FoocketingService foocketingService;
 
     // 푸켓팅 등록
-    @PostMapping("/{ownerId}/shops/{shopId}/foocketings")
+    @PostMapping("/{ownerId}/shop/{shopId}/foocketing")
     public ResponseEntity<ApiResponse<FoocketingCreateResponse>> createFoocketing(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
@@ -30,7 +30,7 @@ public class FoocketingController {
     }
 
     // 현재 진행중인 푸켓팅 조회
-    @GetMapping("/{ownerId}/shops/{shopId}/foocketings")
+    @GetMapping("/{ownerId}/shop/{shopId}/foocketing")
     public ResponseEntity<ApiResponse<FoocketingListResponse>> getActiveFoocketings(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,

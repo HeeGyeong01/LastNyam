@@ -23,7 +23,7 @@ public class ShopController {
 	private final ShopService shopService;
 
 	// 가게 등록
-	@PostMapping("/{ownerId}/shops")
+	@PostMapping("/{ownerId}/shop")
 	public ResponseEntity<ApiResponse<ShopCreateResponse>> createShop(
 		@AuthenticationPrincipal Integer userId,
 		@PathVariable("ownerId") Integer ownerId,
@@ -33,7 +33,7 @@ public class ShopController {
 	}
 
 	// 메뉴 등록
-	@PostMapping("/{ownerId}/shops/{shopId}/menus")
+	@PostMapping("/{ownerId}/shop/{shopId}/menu")
 	public ResponseEntity<ApiResponse<MenuCreateResponse>> createMenu(
 		@AuthenticationPrincipal Integer userId,
 		@PathVariable("ownerId") Integer ownerId,
@@ -44,7 +44,7 @@ public class ShopController {
 	}
 
 	// 가게 메뉴 조회
-	@GetMapping("/{ownerId}/shops/{shopId}/menus")
+	@GetMapping("/{ownerId}/shop/{shopId}/menu")
 	public ResponseEntity<ApiResponse<MenuListResponse>> getShopMenus(
 		@AuthenticationPrincipal Integer userId,
 		@PathVariable("ownerId") Integer ownerId,
