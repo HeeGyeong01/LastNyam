@@ -38,4 +38,8 @@ public class FoocketingTransaction {
     @JoinColumn(name = "foocketing_id")
     private Foocketing foocketing;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id")
+    private Shop shop;
+
 }

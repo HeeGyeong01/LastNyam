@@ -20,9 +20,6 @@ public class DiscountTransaction {
     @Column(name = "transaction_id")
     private Integer transactionId;
     
-    @Column(name = "transaction_amount", nullable = false)
-    private Integer transactionAmount;
-    
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_status", nullable = false)
     private TransactionStatus transactionStatus;
@@ -34,10 +31,10 @@ public class DiscountTransaction {
     private LocalDateTime createdAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_id")
-    private Discount discount;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id")
+    private Shop shop;
 }

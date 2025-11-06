@@ -5,7 +5,7 @@ import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.service.JwtService;
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.common.enums.ApiStatus;
-import com.lastnyam.owner.dto.TokenData;
+import com.lastnyam.owner.owner.dto.TokenData;
 import com.lastnyam.owner.security.entity.CustomUserDetails;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

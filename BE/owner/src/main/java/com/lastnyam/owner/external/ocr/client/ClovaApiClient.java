@@ -1,7 +1,7 @@
 package com.lastnyam.owner.external.ocr.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lastnyam.owner.dto.BusinessLicenseOcrResponse;
+import com.lastnyam.owner.external.ocr.dto.BusinessLicenseOcrResponse;
 import com.lastnyam.owner.external.ocr.config.ClovaApiConfig;
 import com.lastnyam.owner.external.ocr.dto.ClovaApiRequest;
 import com.lastnyam.owner.external.ocr.dto.ClovaApiResponse;

@@ -4,6 +4,8 @@ import com.lastnyam.database.entity.Report;
 import com.lastnyam.database.entity.Shop;
 import com.lastnyam.database.entity.ShopView;
 import com.lastnyam.owner.external.gms.service.GMSService;
+import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.report.dto.ReportResponse;
 import com.lastnyam.owner.report.dto.ReportResponse.MenuStats;
 import com.lastnyam.owner.report.repository.MenuStatRepository;
@@ -11,6 +13,7 @@ import com.lastnyam.owner.report.repository.ReportRepository;
 import com.lastnyam.owner.report.repository.ShopViewRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +31,8 @@ public class ReportService {
     private final MenuStatRepository menuStatRepository;
     private final ShopViewRepository shopViewRepository;
 
-    public ReportResponse getReport(String ownerId, Integer shopId) {
+    public ReportResponse getReport(Integer userId, Integer ownerId, Integer shopId) {
+        checkPermission(userId, ownerId);
 
         Report report = reportRepository.findByShopId(shopId);
 
@@ -85,5 +89,11 @@ public class ReportService {
         log.debug("주간 통계 초기화 시작");
         int rowCount = menuStatRepository.initializeStats();
         log.info("주간 통계 초기화 완료 : {}개", rowCount);
+    }
+
+    private static void checkPermission(Integer userId, Integer ownerId) {
+        if (!Objects.equals(userId, ownerId)) {
+            throw new OwnerException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+        }
     }
 }
