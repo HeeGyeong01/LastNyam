@@ -7,9 +7,11 @@ import com.lastnyam.owner.discount.dto.DiscountCreateRequest;
 import com.lastnyam.owner.discount.dto.DiscountCreateResponse;
 import com.lastnyam.owner.discount.dto.DiscountGetResponse;
 import com.lastnyam.owner.discount.dto.DiscountListResponse;
+import com.lastnyam.owner.discount.exception.DiscountErrorCode;
 import com.lastnyam.owner.discount.exception.DiscountException;
 import com.lastnyam.owner.discount.repository.DiscountRepository;
 import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.shop.exception.ShopErrorCode;
 import com.lastnyam.owner.shop.exception.ShopException;
 import com.lastnyam.owner.shop.repository.MenuRepository;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -50,15 +53,31 @@ public class DiscountService {
                 throw new DiscountException(ShopErrorCode.MENU_NOT_IN_SHOP);
         }
 
+        // 할인 가격 검증
+        Integer originalPrice = menu.getMenuPrice();
+        Integer discountPrice = request.getDiscountPrice();
+        
+        if (discountPrice >= originalPrice) {
+            throw new DiscountException(DiscountErrorCode.INVALID_DISCOUNT_PRICE);
+        }
+
+        // 할인율 계산 (소수점 버림)
+        Integer discountRate = (int) (((double) (originalPrice - discountPrice) / originalPrice) * 100);
+
         // 가게 마감 / 픽업 마감 시간 계산
-        LocalDate now = LocalDate.now();
-        LocalDateTime closeTime = LocalDateTime.of(now, shop.getShopCloses());
-        LocalDateTime pickupEndTime = LocalDateTime.of(now, shop.getShopPickupEndTime());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime closeTime = calculateTargetTime(now, shop.getShopCloses());
+        LocalDateTime pickupEndTime = calculateTargetTime(now, shop.getShopPickupEndTime());
+
+        // 픽업 마감 시간이 현재 시간보다 이전이면 주문 불가
+        if (pickupEndTime.isBefore(now) || pickupEndTime.isEqual(now)) {
+            throw new DiscountException(DiscountErrorCode.PICKUP_TIME_PASSED);
+        }
 
         Discount discount = Discount.builder()
-                .discountDate(now)
-                .discountRate(request.getDiscountRate())
-                .discountPrice(request.getDiscountPrice())
+                .discountDate(now.toLocalDate())
+                .discountRate(discountRate)
+                .discountPrice(discountPrice)
                 .discountMenuAmount(request.getDiscountMenuAmount())
                 .discountCloseTime(closeTime)
                 .discountPickupEndTime(pickupEndTime)
@@ -83,9 +102,9 @@ public class DiscountService {
             throw new DiscountException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
-        // 오늘 날짜의 마감세일 조회
-        LocalDate today = LocalDate.now();
-        List<Discount> discounts = discountRepository.findByShopIdAndDiscountDate(shopId, today);
+        // 활성화된 마감세일 조회 (픽업 마감 시간이 현재 이후인 것만)
+        LocalDateTime now = LocalDateTime.now();
+        List<Discount> discounts = discountRepository.findActiveByShopId(shopId, now);
 
         // DTO로 변환
         List<DiscountGetResponse> discountList = discounts.stream()
@@ -112,9 +131,24 @@ public class DiscountService {
                 .build();
     }
 
+    /**
+     * 현재 시간과 목표 시간(LocalTime)을 비교하여 적절한 LocalDateTime을 반환
+     * 목표 시간이 현재 시간보다 이전이면 다음날로 설정
+     */
+    private LocalDateTime calculateTargetTime(LocalDateTime now, LocalTime targetTime) {
+        LocalDateTime targetDateTime = LocalDateTime.of(now.toLocalDate(), targetTime);
+        
+        // 목표 시간이 현재 시간보다 이전이면 다음날로 설정
+        if (targetDateTime.isBefore(now) || targetDateTime.isEqual(now)) {
+            targetDateTime = targetDateTime.plusDays(1);
+        }
+        
+        return targetDateTime;
+    }
+
     private static void checkPermission(Integer userId, Integer ownerId) {
         if (!Objects.equals(userId, ownerId)) {
-            throw new ShopException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+            throw new OwnerException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
         }
     }
 }

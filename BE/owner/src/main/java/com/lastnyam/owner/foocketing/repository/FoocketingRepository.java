@@ -19,6 +19,13 @@ public interface FoocketingRepository extends JpaRepository<Foocketing, Integer>
     List<Foocketing> findByShopIdAndToday(@Param("shopId") Integer shopId,
                                            @Param("startOfDay") LocalDateTime startOfDay,
                                            @Param("endOfDay") LocalDateTime endOfDay);
+    
+    @Query("SELECT f FROM Foocketing f " +
+           "JOIN FETCH f.menu m " +
+           "WHERE m.shop.shopId = :shopId " +
+           "AND f.foocketingPickupEndTime > :currentTime " +
+           "ORDER BY f.foocketingTime ASC")
+    List<Foocketing> findActiveByShopId(@Param("shopId") Integer shopId, @Param("currentTime") LocalDateTime currentTime);
 }
 
 
