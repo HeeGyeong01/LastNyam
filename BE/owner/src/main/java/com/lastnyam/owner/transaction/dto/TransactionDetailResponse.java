@@ -1,6 +1,8 @@
 package com.lastnyam.owner.transaction.dto;
 
+import com.lastnyam.database.entity.*;
 import com.lastnyam.database.entity.enums.TransactionStatus;
+import com.lastnyam.owner.transaction.enums.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -35,6 +38,51 @@ public class TransactionDetailResponse {
     // 푸켓팅 정보 (푸켓팅인 경우에만)
     private FoocketingDetailDto foocketingDetail;
     
+    public static TransactionDetailResponse ofDiscount(DiscountTransaction transaction, List<DiscountTransactionItem> items) {
+        User user = transaction.getUser();
+        Shop shop = transaction.getShop();
+        
+        List<DiscountTransactionItemDto> itemDtos = items.stream()
+                .map(DiscountTransactionItemDto::of)
+                .collect(Collectors.toList());
+        
+        return TransactionDetailResponse.builder()
+                .transactionId(transaction.getTransactionId())
+                .transactionStatus(transaction.getTransactionStatus())
+                .transactionQrImage(transaction.getTransactionQrImage())
+                .createdAt(transaction.getCreatedAt())
+                .transactionType(TransactionType.DISCOUNT.name())
+                .userId(user.getUserId())
+                .userNickname(user.getUserNickname())
+                .userProfile(user.getUserProfile())
+                .shopId(shop.getShopId())
+                .shopName(shop.getShopName())
+                .discountItems(itemDtos)
+                .build();
+    }
+    
+    public static TransactionDetailResponse ofFoocketing(FoocketingTransaction transaction) {
+        User user = transaction.getUser();
+        Shop shop = transaction.getShop();
+        Foocketing foocketing = transaction.getFoocketing();
+        
+        FoocketingDetailDto foocketingDetail = FoocketingDetailDto.of(foocketing);
+        
+        return TransactionDetailResponse.builder()
+                .transactionId(transaction.getTransactionId())
+                .transactionStatus(transaction.getTransactionStatus())
+                .transactionQrImage(transaction.getTransactionQrImage())
+                .createdAt(transaction.getCreatedAt())
+                .transactionType(TransactionType.FOOCKETING.name())
+                .userId(user.getUserId())
+                .userNickname(user.getUserNickname())
+                .userProfile(user.getUserProfile())
+                .shopId(shop.getShopId())
+                .shopName(shop.getShopName())
+                .foocketingDetail(foocketingDetail)
+                .build();
+    }
+    
     @Data
     @Builder
     @NoArgsConstructor
@@ -53,6 +101,23 @@ public class TransactionDetailResponse {
         private String menuName;
         private Integer menuPrice;
         private String menuImage;
+        
+        public static DiscountTransactionItemDto of(DiscountTransactionItem item) {
+            Discount discount = item.getDiscount();
+            Menu menu = discount.getMenu();
+            
+            return DiscountTransactionItemDto.builder()
+                    .transactionItemId(item.getTransactionItemId())
+                    .transactionAmount(item.getTransactionAmount())
+                    .discountId(discount.getDiscountId())
+                    .discountRate(discount.getDiscountRate())
+                    .discountPrice(discount.getDiscountPrice())
+                    .menuId(menu.getMenuId())
+                    .menuName(menu.getMenuName())
+                    .menuPrice(menu.getMenuPrice())
+                    .menuImage(menu.getMenuImage())
+                    .build();
+        }
     }
     
     @Data
@@ -69,6 +134,20 @@ public class TransactionDetailResponse {
         private String menuName;
         private Integer menuPrice;
         private String menuImage;
+        
+        public static FoocketingDetailDto of(Foocketing foocketing) {
+            Menu menu = foocketing.getMenu();
+            
+            return FoocketingDetailDto.builder()
+                    .foocketingId(foocketing.getFoocketingId())
+                    .foocketingTime(foocketing.getFoocketingTime())
+                    .foocketingAmount(foocketing.getFoocketingAmount())
+                    .menuId(menu.getMenuId())
+                    .menuName(menu.getMenuName())
+                    .menuPrice(menu.getMenuPrice())
+                    .menuImage(menu.getMenuImage())
+                    .build();
+        }
     }
 }
 
