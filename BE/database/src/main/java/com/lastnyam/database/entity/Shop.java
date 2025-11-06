@@ -29,6 +29,9 @@ public class Shop {
     @Column(name = "shop_lng", nullable = false)
     private Double shopLng;
 
+    @Column(name = "shop_address", nullable = false)
+    private String shopAddress;
+
     @Column(name = "shop_description", length = 255)
     private String shopDescription;
 

@@ -31,6 +31,7 @@ public class TransactionDetailResponse {
     // 가게 정보
     private Integer shopId;
     private String shopName;
+    private String shopAddress;
     
     // 마감세일 주문 아이템 (마감세일인 경우에만)
     private List<DiscountTransactionItemDto> discountItems;
@@ -57,6 +58,7 @@ public class TransactionDetailResponse {
                 .userProfile(user.getUserProfile())
                 .shopId(shop.getShopId())
                 .shopName(shop.getShopName())
+                .shopAddress(shop.getShopAddress())
                 .discountItems(itemDtos)
                 .build();
     }
@@ -79,6 +81,7 @@ public class TransactionDetailResponse {
                 .userProfile(user.getUserProfile())
                 .shopId(shop.getShopId())
                 .shopName(shop.getShopName())
+                .shopAddress(shop.getShopAddress())
                 .foocketingDetail(foocketingDetail)
                 .build();
     }

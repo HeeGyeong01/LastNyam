@@ -55,20 +55,21 @@ public class OwnerService {
         // 점주의 가게 목록 조회
         List<Shop> shops = shopRepository.findByOwnerId(ownerId);
 
-        // DTO로 변환
-        List<ShopDetailResponse> shopList = shops.stream()
-                .map(shop -> ShopDetailResponse.builder()
-                        .shopId(shop.getShopId())
-                        .shopName(shop.getShopName())
-                        .shopLat(shop.getShopLat())
-                        .shopLng(shop.getShopLng())
-                        .shopDescription(shop.getShopDescription())
-                        .shopBanner(shop.getShopBanner())
-                        .shopCloses(shop.getShopCloses())
-                        .shopPickupEndTime(shop.getShopPickupEndTime())
-                        .categoryName(shop.getFoodCategory().getCategoryName())
-                        .build())
-                .collect(Collectors.toList());
+        		// DTO로 변환
+		List<ShopDetailResponse> shopList = shops.stream()
+				.map(shop -> ShopDetailResponse.builder()
+						.shopId(shop.getShopId())
+						.shopName(shop.getShopName())
+						.shopLat(shop.getShopLat())
+						.shopLng(shop.getShopLng())
+						.shopAddress(shop.getShopAddress())
+						.shopDescription(shop.getShopDescription())
+						.shopBanner(shop.getShopBanner())
+						.shopCloses(shop.getShopCloses())
+						.shopPickupEndTime(shop.getShopPickupEndTime())
+						.categoryName(shop.getFoodCategory().getCategoryName())
+						.build())
+				.collect(Collectors.toList());
         
         return ShopListResponse.builder()
                 .shops(shopList)

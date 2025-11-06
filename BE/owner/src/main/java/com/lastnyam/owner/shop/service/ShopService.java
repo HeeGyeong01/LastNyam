@@ -52,6 +52,7 @@ public class ShopService {
 			.shopName(request.getShopName())
 			.shopLat(request.getShopLat())
 			.shopLng(request.getShopLng())
+			.shopAddress(request.getShopAddress())
 			.shopDescription(request.getShopDescription())
 			.shopBanner(request.getShopBanner())
 			.shopCloses(request.getShopCloses())
