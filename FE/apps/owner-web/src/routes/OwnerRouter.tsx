@@ -11,6 +11,7 @@ import ManageFoocketingPage from '../domains/catalog/pages/ManageFoocketingPage'
 import ManageCloseoutSalePage from '../domains/catalog/pages/ManageCloseoutSalePage';
 import SignUpPage from '../domains/auth/pages/SignUpPage';
 import LoginPage from '../domains/auth/pages/LoginPage';
+import ComponentTestPage from '../domains/test/pages/ComponentTestPage';
 
 const router = createBrowserRouter([
   {
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
           {
             path: 'settings',
             element: <OwnerSettingPage />,
+          },
+          {
+            path: 'test',
+            element: <ComponentTestPage />,
           },
         ],
       },

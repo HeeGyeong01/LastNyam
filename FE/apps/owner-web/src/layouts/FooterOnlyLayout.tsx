@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import Footer from '../components/ui/Footer';
+import Footer from '../components/ui/owner/Footer';
 
 export default function FooterOnlyLayout() {
   return (

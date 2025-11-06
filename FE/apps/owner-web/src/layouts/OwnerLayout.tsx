@@ -1,8 +1,8 @@
 import { Outlet, Link } from 'react-router-dom';
-import { IconButton } from '../components/ui/IconButton';
+import { IconButton } from '../components/ui/owner/IconButton';
 import { Settings, Home, Search, Bell, Heart } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
+import Header from '../components/ui/owner/Header';
+import Footer from '../components/ui/owner/Footer';
 
 export default function OwnerLayout() {
   return (
@@ -111,6 +111,15 @@ export default function OwnerLayout() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Link to="/owner/settings" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
                 설정
+              </Link>
+            </div>
+          </div>
+          
+          <div>
+            <h2 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>테스트</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Link to="/owner/test" style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#333', backgroundColor: '#fff', display: 'block' }}>
+                컴포넌트 테스트
               </Link>
             </div>
           </div>

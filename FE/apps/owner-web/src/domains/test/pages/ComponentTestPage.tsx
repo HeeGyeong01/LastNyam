@@ -1,0 +1,642 @@
+import { useState } from 'react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../orders/components/accordion';
+import { Input } from '../../../components/ui/ownerInput';
+import { DescriptionInput } from '../../../components/ui/descriptionInput';
+import { TimeInput } from '../../../components/ui/timeInput';
+import { ImageUpload } from '../../../components/ui/imageUpload';
+import { Spinner } from '../../../components/ui/spinner';
+
+// 메뉴 타입 정의
+interface Menu {
+  menuId: number;
+  menuName: string;
+  menuDescription: string;
+  menuImage: string;
+  menuPrice: number;
+  categoryName: string;
+}
+
+export default function ComponentTestPage() {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    description: '',
+  });
+  const [timeValue, setTimeValue] = useState('');
+  const [timeValue30, setTimeValue30] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // 예시 메뉴 데이터 (API 응답 형태)
+  const menuData: Menu[] = [
+    {
+      menuId: 1,
+      menuName: "불고기 덮밥",
+      menuDescription: "신선한 소고기를 사용해 달콤짭짤하게 볶은 불고기 덮밥입니다.",
+      menuImage: "https://lastnyam.co.kr/images/menu/bulgogi_rice.jpg",
+      menuPrice: 9500,
+      categoryName: "김밥/분식"
+    },
+    {
+      menuId: 2,
+      menuName: "순대",
+      menuDescription: "신선한 소고기를 사용해 달콤짭짤하게 볶은 불고기 덮밥입니다.",
+      menuImage: "https://lastnyam.co.kr/images/menu/bulgogi_rice.jpg",
+      menuPrice: 9500,
+      categoryName: "김밥/분식"
+    },
+    {
+      menuId: 3,
+      menuName: "떡볶이",
+      menuDescription: "쫄깃한 떡과 매콤한 양념이 일품인 떡볶이입니다.",
+      menuImage: "https://lastnyam.co.kr/images/menu/tteokbokki.jpg",
+      menuPrice: 6000,
+      categoryName: "김밥/분식"
+    },
+    {
+      menuId: 4,
+      menuName: "김치찌개",
+      menuDescription: "얼큰하고 시원한 김치찌개입니다.",
+      menuImage: "https://lastnyam.co.kr/images/menu/kimchi_jjigae.jpg",
+      menuPrice: 8000,
+      categoryName: "찌개/국물"
+    },
+    {
+      menuId: 5,
+      menuName: "된장찌개",
+      menuDescription: "구수한 된장으로 끓인 된장찌개입니다.",
+      menuImage: "https://lastnyam.co.kr/images/menu/doenjang_jjigae.jpg",
+      menuPrice: 7500,
+      categoryName: "찌개/국물"
+    },
+    {
+      menuId: 6,
+      menuName: "제육볶음",
+      menuDescription: "고소한 돼지고기 볶음 요리입니다.",
+      menuImage: "https://lastnyam.co.kr/images/menu/jeyuk_bokkeum.jpg",
+      menuPrice: 12000,
+      categoryName: "메인요리"
+    },
+  ];
+
+  // 카테고리별로 메뉴 그룹화
+  const menusByCategory = menuData.reduce((acc, menu) => {
+    if (!acc[menu.categoryName]) {
+      acc[menu.categoryName] = [];
+    }
+    acc[menu.categoryName].push(menu);
+    return acc;
+  }, {} as Record<string, Menu[]>);
+
+  const categories = Object.keys(menusByCategory);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    // 로딩 시뮬레이션
+    setTimeout(() => {
+      setLoading(false);
+      alert('제출되었습니다!');
+    }, 2000);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ko-KR').format(price);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-8 space-y-8">
+      <h1 className="text-3xl font-bold mb-8">컴포넌트 테스트 페이지</h1>
+
+      {/* Accordion 섹션 - 메뉴 카테고리별 표시 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">Accordion 컴포넌트 (메뉴 예제)</h2>
+        <div className="rounded-lg">
+          <Accordion type="multiple" className="w-full">
+            {categories.map((category, index) => {
+              const menus = menusByCategory[category];
+              return (
+                <AccordionItem key={category} value={`category-${index}`}>
+                  <AccordionTrigger items={menus}>{category}</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3">
+                      {menus.map((menu) => (
+                        <div key={menu.menuId} className="border rounded-md p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-1">{menu.menuName}</h3>
+                              <p className="text-sm text-gray-600 mb-2">{menu.menuDescription}</p>
+                              <p className="text-base font-medium text-orange-600">
+                                {formatPrice(menu.menuPrice)}원
+                              </p>
+                            </div>
+                            {menu.menuImage && (
+                              <img 
+                                src={menu.menuImage} 
+                                alt={menu.menuName}
+                                className="w-20 h-20 object-cover rounded-md"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* Input 섹션 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">Input 컴포넌트</h2>
+        
+        {/* Variant 및 Unit 예시 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Variant 및 Unit 예시</h3>
+            
+            {/* Filled 상태 */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">filled 상태</h4>
+              <div className="space-y-2">
+                <Input
+                  placeholder="입력해보시지"
+                  variant="filled"
+                />
+                <Input
+                  placeholder="text"
+                  variant="filled"
+                  unit="원"
+                />
+              </div>
+            </div>
+
+            {/* Disabled 상태 */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">disabled 상태</h4>
+              <div className="space-y-2">
+                <Input
+                  placeholder="text"
+                  variant="disabled"
+                />
+                <Input
+                  placeholder="text"
+                  variant="disabled"
+                  unit="원"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Size 예시 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Size 예시</h3>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">small (sm) 사이즈</h4>
+              <div className="space-y-2">
+                <Input
+                  placeholder="작은 사이즈 입력"
+                  size="sm"
+                  variant="filled"
+                />
+                <Input
+                  placeholder="작은 사이즈 + 단위"
+                  size="sm"
+                  variant="filled"
+                  unit="원"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">medium (md) 사이즈 (기본값)</h4>
+              <div className="space-y-2">
+                <Input
+                  placeholder="기본 사이즈 입력"
+                  size="md"
+                  variant="filled"
+                />
+                <Input
+                  placeholder="기본 사이즈 + 단위"
+                  size="md"
+                  variant="filled"
+                  unit="원"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">Size 비교</h4>
+              <div className="space-y-2">
+                <Input
+                  placeholder="small 사이즈"
+                  size="sm"
+                  variant="filled"
+                />
+                <Input
+                  placeholder="medium 사이즈 (기본)"
+                  size="md"
+                  variant="filled"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 기본 폼 예제 */}
+        <form onSubmit={handleSubmit} className="space-y-4 border rounded-lg p-6">
+          <div className="space-y-2">
+            <label htmlFor="name" className="block text-sm font-medium">
+              이름
+            </label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="이름을 입력하세요"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-medium">
+              이메일
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="email@example.com"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-medium">
+              비밀번호
+            </label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="비밀번호를 입력하세요"
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="phone" className="block text-sm font-medium">
+              전화번호
+            </label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="010-1234-5678"
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="price" className="block text-sm font-medium">
+              가격 (원 단위 예시)
+            </label>
+            <Input
+              id="price"
+              type="number"
+              placeholder="가격을 입력하세요"
+              unit="원"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="description" className="block text-sm font-medium">
+              설명
+            </label>
+            <Input
+              id="description"
+              type="text"
+              placeholder="추가 설명을 입력하세요"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="number" className="block text-sm font-medium">
+              숫자 입력
+            </label>
+            <Input
+              id="number"
+              type="number"
+              placeholder="숫자를 입력하세요"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="date" className="block text-sm font-medium">
+              날짜 선택
+            </label>
+            <Input
+              id="date"
+              type="date"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="time" className="block text-sm font-medium">
+              시간 선택 (기본)
+            </label>
+            <Input
+              id="time"
+              type="time"
+              placeholder="시간을 선택하세요"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="custom-time" className="block text-sm font-medium">
+              커스텀 시간 입력 (시/분/AM-PM 분리)
+            </label>
+            <TimeInput
+              value={timeValue}
+              onChange={(value) => {
+                console.log('시간 입력 (기본):', value);
+                setTimeValue(value);
+              }}
+            />
+            {timeValue && (
+              <p className="text-sm text-gray-600">선택된 시간: {timeValue}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="custom-time-30" className="block text-sm font-medium">
+              커스텀 시간 입력 (30분 단위)
+            </label>
+            <TimeInput
+              value={timeValue30}
+              onChange={(value) => {
+                console.log('시간 입력 (30분 단위):', value);
+                setTimeValue30(value);
+              }}
+              interval30={true}
+            />
+            {timeValue30 && (
+              <p className="text-sm text-gray-600">선택된 시간: {timeValue30}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="datetime" className="block text-sm font-medium">
+              날짜 및 시간 선택
+            </label>
+            <Input
+              id="datetime"
+              type="datetime-local"
+              placeholder="날짜와 시간을 선택하세요"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Spinner className="size-5" />
+                <span>제출 중...</span>
+              </>
+            ) : (
+              '제출하기'
+            )}
+          </button>
+        </form>
+      </section>
+
+      {/* ImageUpload 섹션 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">ImageUpload 컴포넌트</h2>
+        <div className="border rounded-lg p-6 space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">기본 예시</h3>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">Filled 상태</h4>
+              <ImageUpload
+                value={imageFile}
+                onChange={(file) => {
+                  console.log('이미지 업로드:', file);
+                  setImageFile(file);
+                }}
+                variant="filled"
+              />
+            </div>
+
+          </div>
+
+          {/* 실제 사용 예시 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">실제 사용 예시</h3>
+            <div className="space-y-4">
+              <ImageUpload
+                value={imageFile}
+                onChange={(file) => {
+                  console.log('선택된 이미지:', file);
+                  setImageFile(file);
+                }}
+                variant="filled"
+                maxSize={10 * 1024 * 1024} // 10MB
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DescriptionInput 섹션 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">DescriptionInput 컴포넌트</h2>
+        <div className="border rounded-lg p-6 space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">기본 예시</h3>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">Label만 있는 경우</h4>
+              <DescriptionInput
+                label="메뉴 설명"
+                placeholder="메뉴에 대한 상세 설명을 입력하세요"
+                variant="filled"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">Label과 Description이 있는 경우</h4>
+              <DescriptionInput
+                label="상품 설명"
+                description="최대 500자까지 입력 가능합니다. 상품의 특징과 장점을 자세히 설명해주세요."
+                placeholder="상품에 대한 상세 설명을 입력하세요"
+                variant="filled"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">Disabled 상태</h4>
+              <DescriptionInput
+                label="비활성화된 설명 입력"
+                description="이 입력란은 비활성화되어 있습니다."
+                placeholder="입력할 수 없습니다"
+                variant="disabled"
+                value="이미 입력된 텍스트입니다."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-600">Filled 상태</h4>
+              <DescriptionInput
+                label="활성화된 설명 입력"
+                description="자유롭게 입력할 수 있습니다."
+                placeholder="여기에 설명을 입력하세요"
+                variant="filled"
+              />
+            </div>
+          </div>
+
+          {/* 실제 사용 예시 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">실제 사용 예시</h3>
+            <form className="space-y-4">
+              <DescriptionInput
+                label="메뉴 상세 설명"
+                description="고객에게 보여질 메뉴 설명을 입력해주세요. (최대 200자)"
+                placeholder="예: 신선한 재료로 만든 특제 양념의 불고기 덮밥입니다. 부드러운 고기와 달콤한 양념이 잘 어우러져 맛있습니다."
+                variant="filled"
+                maxLength={200}
+              />
+              
+              <DescriptionInput
+                label="영업 시간 안내"
+                description="영업 시간과 휴무일 등 안내 사항을 입력해주세요."
+                placeholder="예: 평일 09:00 - 21:00, 주말 10:00 - 22:00"
+                variant="filled"
+              />
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Spinner 섹션 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">Spinner 컴포넌트</h2>
+        <div className="border rounded-lg p-6 space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">기본 스피너</h3>
+            <div className="flex items-center gap-4">
+              <Spinner />
+              <span className="text-gray-600">로딩 중...</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">다양한 크기의 스피너</h3>
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col items-center gap-2">
+                <Spinner className="size-4" />
+                <span className="text-xs text-gray-600">작은 크기</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Spinner className="size-6" />
+                <span className="text-xs text-gray-600">중간 크기</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Spinner className="size-8" />
+                <span className="text-xs text-gray-600">큰 크기</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Spinner className="size-12" />
+                <span className="text-xs text-gray-600">매우 큰 크기</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">버튼 내 스피너</h3>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  setTimeout(() => setLoading(false), 2000);
+                }}
+                disabled={loading}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading && <Spinner className="size-4" />}
+                <span>데이터 로드</span>
+              </button>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  setTimeout(() => setLoading(false), 2000);
+                }}
+                disabled={loading}
+                className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading && <Spinner className="size-4" />}
+                <span>저장하기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 통합 예제 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">통합 예제</h2>
+        <div className="border rounded-lg p-6">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="integrated-1">
+              <AccordionTrigger>폼 데이터 확인</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">입력된 이름</label>
+                    <Input
+                      type="text"
+                      value={formData.name}
+                      readOnly
+                      className="bg-gray-50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">입력된 이메일</label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      readOnly
+                      className="bg-gray-50"
+                    />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </section>
+    </div>
+  );
+}
+

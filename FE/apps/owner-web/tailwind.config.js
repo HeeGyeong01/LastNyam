@@ -7,6 +7,10 @@ export default {
     plugins: [require("tailwindcss-animate")],
     theme: {
     	extend: {
+    		spacing: {
+    			'25': '6.25rem', // 100px
+    			'30': '7.5rem',  // 120px
+    		},
     		borderRadius: {
     			lg: 'var(--radius)',
     			md: 'calc(var(--radius) - 2px)',
