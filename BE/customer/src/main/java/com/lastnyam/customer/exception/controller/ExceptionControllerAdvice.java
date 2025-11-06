@@ -27,27 +27,26 @@ public class ExceptionControllerAdvice {
 
     @ExceptionHandler(com.lastnyam.common.exception.BusinessException.class)
     public ResponseEntity<ApiResponse<?>> baseExceptionHandler(com.lastnyam.common.exception.BusinessException e) {
-        ApiResponse<Object> body = ApiResponse.ofFail(e.getCode(), e.getMessage());
+        ApiResponse<Object> body = ApiResponse.ofFail(e.getCode().getCode(), e.getCode().getMessage());
 
         if (e instanceof ResourceNotFoundException) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+            return ResponseEntity.status(e.getCode().getStatus()).body(body);
         }
 
         if (e instanceof NoAuthorityException) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+            return ResponseEntity.status(e.getCode().getStatus()).body(body);
         }
 
         if (e instanceof InternalServerException) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+            return ResponseEntity.status(e.getCode().getStatus()).body(body);
         }
 
         if (e instanceof BadRequestException) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+            return ResponseEntity.status(e.getCode().getStatus()).body(body);
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.status(e.getCode().getStatus()).body(body);
     }
-
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
@@ -111,7 +110,6 @@ public class ExceptionControllerAdvice {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleUnexpectedException(Exception ex, HttpServletRequest request) {
         log.error("예상치 못한 예외가 발생하였습니다: {}", ex.getMessage(), ex);
@@ -119,6 +117,5 @@ public class ExceptionControllerAdvice {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.ofError(500, "서버 내부 오류가 발생했습니다. 관리자에게 문의해 주세요."));
     }
-
 
 }
