@@ -19,7 +19,7 @@ public class DiscountController {
     private final DiscountService discountService;
 
     // 마감세일 등록
-    @PostMapping("/{ownerId}/shops/{shopId}/discounts")
+    @PostMapping("/{ownerId}/shop/{shopId}/discount")
     public ResponseEntity<ApiResponse<DiscountCreateResponse>> createDiscount(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
@@ -30,7 +30,7 @@ public class DiscountController {
     }
     
     // 현재 진행중인 마감세일 조회
-    @GetMapping("/{ownerId}/shops/{shopId}/discounts")
+    @GetMapping("/{ownerId}/shop/{shopId}/discount")
     public ResponseEntity<ApiResponse<DiscountListResponse>> getActiveDiscounts(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,

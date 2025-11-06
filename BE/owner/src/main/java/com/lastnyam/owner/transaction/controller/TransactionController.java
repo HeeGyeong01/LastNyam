@@ -20,7 +20,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     // 주문 상태 변경
-    @PatchMapping("/{ownerId}/transactions/{transactionId}/status")
+    @PatchMapping("/{ownerId}/transaction/{transactionId}/status")
     public ResponseEntity<ApiResponse<TransactionStatusUpdateResponse>> updateTransactionStatus(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
@@ -31,7 +31,7 @@ public class TransactionController {
     }
 
     // 주문 상세 조회
-    @GetMapping("/{ownerId}/transactions/{transactionId}")
+    @GetMapping("/{ownerId}/transaction/{transactionId}")
     public ResponseEntity<ApiResponse<TransactionDetailResponse>> getTransactionDetail(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
@@ -42,7 +42,7 @@ public class TransactionController {
     }
     
     // 주문 상태 마감세일/푸켓팅 조회 (노쇼, 픽업완료 제외)
-    @GetMapping("/{ownerId}/shops/{shopId}/transactions")
+    @GetMapping("/{ownerId}/shop/{shopId}/transaction")
     public ResponseEntity<ApiResponse<TransactionListResponse>> getActiveTransactions(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
