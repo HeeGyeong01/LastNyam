@@ -5,10 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+@SpringBootApplication(scanBasePackages = "com.lastnyam")
 @EnableJpaAuditing
-@SpringBootApplication
 @EntityScan(basePackages = "com.lastnyam.database.entity")
-
 public class CustomerApplication {
 
     public static void main(String[] args) {
