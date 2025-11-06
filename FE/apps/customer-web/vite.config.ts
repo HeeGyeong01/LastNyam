@@ -10,7 +10,8 @@ export default defineConfig({
       "@/components": path.resolve(__dirname, "./src/components"),
       "@/lib": path.resolve(__dirname, "./src/lib"),
       "@/hooks": path.resolve(__dirname, "./src/hooks"),
-      "@shared": path.resolve(__dirname, "../../shared"),
+      "@shared": path.resolve(__dirname, "../../shared/src"),
+      "@shared/*": path.resolve(__dirname, "../../shared/src/*"),
     },
   },
 })
