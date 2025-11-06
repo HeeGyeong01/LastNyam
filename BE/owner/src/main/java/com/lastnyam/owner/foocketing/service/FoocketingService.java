@@ -2,10 +2,14 @@ package com.lastnyam.owner.foocketing.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import com.lastnyam.owner.foocketing.exception.FoocketingErrorCode;
 import com.lastnyam.owner.foocketing.exception.FoocketingException;
 import com.lastnyam.owner.foocketing.repository.FoocketingRepository;
+import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.owner.exception.OwnerException;
+import com.lastnyam.owner.shop.exception.ShopErrorCode;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import com.lastnyam.owner.shop.repository.ShopRepository;
 import org.springframework.stereotype.Service;
@@ -22,6 +26,7 @@ import com.lastnyam.owner.foocketing.dto.FoocketingListResponse;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,30 +38,51 @@ public class FoocketingService {
 	private final FoocketingRepository foocketingRepository;
 
 	@Transactional
-	public FoocketingCreateResponse createFoocketing(Integer ownerId, Integer shopId, FoocketingCreateRequest request) {
+	public FoocketingCreateResponse createFoocketing(Integer userId, Integer ownerId, Integer shopId, FoocketingCreateRequest request) {
+		checkPermission(userId, ownerId);
+		
 		// 가게 확인 및 점주 권한 확인
 		Shop shop = shopRepository.findById(shopId)
-			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.SHOP_NOT_FOUND));
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
 
 		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-			throw new FoocketingException(FoocketingErrorCode.NOT_SHOP_OWNER);
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
 		}
 
 		// 메뉴 확인
 		Menu menu = menuRepository.findById(request.getMenuId())
-			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.MENU_NOT_FOUND));
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.MENU_NOT_FOUND));
 
 		if (!menu.getShop().getShopId().equals(shopId)) {
-			throw new FoocketingException(FoocketingErrorCode.MENU_NOT_IN_SHOP);
+			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
 		}
 
 		// 가게 마감 / 픽업 마감 시간 계산
-		LocalDate now = LocalDate.now();
-		LocalDateTime closeTime = LocalDateTime.of(now, shop.getShopCloses());
-		LocalDateTime pickupEndTime = LocalDateTime.of(now, shop.getShopPickupEndTime());
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime closeTime = calculateTargetTime(now, shop.getShopCloses());
+		LocalDateTime pickupEndTime = calculateTargetTime(now, shop.getShopPickupEndTime());
+
+		// 픽업 마감 시간이 현재 시간보다 이전이면 주문 불가
+		if (pickupEndTime.isBefore(now) || pickupEndTime.isEqual(now)) {
+			throw new FoocketingException(FoocketingErrorCode.PICKUP_TIME_PASSED);
+		}
+
+		// 푸켓팅 시간 계산 (LocalTime -> LocalDateTime)
+		LocalTime foocketingTimeInput = request.getFoocketingTime();
+		LocalDateTime foocketingTime = calculateTargetTime(now, foocketingTimeInput);
+		
+		// 푸켓팅 시간이 현재 시간보다 이전이면 안됨
+		if (foocketingTime.isBefore(now) || foocketingTime.isEqual(now)) {
+			throw new FoocketingException(FoocketingErrorCode.INVALID_FOOCKETING_TIME);
+		}
+		
+		// 푸켓팅 시간이 픽업 마감 시간 이후면 안됨
+		if (foocketingTime.isAfter(pickupEndTime)) {
+			throw new FoocketingException(FoocketingErrorCode.FOOCKETING_TIME_AFTER_PICKUP_END);
+		}
 
 		Foocketing foocketing = Foocketing.builder()
-			.foocketingTime(request.getFoocketingTime())
+			.foocketingTime(foocketingTime)
 			.foocketingAmount(request.getFoocketingAmount())
 			.foocketingCloseTime(closeTime)
 			.foocketingPickupEndTime(pickupEndTime)
@@ -71,21 +97,20 @@ public class FoocketingService {
 	}
 
 	@Transactional(readOnly = true)
-	public FoocketingListResponse getActiveFoocketings(Integer ownerId, Integer shopId) {
+	public FoocketingListResponse getActiveFoocketings(Integer userId, Integer ownerId, Integer shopId) {
+		checkPermission(userId, ownerId);
+		
 		// 가게 확인 및 점주 권한 확인
 		Shop shop = shopRepository.findById(shopId)
-			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.SHOP_NOT_FOUND));
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
 		
 		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-			throw new FoocketingException(FoocketingErrorCode.NOT_SHOP_OWNER);
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
 		}
 
-		// 오늘 날짜의 푸켓팅 조회
+		// 활성화된 푸켓팅 조회 (픽업 마감 시간이 현재 이후인 것만)
 		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
-		LocalDateTime endOfDay = startOfDay.plusDays(1);
-		
-		List<Foocketing> foocketings = foocketingRepository.findByShopIdAndToday(shopId, startOfDay, endOfDay);
+		List<Foocketing> foocketings = foocketingRepository.findActiveByShopId(shopId, now);
 
 		// DTO로 변환
 		List<FoocketingGetResponse> foocketingList = foocketings.stream()
@@ -108,5 +133,26 @@ public class FoocketingService {
 		return FoocketingListResponse.builder()
 			.foocketings(foocketingList)
 			.build();
+	}
+
+	/**
+	 * 현재 시간과 목표 시간(LocalTime)을 비교하여 적절한 LocalDateTime을 반환
+	 * 목표 시간이 현재 시간보다 이전이면 다음날로 설정
+	 */
+	private LocalDateTime calculateTargetTime(LocalDateTime now, LocalTime targetTime) {
+		LocalDateTime targetDateTime = LocalDateTime.of(now.toLocalDate(), targetTime);
+		
+		// 목표 시간이 현재 시간보다 이전이면 다음날로 설정
+		if (targetDateTime.isBefore(now) || targetDateTime.isEqual(now)) {
+			targetDateTime = targetDateTime.plusDays(1);
+		}
+		
+		return targetDateTime;
+	}
+
+	private static void checkPermission(Integer userId, Integer ownerId) {
+		if (!Objects.equals(userId, ownerId)) {
+			throw new OwnerException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+		}
 	}
 }

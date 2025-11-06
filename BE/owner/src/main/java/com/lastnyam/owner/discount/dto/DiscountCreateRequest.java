@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DiscountCreateRequest {
-    private Integer discountRate;
     private Integer discountPrice;
     private Integer discountMenuAmount;
     private Integer menuId;

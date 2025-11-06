@@ -2,6 +2,7 @@ package com.lastnyam.owner.owner.service;
 
 import com.lastnyam.database.entity.Owner;
 import com.lastnyam.database.entity.Shop;
+import com.lastnyam.owner.owner.dto.OwnerDetailResponse;
 import com.lastnyam.owner.owner.dto.OwnerRegisterRequest;
 import com.lastnyam.owner.owner.dto.ShopDetailResponse;
 import com.lastnyam.owner.owner.dto.ShopListResponse;
@@ -44,7 +45,9 @@ public class OwnerService {
     }
 
     @Transactional(readOnly = true)
-    public ShopListResponse getOwnerShops(Integer ownerId) {
+    public ShopListResponse getOwnerShops(Integer userId, Integer ownerId) {
+        checkPermission(userId, ownerId);
+
         // 점주 확인
         Owner owner = ownerRepository.findById(ownerId)
                 .orElseThrow(() -> new OwnerException(OwnerErrorCode.OWNER_NOT_FOUND));
@@ -52,23 +55,38 @@ public class OwnerService {
         // 점주의 가게 목록 조회
         List<Shop> shops = shopRepository.findByOwnerId(ownerId);
 
-        // DTO로 변환
-        List<ShopDetailResponse> shopList = shops.stream()
-                .map(shop -> ShopDetailResponse.builder()
-                        .shopId(shop.getShopId())
-                        .shopName(shop.getShopName())
-                        .shopLat(shop.getShopLat())
-                        .shopLng(shop.getShopLng())
-                        .shopDescription(shop.getShopDescription())
-                        .shopBanner(shop.getShopBanner())
-                        .shopCloses(shop.getShopCloses())
-                        .shopPickupEndTime(shop.getShopPickupEndTime())
-                        .categoryName(shop.getFoodCategory().getCategoryName())
-                        .build())
-                .collect(Collectors.toList());
+        		// DTO로 변환
+		List<ShopDetailResponse> shopList = shops.stream()
+				.map(shop -> ShopDetailResponse.builder()
+						.shopId(shop.getShopId())
+						.shopName(shop.getShopName())
+						.shopLat(shop.getShopLat())
+						.shopLng(shop.getShopLng())
+						.shopAddress(shop.getShopAddress())
+						.shopDescription(shop.getShopDescription())
+						.shopBanner(shop.getShopBanner())
+						.shopCloses(shop.getShopCloses())
+						.shopPickupEndTime(shop.getShopPickupEndTime())
+						.categoryName(shop.getFoodCategory().getCategoryName())
+						.build())
+				.collect(Collectors.toList());
         
         return ShopListResponse.builder()
                 .shops(shopList)
                 .build();
+    }
+
+    public OwnerDetailResponse getProfile(Integer ownerId) {
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new OwnerException(OwnerErrorCode.OWNER_NOT_FOUND));
+        return OwnerDetailResponse.builder()
+                .ownerId(owner.getOwnerId())
+                .build();
+    }
+
+    private static void checkPermission(Integer userId, Integer ownerId) {
+        if (!userId.equals(ownerId)) {
+            throw new OwnerException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+        }
     }
 }

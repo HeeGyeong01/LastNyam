@@ -16,6 +16,7 @@ public class ShopDetailResponse {
     private String shopName;
     private Double shopLat;
     private Double shopLng;
+    private String shopAddress;
     private String shopDescription;
     private String shopBanner;
     private LocalTime shopCloses;
