@@ -7,9 +7,11 @@ import com.lastnyam.owner.discount.dto.DiscountCreateRequest;
 import com.lastnyam.owner.discount.dto.DiscountCreateResponse;
 import com.lastnyam.owner.discount.dto.DiscountGetResponse;
 import com.lastnyam.owner.discount.dto.DiscountListResponse;
-import com.lastnyam.owner.discount.exception.DiscountErrorCode;
 import com.lastnyam.owner.discount.exception.DiscountException;
 import com.lastnyam.owner.discount.repository.DiscountRepository;
+import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.shop.exception.ShopErrorCode;
+import com.lastnyam.owner.shop.exception.ShopException;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import com.lastnyam.owner.shop.repository.ShopRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,19 +33,21 @@ public class DiscountService {
     private final DiscountRepository discountRepository;
 
     @Transactional
-    public DiscountCreateResponse createDiscount(Integer ownerId, Integer shopId, DiscountCreateRequest request) {
+    public DiscountCreateResponse createDiscount(Integer userId, Integer ownerId, Integer shopId, DiscountCreateRequest request) {
+        checkPermission(userId, ownerId);
+        
         // 가게 확인 및 점주 권한 확인
         Shop shop = shopRepository.findById(shopId)
-                .orElseThrow(() -> new DiscountException(DiscountErrorCode.SHOP_NOT_FOUND));
+                .orElseThrow(() -> new DiscountException(ShopErrorCode.SHOP_NOT_FOUND));
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new DiscountException(DiscountErrorCode.NOT_SHOP_OWNER);
+            throw new DiscountException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
         // 메뉴 확인
         Menu menu = menuRepository.findById(request.getMenuId())
-                .orElseThrow(() -> new DiscountException(DiscountErrorCode.MENU_NOT_FOUND));
+                .orElseThrow(() -> new DiscountException(ShopErrorCode.MENU_NOT_FOUND));
         if (!menu.getShop().getShopId().equals(shopId)) {
-                throw new DiscountException(DiscountErrorCode.MENU_NOT_IN_SHOP);
+                throw new DiscountException(ShopErrorCode.MENU_NOT_IN_SHOP);
         }
 
         // 가게 마감 / 픽업 마감 시간 계산
@@ -68,12 +73,14 @@ public class DiscountService {
     }
 
     @Transactional(readOnly = true)
-    public DiscountListResponse getActiveDiscounts(Integer ownerId, Integer shopId) {
+    public DiscountListResponse getActiveDiscounts(Integer userId, Integer ownerId, Integer shopId) {
+        checkPermission(userId, ownerId);
+        
         // 가게 확인 및 점주 권한 확인
         Shop shop = shopRepository.findById(shopId)
-                .orElseThrow(() -> new DiscountException(DiscountErrorCode.SHOP_NOT_FOUND));
+                .orElseThrow(() -> new DiscountException(ShopErrorCode.SHOP_NOT_FOUND));
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new DiscountException(DiscountErrorCode.NOT_SHOP_OWNER);
+            throw new DiscountException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
         // 오늘 날짜의 마감세일 조회
@@ -103,5 +110,11 @@ public class DiscountService {
         return DiscountListResponse.builder()
                 .discounts(discountList)
                 .build();
+    }
+
+    private static void checkPermission(Integer userId, Integer ownerId) {
+        if (!Objects.equals(userId, ownerId)) {
+            throw new ShopException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+        }
     }
 }

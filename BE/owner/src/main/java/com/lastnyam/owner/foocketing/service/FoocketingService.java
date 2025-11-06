@@ -3,9 +3,10 @@ package com.lastnyam.owner.foocketing.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.lastnyam.owner.foocketing.exception.FoocketingErrorCode;
 import com.lastnyam.owner.foocketing.exception.FoocketingException;
 import com.lastnyam.owner.foocketing.repository.FoocketingRepository;
+import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.shop.exception.ShopErrorCode;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import com.lastnyam.owner.shop.repository.ShopRepository;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import com.lastnyam.owner.foocketing.dto.FoocketingListResponse;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,21 +35,23 @@ public class FoocketingService {
 	private final FoocketingRepository foocketingRepository;
 
 	@Transactional
-	public FoocketingCreateResponse createFoocketing(Integer ownerId, Integer shopId, FoocketingCreateRequest request) {
+	public FoocketingCreateResponse createFoocketing(Integer userId, Integer ownerId, Integer shopId, FoocketingCreateRequest request) {
+		checkPermission(userId, ownerId);
+		
 		// 가게 확인 및 점주 권한 확인
 		Shop shop = shopRepository.findById(shopId)
-			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.SHOP_NOT_FOUND));
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
 
 		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-			throw new FoocketingException(FoocketingErrorCode.NOT_SHOP_OWNER);
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
 		}
 
 		// 메뉴 확인
 		Menu menu = menuRepository.findById(request.getMenuId())
-			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.MENU_NOT_FOUND));
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.MENU_NOT_FOUND));
 
 		if (!menu.getShop().getShopId().equals(shopId)) {
-			throw new FoocketingException(FoocketingErrorCode.MENU_NOT_IN_SHOP);
+			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
 		}
 
 		// 가게 마감 / 픽업 마감 시간 계산
@@ -71,13 +75,15 @@ public class FoocketingService {
 	}
 
 	@Transactional(readOnly = true)
-	public FoocketingListResponse getActiveFoocketings(Integer ownerId, Integer shopId) {
+	public FoocketingListResponse getActiveFoocketings(Integer userId, Integer ownerId, Integer shopId) {
+		checkPermission(userId, ownerId);
+		
 		// 가게 확인 및 점주 권한 확인
 		Shop shop = shopRepository.findById(shopId)
-			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.SHOP_NOT_FOUND));
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
 		
 		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-			throw new FoocketingException(FoocketingErrorCode.NOT_SHOP_OWNER);
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
 		}
 
 		// 오늘 날짜의 푸켓팅 조회
@@ -108,5 +114,11 @@ public class FoocketingService {
 		return FoocketingListResponse.builder()
 			.foocketings(foocketingList)
 			.build();
+	}
+
+	private static void checkPermission(Integer userId, Integer ownerId) {
+		if (!Objects.equals(userId, ownerId)) {
+			throw new FoocketingException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+		}
 	}
 }

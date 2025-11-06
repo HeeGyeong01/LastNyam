@@ -8,6 +8,7 @@ import com.lastnyam.owner.foocketing.service.FoocketingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,19 +21,21 @@ public class FoocketingController {
     // 푸켓팅 등록
     @PostMapping("/{ownerId}/shops/{shopId}/foocketings")
     public ResponseEntity<ApiResponse<FoocketingCreateResponse>> createFoocketing(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
             @PathVariable("shopId") Integer shopId,
             @RequestBody FoocketingCreateRequest request) {
-        FoocketingCreateResponse result = foocketingService.createFoocketing(ownerId, shopId, request);
+        FoocketingCreateResponse result = foocketingService.createFoocketing(userId, ownerId, shopId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(result));
     }
 
     // 현재 진행중인 푸켓팅 조회
     @GetMapping("/{ownerId}/shops/{shopId}/foocketings")
     public ResponseEntity<ApiResponse<FoocketingListResponse>> getActiveFoocketings(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
             @PathVariable("shopId") Integer shopId) {
-        FoocketingListResponse result = foocketingService.getActiveFoocketings(ownerId, shopId);
+        FoocketingListResponse result = foocketingService.getActiveFoocketings(userId, ownerId, shopId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 
