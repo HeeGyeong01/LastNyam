@@ -2,8 +2,8 @@ package com.lastnyam.customer.foocketing.repository;
 
 import com.lastnyam.customer.foocketing.dto.CursorResponse;
 import com.lastnyam.customer.foocketing.dto.FoocketingBriefInfo;
-import com.lastnyam.customer.foocketing.dto.FoocketingBriefInfo.MenuInfo;
-import com.lastnyam.customer.foocketing.dto.FoocketingBriefInfo.ShopInfo;
+import com.lastnyam.customer.foocketing.dto.MenuInfo;
+import com.lastnyam.customer.foocketing.dto.ShopInfo;
 import com.lastnyam.customer.foocketing.dto.TimestampCursorInfo;
 import com.lastnyam.customer.foocketing.enums.SortType;
 import com.lastnyam.customer.foocketing.exception.FoocketingQueryException;

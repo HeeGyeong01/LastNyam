@@ -18,26 +18,7 @@ public class FoocketingBriefInfo {
     private ShopInfo shop;
 
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MenuInfo {
-        private String name;
-        private Integer price;
-        private String photoUrl;
-    }
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ShopInfo {
-        private String name;
-        private Double lat;
-        private Double lng;
-        private Double distance;
-        private Double rating;
-        private Integer ratingCount;
-    }
+
+
 }

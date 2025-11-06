@@ -23,6 +23,7 @@ dependencies {
     implementation project(':common')
     implementation project(':database')
     implementation project(':authentication')
+    implementation project(':redis')
 
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
