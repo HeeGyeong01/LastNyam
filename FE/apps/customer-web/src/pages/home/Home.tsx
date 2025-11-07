@@ -1,9 +1,16 @@
+import { Input } from '@shared/components/Input';
+import { HomeHeader } from '@/components/common';
+
 export default function Home() {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Home</h1>
-      <p>홈 페이지</p>
-    </div>
+    <>
+      <HomeHeader />
+      <div className="px-4">
+        <h1 className="text-2xl font-bold">Home</h1>
+        <Input placeholder="Search" />
+        <p>홈 페이지</p>
+      </div>
+    </>
   );
 }
 
