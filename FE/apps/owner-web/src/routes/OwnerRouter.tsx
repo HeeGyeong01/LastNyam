@@ -1,104 +1,121 @@
-import { createBrowserRouter } from 'react-router-dom';
-import App from '../App';
-import OwnerSettingPage from '../domains/settings/pages/OwnerSettingPage';
-import ReceiptConfirmPage from '../domains/orders/pages/ReceiptConfirmPage';
-import OrderListPage from '../domains/orders/pages/OrderListPage';
-import QRScanPage from '../domains/orders/pages/QRScanPage';
-import ReportPage from '../domains/insights/pages/ReportPage';
-import ManageMenuPage from '../domains/catalog/pages/ManageMenuPage';
-import ManageFoocketingPage from '../domains/catalog/pages/ManageFoocketingPage';
-import ManageCloseoutSalePage from '../domains/catalog/pages/ManageCloseoutSalePage';
-import SignUpPage from '../domains/auth/pages/SignUpPage';
-import LoginPage from '../domains/auth/pages/LoginPage';
-import StoreInformationStep1InputPage from '../domains/auth/pages/StoreInformation/StoreInformationStep1InputPage';
-import StoreInformationStep1DocumentPage from '../domains/auth/pages/StoreInformation/StoreInformationStep1DocumentPage';
-import StoreInformationStep2Page from '../domains/auth/pages/StoreInformation/StoreInformationStep2Page';
-import ComponentTestPage from '../domains/test/pages/ComponentTestPage';
-import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
+import { createBrowserRouter } from "react-router-dom";
+import App from "../App";
+import OwnerSettingPage from "../domains/settings/pages/OwnerSettingPage";
+import ReceiptConfirmPage from "../domains/orders/pages/ReceiptConfirmPage";
+import OrderListPage from "../domains/orders/pages/OrderListPage";
+import QRScanPage from "../domains/orders/pages/QRScanPage";
+import ReportPage from "../domains/insights/pages/ReportPage";
+import ManageMenuPage from "../domains/catalog/pages/ManageMenuPage";
+import ManageFoocketingPage from "../domains/catalog/pages/ManageFoocketingPage";
+import ManageCloseoutSalePage from "../domains/catalog/pages/ManageCloseoutSalePage";
+import SignUpPage from "../domains/auth/pages/SignUpPage";
+import LoginPage from "../domains/auth/pages/LoginPage";
+import StoreInformationStep1InputPage from "../domains/auth/pages/StoreInformation/StoreInformationStep1InputPage";
+import StoreInformationStep1DocumentPage from "../domains/auth/pages/StoreInformation/StoreInformationStep1DocumentPage";
+import StoreInformationStep2Page from "../domains/auth/pages/StoreInformation/StoreInformationStep2Page";
+import ComponentTestPage from "../domains/test/pages/ComponentTestPage";
+import HeaderFooterLayout from "../layouts/HeaderFooterLayout";
+import FooterOnlyLayout from "../layouts/FooterOnlyLayout";
+import QRScanLayout from "../layouts/QRScanLayout";
 
 const router = createBrowserRouter([
   {
-    path: '/owner',
+    path: "/owner",
     element: <App />,
     children: [
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "signup",
+        element: <SignUpPage />,
+      },
+      {
+        element: <FooterOnlyLayout />,
+        children: [
+          {
+            path: "orders",
+            children: [
+              {
+                path: "list",
+                element: <OrderListPage />,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        element: <QRScanLayout />,
+        children: [
+          {
+            path: "orders/qr-scan",
+            element: <QRScanPage />,
+          },
+        ],
+      },
       {
         element: <HeaderFooterLayout />,
         // element: <OwnerLayout />,
         children: [
           {
-            path: 'login',
-            element: <LoginPage />,
-          },
-          {
-            path: 'signup',
-            element: <SignUpPage />,
-          },
-          {
-            path: 'orders',
+            path: "orders",
             children: [
               {
-                path: 'list',
-                element: <OrderListPage />,
-              },
-              {
-                path: 'qr-scan',
-                element: <QRScanPage />,
-              },
-              {
-                path: 'receipt-confirm',
+                path: "receipt-confirm",
                 element: <ReceiptConfirmPage />,
               },
             ],
           },
           {
-            path: 'catalog',
+            path: "catalog",
             children: [
               {
-                path: 'menu',
+                path: "menu",
                 element: <ManageMenuPage />,
               },
               {
-                path: 'foocketing',
+                path: "foocketing",
                 element: <ManageFoocketingPage />,
               },
               {
-                path: 'closeout-sale',
+                path: "closeout-sale",
                 element: <ManageCloseoutSalePage />,
               },
             ],
           },
           {
-            path: 'insights',
+            path: "insights",
             children: [
               {
-                path: 'report',
+                path: "report",
                 element: <ReportPage />,
               },
             ],
           },
           {
-            path: 'settings',
+            path: "settings",
             element: <OwnerSettingPage />,
           },
           {
-            path: 'store-information',
+            path: "store-information",
             children: [
               {
-                path: 'step1-input',
+                path: "step1-input",
                 element: <StoreInformationStep1InputPage />,
               },
               {
-                path: 'step1-document',
+                path: "step1-document",
                 element: <StoreInformationStep1DocumentPage />,
               },
               {
-                path: 'step2',
+                path: "step2",
                 element: <StoreInformationStep2Page />,
               },
             ],
           },
           {
-            path: 'test',
+            path: "test",
             element: <ComponentTestPage />,
           },
         ],
@@ -108,4 +125,3 @@ const router = createBrowserRouter([
 ]);
 
 export default router;
-
