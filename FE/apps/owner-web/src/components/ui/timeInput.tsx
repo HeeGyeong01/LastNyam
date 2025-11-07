@@ -28,16 +28,20 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
     // value를 파싱하여 시, 분, AM/PM으로 분리
     const parseTime = (timeStr: string) => {
       if (!timeStr || !timeStr.includes(":")) {
-        return { hour: 12, minute: 0, period: "AM" as TimePeriod }
+        return { hour: null, minute: null, period: null as TimePeriod | null }
       }
-      
+
       const [hourStr, minuteStr] = timeStr.split(":")
       const hour24 = parseInt(hourStr, 10)
       const minute = parseInt(minuteStr, 10)
-      
+
+      if (Number.isNaN(hour24) || Number.isNaN(minute)) {
+        return { hour: null, minute: null, period: null as TimePeriod | null }
+      }
+
       let hour12 = hour24
       let period: TimePeriod = "AM"
-      
+
       if (hour24 === 0) {
         hour12 = 12
         period = "AM"
@@ -51,12 +55,15 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
         hour12 = hour24
         period = "AM"
       }
-      
+
       return { hour: hour12, minute, period }
     }
 
-    const isEmpty = !value || value.trim() === ""
-    const { hour, minute, period } = parseTime(value)
+    const [selectedHour, setSelectedHour] = React.useState<number | null>(() => parseTime(value).hour)
+    const [selectedMinute, setSelectedMinute] = React.useState<number | null>(() => parseTime(value).minute)
+    const [selectedPeriod, setSelectedPeriod] = React.useState<TimePeriod | null>(() => parseTime(value).period)
+
+    const ignoreEmptyEffectRef = React.useRef(false)
     
     // 시간, 분 옵션 생성
     const hours = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -75,50 +82,63 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
       return `${hour24.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
     }
 
-    const handleTimeChange = React.useCallback((newHour: number, newMinute: number, newPeriod: TimePeriod) => {
-      const timeString = to24Hour(newHour, newMinute, newPeriod)
-      onChange?.(timeString)
+    const updateTime = React.useCallback((hourValue: number | null, minuteValue: number | null, periodValue: TimePeriod | null) => {
+      setSelectedHour(hourValue)
+      setSelectedMinute(minuteValue)
+      setSelectedPeriod(periodValue)
+
+      const isComplete = hourValue !== null && minuteValue !== null && periodValue !== null
+
+      if (isComplete) {
+        ignoreEmptyEffectRef.current = false
+        const timeString = to24Hour(hourValue!, minuteValue!, periodValue!)
+        onChange?.(timeString)
+      } else {
+        ignoreEmptyEffectRef.current = true
+        onChange?.("")
+      }
     }, [onChange])
 
-    const handleHourSelect = (selectedHour: number) => {
-      handleTimeChange(selectedHour, minute, period)
+    const handleHourSelect = (hourValue: number) => {
+      updateTime(hourValue, selectedMinute, selectedPeriod)
       setOpenDropdown(null)
     }
 
-    const handleMinuteSelect = (selectedMinute: number) => {
-      handleTimeChange(hour, selectedMinute, period)
+    const handleMinuteSelect = (minuteValue: number) => {
+      updateTime(selectedHour, minuteValue, selectedPeriod)
       setOpenDropdown(null)
     }
 
-    const handlePeriodSelect = (selectedPeriod: TimePeriod) => {
-      handleTimeChange(hour, minute, selectedPeriod)
+    const handlePeriodSelect = (periodValue: TimePeriod) => {
+      updateTime(selectedHour, selectedMinute, periodValue)
       setOpenDropdown(null)
     }
 
     // 더블 클릭 핸들러
-    const handleDoubleClick = (type: "hour" | "minute" | "period") => {
+    const triggerInlineEdit = (type: "hour" | "minute" | "period") => {
       if (isDisabled) return
-      
+
+      setOpenDropdown(null)
       setEditMode(type)
       if (type === "hour") {
-        setEditValue(hour.toString())
+        setEditValue(selectedHour !== null ? selectedHour.toString() : "")
       } else if (type === "minute") {
-        setEditValue(minute.toString())
+        setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
       } else {
-        setEditValue(period)
+        setEditValue(selectedPeriod ?? "")
       }
+    }
+
+    const handleDoubleClick = (type: "hour" | "minute" | "period") => {
+      triggerInlineEdit(type)
     }
 
     // 텍스트 입력 완료 처리
     const handleEditComplete = React.useCallback((type: "hour" | "minute" | "period") => {
-      // 항상 최신 value를 파싱하여 사용
-      const currentTime = parseTime(value)
-      const { hour: currentHour, minute: currentMinute, period: currentPeriod } = currentTime
-      
       if (type === "hour") {
         const num = parseInt(editValue, 10)
         if (!isNaN(num) && num >= 1 && num <= 12) {
-          handleTimeChange(num, currentMinute, currentPeriod)
+          updateTime(num, selectedMinute, selectedPeriod)
         }
       } else if (type === "minute") {
         const num = parseInt(editValue, 10)
@@ -129,17 +149,17 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
           } else {
             validMinute = Math.max(0, Math.min(59, num))
           }
-          handleTimeChange(currentHour, validMinute, currentPeriod)
+          updateTime(selectedHour, validMinute, selectedPeriod)
         }
       } else {
         if (editValue.toUpperCase() === "AM" || editValue.toUpperCase() === "PM") {
-          handleTimeChange(currentHour, currentMinute, editValue.toUpperCase() as TimePeriod)
+          updateTime(selectedHour, selectedMinute, editValue.toUpperCase() as TimePeriod)
         }
       }
-      
+
       setEditMode(null)
       setEditValue("")
-    }, [value, editValue, interval30, handleTimeChange])
+    }, [editValue, interval30, updateTime, selectedHour, selectedMinute, selectedPeriod])
 
     // 외부 클릭 시 드롭다운 닫기
     React.useEffect(() => {
@@ -173,6 +193,29 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
 
     const isDisabled = variant === "disabled" || disabled
 
+    const isHourEmpty = selectedHour === null
+    const isMinuteEmpty = selectedMinute === null
+    const isPeriodEmpty = selectedPeriod === null
+
+    React.useEffect(() => {
+      if (!value || value.trim() === "") {
+        if (ignoreEmptyEffectRef.current) {
+          ignoreEmptyEffectRef.current = false
+          return
+        }
+        setSelectedHour(null)
+        setSelectedMinute(null)
+        setSelectedPeriod(null)
+        return
+      }
+
+      const parsed = parseTime(value)
+      setSelectedHour(parsed.hour)
+      setSelectedMinute(parsed.minute)
+      setSelectedPeriod(parsed.period)
+      ignoreEmptyEffectRef.current = false
+    }, [value])
+
     return (
       <div ref={containerRef} className={cn("flex items-center", className)}>
         {/* 기본 time input (숨김) */}
@@ -188,82 +231,96 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
         <div className="flex items-center gap-1">
           {/* 시 드롭다운 */}
           <div className="relative">
-          {editMode === "hour" ? (
-            <input
-              ref={hourInputRef}
-              type="text"
-              value={editValue}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "")
-                setEditValue(val)
-              }}
-              onBlur={() => handleEditComplete("hour")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleEditComplete("hour")
-                } else if (e.key === "Escape") {
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isDisabled) {
+                if (openDropdown === "hour") {
+                  setOpenDropdown(null)
+                } else {
+                  setOpenDropdown("hour")
                   setEditMode(null)
-                  setEditValue("")
                 }
-              }}
-              className={cn(
-                "h-9 px-3 border-b border-input bg-transparent text-base text-center inline-block min-w-[3.5rem]",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                variant === "filled" && "bg-bg-1 text-primary border-subtle",
-                variant === "disabled" && "bg-bg-3 text-tertiary border-subtle"
-              )}
-            />
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (!isDisabled) {
-                    setOpenDropdown(openDropdown === "hour" ? null : "hour")
+              }
+            }}
+            onDoubleClick={() => {
+              if (!isDisabled) {
+                setEditMode("hour")
+                setEditValue(selectedHour !== null ? selectedHour.toString() : "")
+              }
+            }}
+            onTouchStart={() => {
+              if (!isDisabled) {
+                setOpenDropdown(null)
+                setEditMode("hour")
+                setEditValue(selectedHour !== null ? selectedHour.toString() : "")
+              }
+            }}
+            disabled={isDisabled}
+            className={cn(
+              "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              variant === "filled" && "bg-bg-1 border-subtle",
+              variant === "filled" && (isHourEmpty ? "text-subtle" : "text-primary"),
+              variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
+              openDropdown === "hour" && editMode !== "hour" && "ring-1 ring-ring"
+            )}
+          >
+            {editMode === "hour" ? (
+              <input
+                ref={hourInputRef}
+                type="text"
+                value={editValue}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "")
+                  setEditValue(val)
+                }}
+                onBlur={() => handleEditComplete("hour")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleEditComplete("hour")
+                  } else if (e.key === "Escape") {
+                    setEditMode(null)
+                    setEditValue("")
                   }
                 }}
-                onDoubleClick={() => handleDoubleClick("hour")}
-                disabled={isDisabled}
                 className={cn(
-                  "h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
-                  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  "disabled:cursor-not-allowed disabled:opacity-50",
-                  variant === "filled" && "bg-bg-1 border-subtle",
-                  variant === "filled" && isEmpty && "text-subtle",
-                  variant === "filled" && !isEmpty && "text-primary",
-                  variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
-                  openDropdown === "hour" && "ring-1 ring-ring"
+                  "w-full h-full border-none bg-transparent text-base text-center",
+                  "focus-visible:outline-none focus-visible:ring-0",
+                  variant === "filled" && "text-primary",
+                  variant === "disabled" && "text-tertiary"
                 )}
-              >
-                {isEmpty ? "00" : hour.toString().padStart(2, "0")}
-              </button>
-              
-              {openDropdown === "hour" && !isDisabled && (
-                <div
-                className="absolute left-0 z-50 mt-1 bg-white border border-subtle rounded-md shadow-lg max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span>{isHourEmpty ? "HH" : selectedHour?.toString().padStart(2, "0")}</span>
+            )}
+          </button>
+
+          {openDropdown === "hour" && editMode !== "hour" && !isDisabled && (
+            <div
+              className="absolute left-0 z-50 mt-1 bg-white border border-subtle rounded-md shadow-lg max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {hours.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleHourSelect(h)
+                  }}
+                  className={cn(
+                    "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
+                    "hover:bg-bg-2",
+                    selectedHour === h && "bg-brand-bg-3 text-brand"
+                  )}
                 >
-                  {hours.map((h) => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleHourSelect(h)
-                      }}
-                      className={cn(
-                        "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
-                        "hover:bg-bg-2",
-                        hour === h && "bg-brand-bg-3 text-brand"
-                      )}
-                    >
-                      {h.toString().padStart(2, "0")}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
+                  {h.toString().padStart(2, "0")}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -273,83 +330,97 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
 
           {/* 분 드롭다운 */}
           <div className="relative">
-          {editMode === "minute" ? (
-            <input
-              ref={minuteInputRef}
-              type="text"
-              value={editValue}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "")
-                setEditValue(val)
-              }}
-              onBlur={() => handleEditComplete("minute")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleEditComplete("minute")
-                } else if (e.key === "Escape") {
-                  setEditMode(null)
-                  setEditValue("")
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isDisabled) {
+                  if (openDropdown === "minute") {
+                    setOpenDropdown(null)
+                  } else {
+                    setOpenDropdown("minute")
+                    setEditMode(null)
+                  }
                 }
               }}
+              onDoubleClick={() => {
+                if (!isDisabled) {
+                  setEditMode("minute")
+                  setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
+                }
+              }}
+              onTouchStart={() => {
+                if (!isDisabled) {
+                  setOpenDropdown(null)
+                  setEditMode("minute")
+                  setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
+                }
+              }}
+              disabled={isDisabled}
               className={cn(
-                "h-9 px-3 border-b border-input bg-transparent text-base text-center inline-block min-w-[3.5rem]",
+                "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                variant === "filled" && "bg-bg-1 text-primary border-subtle",
-                variant === "disabled" && "bg-bg-3 text-tertiary border-subtle"
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                variant === "filled" && "bg-bg-1 border-subtle",
+                variant === "filled" && (isMinuteEmpty ? "text-subtle" : "text-primary"),
+                variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
+                openDropdown === "minute" && editMode !== "minute" && "ring-1 ring-ring"
               )}
-            />
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (!isDisabled) {
-                    setOpenDropdown(openDropdown === "minute" ? null : "minute")
-                  }
-                }}
-                onDoubleClick={() => handleDoubleClick("minute")}
-                disabled={isDisabled}
-                className={cn(
-                  "h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
-                  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  "disabled:cursor-not-allowed disabled:opacity-50",
-                  variant === "filled" && "bg-bg-1 border-subtle",
-                  variant === "filled" && isEmpty && "text-subtle",
-                  variant === "filled" && !isEmpty && "text-primary",
-                  variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
-                  openDropdown === "minute" && "ring-1 ring-ring"
-                )}
-              >
-                {isEmpty ? "00" : minute.toString().padStart(2, "0")}
-              </button>
-              
-              {openDropdown === "minute" && !isDisabled && (
-                <div
+            >
+              {editMode === "minute" ? (
+                <input
+                  ref={minuteInputRef}
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "")
+                    setEditValue(val)
+                  }}
+                  onBlur={() => handleEditComplete("minute")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleEditComplete("minute")
+                    } else if (e.key === "Escape") {
+                      setEditMode(null)
+                      setEditValue("")
+                    }
+                  }}
+                  className={cn(
+                    "w-full h-full border-none bg-transparent text-base text-center",
+                    "focus-visible:outline-none focus-visible:ring-0",
+                    variant === "filled" && "text-primary",
+                    variant === "disabled" && "text-tertiary"
+                  )}
+                />
+              ) : (
+                <span>{isMinuteEmpty ? "MM" : selectedMinute?.toString().padStart(2, "0")}</span>
+              )}
+            </button>
+
+            {openDropdown === "minute" && editMode !== "minute" && !isDisabled && (
+              <div
                 className="absolute left-0 rounded-md z-50 mt-1 bg-white border border-subtle shadow-lg max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 onClick={(e) => e.stopPropagation()}
-                >
-                  {minutes.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleMinuteSelect(m)
-                      }}
-                      className={cn(
-                        "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
-                        "hover:bg-bg-2",
-                        minute === m && "bg-brand-bg-3 text-brand"
-                      )}
-                    >
-                      {m.toString().padStart(2, "0")}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+              >
+                {minutes.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleMinuteSelect(m)
+                    }}
+                    className={cn(
+                      "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
+                      "hover:bg-bg-2",
+                      selectedMinute === m && "bg-brand-bg-3 text-brand"
+                    )}
+                  >
+                    {m.toString().padStart(2, "0")}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -397,12 +468,13 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                   "h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3rem]",
                   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   "disabled:cursor-not-allowed disabled:opacity-50",
-                  variant === "filled" && "bg-bg-1 text-primary border-subtle",
+                  variant === "filled" && "bg-bg-1 border-subtle",
+                  variant === "filled" && (isPeriodEmpty ? "text-subtle" : "text-primary"),
                   variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
                   openDropdown === "period" && "ring-1 ring-ring"
                 )}
               >
-                {period}
+                {isPeriodEmpty ? "--" : selectedPeriod}
               </button>
               
               {openDropdown === "period" && !isDisabled && (
@@ -419,7 +491,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                     className={cn(
                       "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
                       "hover:bg-bg-2",
-                      period === "AM" && "bg-brand-bg-3 text-brand"
+                      selectedPeriod === "AM" && "bg-brand-bg-3 text-brand"
                     )}
                   >
                     AM
@@ -433,7 +505,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                     className={cn(
                       "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
                       "hover:bg-bg-2",
-                      period === "PM" && "bg-brand-bg-3 text-brand"
+                      selectedPeriod === "PM" && "bg-brand-bg-3 text-brand"
                     )}
                   >
                     PM

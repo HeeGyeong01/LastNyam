@@ -7,6 +7,7 @@ import { TimeInput } from '../../../components/ui/timeInput';
 import { ImageUpload } from '../../../components/ui/imageUpload';
 import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
+import { MenuFormField } from '../../../components/ui/menuFormField';
 import { Info, ExternalLink } from 'lucide-react';
 
 // 메뉴 타입 정의
@@ -46,6 +47,8 @@ export default function ComponentTestPage() {
   });
   const [timeValue, setTimeValue] = useState('');
   const [timeValue30, setTimeValue30] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('signature');
+  const [discountInfo, setDiscountInfo] = useState<{ discountPrice?: number; discountRate?: number }>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [modalOpen1, setModalOpen1] = useState(false);
   const [modalOpen2, setModalOpen2] = useState(false);
@@ -55,6 +58,8 @@ export default function ComponentTestPage() {
   const [modalOpen6, setModalOpen6] = useState(false);
   const [loadingModalOpen, setLoadingModalOpen] = useState(false);
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
+
+  const menuBasePrice = 12000;
 
   // 예시 메뉴 데이터 (API 응답 형태)
   const menuData: Menu[] = [
@@ -479,6 +484,88 @@ export default function ComponentTestPage() {
             )}
           </button>
         </form>
+
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">MenuFormField 컴포넌트</h3>
+
+          <div className="space-y-4">
+            <MenuFormField
+              title="메뉴 가격"
+              required
+              inputProps={{
+                placeholder: '메뉴 가격을 입력하세요',
+                unit: '원',
+              }}
+            />
+
+            <MenuFormField
+              title="메뉴 설명"
+              variant="explanation"
+              helperText="최대 200자까지 입력 가능합니다."
+              textareaProps={{
+                placeholder: '메뉴에 대한 설명을 입력하세요',
+                rows: 4,
+              }}
+            />
+
+            <MenuFormField
+              title="카테고리"
+              variant="category"
+              options={[
+                { value: 'signature', label: '대표 메뉴' },
+                { value: 'rice', label: '식사류' },
+                { value: 'noodle', label: '면/분식' },
+              ]}
+              value={selectedCategory}
+              onChange={(value) => {
+                if (typeof value === 'string') {
+                  setSelectedCategory(value);
+                }
+              }}
+            />
+
+            <MenuFormField
+              title="판매 시작 시간"
+              variant="time"
+              helperText="더블클릭 시 직접 입력할 수 있습니다."
+              timeInputProps={{
+                value: timeValue,
+                onChange: (value) => setTimeValue(value),
+              }}
+            />
+
+            <MenuFormField
+              title="할인 정보"
+              variant="discount"
+              basePrice={menuBasePrice}
+              defaultValue={discountInfo}
+              onChange={(value) => setDiscountInfo(value)}
+              helperText={`정상가 ${menuBasePrice.toLocaleString()}원 기준으로 자동 계산됩니다.`}
+              pricePlaceholder="할인가"
+              ratePlaceholder="할인율"
+            />
+
+            <div className="rounded-md border border-dashed border-subtle bg-bg-1 p-4 text-sm text-secondary">
+              <p>
+                선택된 카테고리: <span className="text-primary">{selectedCategory}</span>
+              </p>
+              <p>
+                현재 할인가:{' '}
+                <span className="text-primary">
+                  {discountInfo.discountPrice !== undefined
+                    ? `${discountInfo.discountPrice.toLocaleString()}원`
+                    : '-'}
+                </span>
+              </p>
+              <p>
+                현재 할인율:{' '}
+                <span className="text-primary">
+                  {discountInfo.discountRate !== undefined ? `${discountInfo.discountRate}%` : '-'}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ImageUpload 섹션 */}
@@ -851,39 +938,6 @@ export default function ComponentTestPage() {
         </div>
       </section>
 
-      {/* 통합 예제 */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold">통합 예제</h2>
-        <div className="border rounded-lg p-6">
-          <Accordion type="single" collapsible>
-            <AccordionItem value="integrated-1">
-              <AccordionTrigger>폼 데이터 확인</AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium">입력된 이름</label>
-                    <Input
-                      type="text"
-                      value={formData.name}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium">입력된 이메일</label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </section>
     </div>
   );
 }
