@@ -1,4 +1,4 @@
-package com.lastnyam.owner.external.s3.enums;
+package com.lastnyam.s3.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 public enum S3FileType {
 
     MENU_IMAGE("menu-image", "메뉴 이미지"),
-    SHOP_PROFILE_IMAGE("shop-profile-image", "가게 프로필 이미지");
+    SHOP_PROFILE_IMAGE("shop-profile-image", "가게 프로필 이미지"),
+    QR_IMAGE("qr-image", "QR 코드 이미지");
 
     /**
      * S3 버킷 내 디렉토리 경로
@@ -35,3 +36,4 @@ public enum S3FileType {
         return path + "/" + fileName;
     }
 }
+

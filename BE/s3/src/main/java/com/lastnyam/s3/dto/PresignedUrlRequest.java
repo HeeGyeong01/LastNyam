@@ -1,6 +1,6 @@
-package com.lastnyam.owner.external.s3.dto;
+package com.lastnyam.s3.dto;
 
-import com.lastnyam.owner.external.s3.enums.S3FileType;
+import com.lastnyam.s3.enums.S3FileType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,3 +30,4 @@ public class PresignedUrlRequest {
      */
     private Long fileSize;
 }
+

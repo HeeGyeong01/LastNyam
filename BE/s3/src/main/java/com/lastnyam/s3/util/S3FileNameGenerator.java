@@ -1,4 +1,4 @@
-package com.lastnyam.owner.external.s3.util;
+package com.lastnyam.s3.util;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -90,3 +90,4 @@ public class S3FileNameGenerator {
         return parts.length >= 3 ? parts[2] : generatedFileName;
     }
 }
+

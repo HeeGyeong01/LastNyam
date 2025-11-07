@@ -1,4 +1,4 @@
-package com.lastnyam.owner.external.s3.config;
+package com.lastnyam.s3.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,3 +59,4 @@ public class S3Config {
                 .build();
     }
 }
+

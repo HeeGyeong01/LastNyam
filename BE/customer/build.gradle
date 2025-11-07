@@ -24,6 +24,7 @@ dependencies {
     implementation project(':database')
     implementation project(':authentication')
     implementation project(':redis')
+    implementation project(':s3')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

@@ -1,17 +1,15 @@
-package com.lastnyam.owner.external.s3.config;
+package com.lastnyam.s3.config;
 
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * AWS S3 설정 프로퍼티
  */
 @Getter
 @Setter
-@Component
 @ConfigurationProperties(prefix = "cloud.aws")
 public class S3Properties {
 
@@ -61,3 +59,4 @@ public class S3Properties {
         private List<String> allowedExtensions = List.of("jpg", "jpeg", "png");
     }
 }
+

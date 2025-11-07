@@ -1,4 +1,4 @@
-package com.lastnyam.owner.external.s3.dto;
+package com.lastnyam.s3.dto;
 
 import java.time.Instant;
 import lombok.AllArgsConstructor;
@@ -41,3 +41,4 @@ public class PresignedUrlResponse {
     private String fileUrl;
 
 }
+

@@ -1,10 +1,10 @@
-package com.lastnyam.owner.external.s3.service;
+package com.lastnyam.s3.service;
 
-import com.lastnyam.owner.external.s3.config.S3Properties;
-import com.lastnyam.owner.external.s3.dto.PresignedUrlRequest;
-import com.lastnyam.owner.external.s3.dto.PresignedUrlResponse;
-import com.lastnyam.owner.external.s3.dto.S3FileInfo;
-import com.lastnyam.owner.external.s3.util.S3FileNameGenerator;
+import com.lastnyam.s3.config.S3Properties;
+import com.lastnyam.s3.dto.PresignedUrlRequest;
+import com.lastnyam.s3.dto.PresignedUrlResponse;
+import com.lastnyam.s3.dto.S3FileInfo;
+import com.lastnyam.s3.util.S3FileNameGenerator;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
@@ -177,3 +177,4 @@ public class S3Service {
         }
     }
 }
+
