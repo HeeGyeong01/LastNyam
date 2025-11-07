@@ -99,7 +99,7 @@ pipeline {
     stage('BE - Build & Push Images') {
       when { expression { return env.IS_BE == 'true' } }
       parallel {
-        failFast: false
+        
         
         stage('Build Customer') {
           when { expression { return env.BUILD_CUSTOMER == 'true' } }
@@ -206,7 +206,7 @@ pipeline {
     stage('BE - Deploy Services') {
       when { expression { return env.IS_BE == 'true' } }
       parallel {
-        failFast: false
+        
         
         stage('Deploy Customer') {
           when { expression { return env.BUILD_CUSTOMER == 'true' && env.BUILD_CUSTOMER_SUCCESS == 'true' } }
@@ -343,7 +343,7 @@ pipeline {
     stage('FE - Build & Deploy') {
       when { expression { return env.IS_FE == 'true' } }
       parallel {
-        failFast: false
+        
         
         stage('Build FE Owner') {
           when { expression { return env.BUILD_FE_OWNER == 'true' } }
