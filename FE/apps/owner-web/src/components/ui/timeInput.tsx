@@ -114,25 +114,6 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
       setOpenDropdown(null)
     }
 
-    // 더블 클릭 핸들러
-    const triggerInlineEdit = (type: "hour" | "minute" | "period") => {
-      if (isDisabled) return
-
-      setOpenDropdown(null)
-      setEditMode(type)
-      if (type === "hour") {
-        setEditValue(selectedHour !== null ? selectedHour.toString() : "")
-      } else if (type === "minute") {
-        setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
-      } else {
-        setEditValue(selectedPeriod ?? "")
-      }
-    }
-
-    const handleDoubleClick = (type: "hour" | "minute" | "period") => {
-      triggerInlineEdit(type)
-    }
-
     // 텍스트 입력 완료 처리
     const handleEditComplete = React.useCallback((type: "hour" | "minute" | "period") => {
       if (type === "hour") {
@@ -197,6 +178,44 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
     const isMinuteEmpty = selectedMinute === null
     const isPeriodEmpty = selectedPeriod === null
 
+    const touchEditTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+    const touchEditTriggeredRef = React.useRef(false)
+
+    const triggerInlineEdit = (type: "hour" | "minute" | "period") => {
+      if (isDisabled) return
+
+      setOpenDropdown(null)
+      setEditMode(type)
+      if (type === "hour") {
+        setEditValue(selectedHour !== null ? selectedHour.toString() : "")
+      } else if (type === "minute") {
+        setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
+      } else {
+        setEditValue(selectedPeriod ?? "")
+      }
+    }
+
+    const startTouchEdit = (type: "hour" | "minute" | "period") => {
+      if (isDisabled) return
+
+      if (touchEditTimeoutRef.current) {
+        clearTimeout(touchEditTimeoutRef.current)
+      }
+      touchEditTriggeredRef.current = false
+      touchEditTimeoutRef.current = setTimeout(() => {
+        touchEditTimeoutRef.current = null
+        touchEditTriggeredRef.current = true
+        triggerInlineEdit(type)
+      }, 400)
+    }
+
+    const endTouchEdit = () => {
+      if (touchEditTimeoutRef.current) {
+        clearTimeout(touchEditTimeoutRef.current)
+        touchEditTimeoutRef.current = null
+      }
+    }
+
     React.useEffect(() => {
       if (!value || value.trim() === "") {
         if (ignoreEmptyEffectRef.current) {
@@ -236,6 +255,10 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
             onClick={(e) => {
               e.stopPropagation()
               if (!isDisabled) {
+                if (touchEditTriggeredRef.current) {
+                  touchEditTriggeredRef.current = false
+                  return
+                }
                 if (openDropdown === "hour") {
                   setOpenDropdown(null)
                 } else {
@@ -244,19 +267,10 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 }
               }
             }}
-            onDoubleClick={() => {
-              if (!isDisabled) {
-                setEditMode("hour")
-                setEditValue(selectedHour !== null ? selectedHour.toString() : "")
-              }
-            }}
-            onTouchStart={() => {
-              if (!isDisabled) {
-                setOpenDropdown(null)
-                setEditMode("hour")
-                setEditValue(selectedHour !== null ? selectedHour.toString() : "")
-              }
-            }}
+            onDoubleClick={() => triggerInlineEdit("hour")}
+            onTouchStart={() => startTouchEdit("hour")}
+            onTouchEnd={() => endTouchEdit()}
+            onTouchCancel={() => endTouchEdit()}
             disabled={isDisabled}
             className={cn(
               "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
@@ -332,9 +346,13 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
           <div className="relative">
             <button
               type="button"
-              onClick={(e) => {
+            onClick={(e) => {
                 e.stopPropagation()
                 if (!isDisabled) {
+                if (touchEditTriggeredRef.current) {
+                  touchEditTriggeredRef.current = false
+                  return
+                }
                   if (openDropdown === "minute") {
                     setOpenDropdown(null)
                   } else {
@@ -343,19 +361,10 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                   }
                 }
               }}
-              onDoubleClick={() => {
-                if (!isDisabled) {
-                  setEditMode("minute")
-                  setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
-                }
-              }}
-              onTouchStart={() => {
-                if (!isDisabled) {
-                  setOpenDropdown(null)
-                  setEditMode("minute")
-                  setEditValue(selectedMinute !== null ? selectedMinute.toString() : "")
-                }
-              }}
+            onDoubleClick={() => triggerInlineEdit("minute")}
+            onTouchStart={() => startTouchEdit("minute")}
+            onTouchEnd={() => endTouchEdit()}
+            onTouchCancel={() => endTouchEdit()}
               disabled={isDisabled}
               className={cn(
                 "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
@@ -426,93 +435,103 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
 
         {/* AM/PM 드롭다운 */}
         <div className="relative ml-2">
-          {editMode === "period" ? (
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => {
-                const val = e.target.value.toUpperCase().replace(/[^AMP]/g, "")
-                if (val.length <= 2) {
-                  setEditValue(val)
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isDisabled) {
+                if (touchEditTriggeredRef.current) {
+                  touchEditTriggeredRef.current = false
+                  return
                 }
-              }}
-              onBlur={() => handleEditComplete("period")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleEditComplete("period")
-                } else if (e.key === "Escape") {
+                if (openDropdown === "period") {
+                  setOpenDropdown(null)
+                } else {
+                  setOpenDropdown("period")
                   setEditMode(null)
-                  setEditValue("")
                 }
-              }}
-              className={cn(
-                "h-9 px-3 border-b border-input bg-transparent text-base text-center inline-block min-w-[3rem]",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                variant === "filled" && "bg-bg-1 text-primary border-subtle",
-                variant === "disabled" && "bg-bg-3 text-tertiary border-subtle"
-              )}
-            />
-          ) : (
-            <>
+              }
+            }}
+            onDoubleClick={() => triggerInlineEdit("period")}
+            onTouchStart={() => startTouchEdit("period")}
+            onTouchEnd={() => endTouchEdit()}
+            onTouchCancel={() => endTouchEdit()}
+            disabled={isDisabled}
+            className={cn(
+              "relative h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3rem]",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              variant === "filled" && "bg-bg-1 border-subtle",
+              variant === "filled" && (isPeriodEmpty ? "text-subtle" : "text-primary"),
+              variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
+              openDropdown === "period" && editMode !== "period" && "ring-1 ring-ring"
+            )}
+          >
+            {editMode === "period" ? (
+              <input
+                type="text"
+                value={editValue}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase().replace(/[^AMP]/g, "")
+                  if (val.length <= 2) {
+                    setEditValue(val)
+                  }
+                }}
+                onBlur={() => handleEditComplete("period")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleEditComplete("period")
+                  } else if (e.key === "Escape") {
+                    setEditMode(null)
+                    setEditValue("")
+                  }
+                }}
+                className={cn(
+                  "w-full h-full border-none bg-transparent text-base text-center uppercase",
+                  "focus-visible:outline-none focus-visible:ring-0",
+                  variant === "filled" && "text-primary",
+                  variant === "disabled" && "text-tertiary"
+                )}
+              />
+            ) : (
+              <span>{isPeriodEmpty ? "--" : selectedPeriod}</span>
+            )}
+          </button>
+
+          {openDropdown === "period" && editMode !== "period" && !isDisabled && (
+            <div
+              className="absolute left-0 z-50 mt-1 bg-white border border-subtle rounded-md shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
-                  if (!isDisabled) {
-                    setOpenDropdown(openDropdown === "period" ? null : "period")
-                  }
+                  handlePeriodSelect("AM")
                 }}
-                onDoubleClick={() => handleDoubleClick("period")}
-                disabled={isDisabled}
                 className={cn(
-                  "h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3rem]",
-                  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  "disabled:cursor-not-allowed disabled:opacity-50",
-                  variant === "filled" && "bg-bg-1 border-subtle",
-                  variant === "filled" && (isPeriodEmpty ? "text-subtle" : "text-primary"),
-                  variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
-                  openDropdown === "period" && "ring-1 ring-ring"
+                  "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
+                  "hover:bg-bg-2",
+                  selectedPeriod === "AM" && "bg-brand-bg-3 text-brand"
                 )}
               >
-                {isPeriodEmpty ? "--" : selectedPeriod}
+                AM
               </button>
-              
-              {openDropdown === "period" && !isDisabled && (
-                <div
-                  className="absolute left-0 z-50 mt-1 bg-white border border-subtle rounded-md shadow-lg"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handlePeriodSelect("AM")
-                    }}
-                    className={cn(
-                      "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
-                      "hover:bg-bg-2",
-                      selectedPeriod === "AM" && "bg-brand-bg-3 text-brand"
-                    )}
-                  >
-                    AM
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handlePeriodSelect("PM")
-                    }}
-                    className={cn(
-                      "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
-                      "hover:bg-bg-2",
-                      selectedPeriod === "PM" && "bg-brand-bg-3 text-brand"
-                    )}
-                  >
-                    PM
-                  </button>
-                </div>
-              )}
-            </>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handlePeriodSelect("PM")
+                }}
+                className={cn(
+                  "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
+                  "hover:bg-bg-2",
+                  selectedPeriod === "PM" && "bg-brand-bg-3 text-brand"
+                )}
+              >
+                PM
+              </button>
+            </div>
           )}
         </div>
       </div>

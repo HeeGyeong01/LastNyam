@@ -8,6 +8,8 @@ import { ImageUpload } from '../../../components/ui/imageUpload';
 import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
 import { MenuFormField } from '../../../components/ui/menuFormField';
+import { type OrderStatus, type TransactionType } from '../../orders/components/orderStatusCard';
+import { OrderStatusBoard, type OrderStatusBoardTransaction } from '../../orders/components/orderStatusBoard';
 import { Info, ExternalLink } from 'lucide-react';
 
 // 메뉴 타입 정의
@@ -60,6 +62,165 @@ export default function ComponentTestPage() {
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
 
   const menuBasePrice = 12000;
+
+  interface Transaction extends OrderStatusBoardTransaction {
+    totalAmount: number;
+    transactionKey: string;
+  }
+
+  const sampleApiResponse = {
+    data: {
+      transactions: [
+        {
+          transactionId: 1,
+          transactionStatus: 'PENDING_APPROVAL' as OrderStatus,
+          createdAt: '2025-11-05T16:00:00',
+          transactionType: 'DISCOUNT' as TransactionType,
+          itemDtos: [
+            {
+              menuName: '불고기 덮밥',
+              menuPrice: 8000,
+              amount: 12,
+              subtotal: 96000,
+            },
+            {
+              menuName: '불고기 덮밥',
+              menuPrice: 8000,
+              amount: 123,
+              subtotal: 984000,
+            },
+          ],
+          totalAmount: 1080000,
+        },
+        {
+          transactionId: 2,
+          transactionStatus: 'PENDING_APPROVAL' as OrderStatus,
+          createdAt: '2025-11-05T16:00:00',
+          transactionType: 'FOOCKETING' as TransactionType,
+          itemDtos: [
+            {
+              menuName: '불고기 덮밥',
+              menuPrice: 9500,
+              subtotal: 9500,
+            },
+          ],
+          totalAmount: 9500,
+        },
+        {
+          transactionId: 3,
+          transactionStatus: 'PREPARING_FOOD' as OrderStatus,
+          createdAt: '2025-11-05T16:30:00',
+          transactionType: 'DISCOUNT' as TransactionType,
+          itemDtos: [
+            {
+              menuName: '김치찌개',
+              menuPrice: 8000,
+              amount: 4,
+              subtotal: 32000,
+            },
+            {
+              menuName: '된장찌개',
+              menuPrice: 7500,
+              amount: 2,
+              subtotal: 15000,
+            },
+          ],
+          totalAmount: 47000,
+        },
+        {
+          transactionId: 4,
+          transactionStatus: 'WAITING_PICKUP' as OrderStatus,
+          createdAt: '2025-11-05T17:05:00',
+          transactionType: 'FOOCKETING' as TransactionType,
+          itemDtos: [
+            {
+              menuName: '시그니처 샌드위치',
+              menuPrice: 6800,
+              subtotal: 6800,
+            },
+            {
+              menuName: '아이스 아메리카노',
+              menuPrice: 4300,
+              subtotal: 4300,
+            },
+          ],
+          totalAmount: 0,
+        },
+        {
+          transactionId: 5,
+          transactionStatus: 'PREPARING_FOOD' as OrderStatus,
+          createdAt: '2025-11-05T17:20:00',
+          transactionType: 'FOOCKETING' as TransactionType,
+          itemDtos: [
+            {
+              menuName: '망고 스무디',
+              menuPrice: 5200,
+              subtotal: 5200,
+            },
+            {
+              menuName: '트러플 감자칩',
+              menuPrice: 3900,
+              subtotal: 3900,
+            },
+          ],
+          totalAmount: 0,
+        },
+        {
+          transactionId: 6,
+          transactionStatus: 'WAITING_PICKUP' as OrderStatus,
+          createdAt: '2025-11-05T17:45:00',
+          transactionType: 'DISCOUNT' as TransactionType,
+          itemDtos: [
+            {
+              menuName: '크림 파스타',
+              menuPrice: 11500,
+              amount: 2,
+              subtotal: 23000,
+            },
+            {
+              menuName: '갈릭 브레드',
+              menuPrice: 4500,
+              amount: 2,
+              subtotal: 9000,
+            },
+          ],
+          totalAmount: 32000,
+        },
+      ],
+    },
+  };
+
+  const [transactions, setTransactions] = useState<Transaction[]>(() =>
+    sampleApiResponse.data.transactions.map((transaction, index) => ({
+      ...transaction,
+      transactionKey: `${transaction.transactionId}-${transaction.transactionType}-${index}`,
+    }))
+  );
+
+  const nextStatusMap: Partial<Record<OrderStatus, OrderStatus>> = {
+    PENDING_APPROVAL: 'PREPARING_FOOD',
+    PREPARING_FOOD: 'WAITING_PICKUP',
+  };
+
+  const handleAdvanceStatus = (transaction: OrderStatusBoardTransaction) => {
+    const nextStatus = nextStatusMap[transaction.transactionStatus];
+    if (!nextStatus) {
+      return;
+    }
+
+    const transactionKey = 'transactionKey' in transaction ? transaction.transactionKey : undefined;
+    if (!transactionKey) {
+      return;
+    }
+
+    setTransactions((prev) =>
+      prev.map((prevTransaction) =>
+        prevTransaction.transactionKey === transactionKey
+          ? { ...prevTransaction, transactionStatus: nextStatus }
+          : prevTransaction
+      )
+    );
+  };
 
   // 예시 메뉴 데이터 (API 응답 형태)
   const menuData: Menu[] = [
@@ -146,6 +307,22 @@ export default function ComponentTestPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-8">
       <h1 className="text-3xl font-bold mb-8">컴포넌트 테스트 페이지</h1>
+
+      {/* Order Status Board */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-semibold">Accordion 주문 목록</h2>
+          <p className="text-sm text-gray-600">
+            각 주문 상태별 아코디언 안에서 `OrderStatusCard` 컴포넌트를 바로 확인할 수 있습니다.
+          </p>
+        </div>
+
+        <OrderStatusBoard
+          className="rounded-2xl bg-bg-0"
+          transactions={transactions}
+          onAdvanceStatus={handleAdvanceStatus}
+        />
+      </section>
 
       {/* Route 네비게이션 */}
       <section className="space-y-4">

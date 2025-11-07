@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { DescriptionInput, type DescriptionInputProps } from "./descriptionInput"
 import { Input, type OwnerInputProps } from "./ownerInput"
 import { TimeInput, type TimeInputProps } from "./timeInput"
+import { Button } from "@shared/src/components/Button"
 
 interface BaseMenuFormFieldProps {
   title: string
@@ -86,6 +87,8 @@ export function MenuFormField(props: MenuFormFieldProps) {
     fieldWrapperClassName,
   } = props
 
+  const isDescriptionVariant = props.variant === "explanation"
+
   const renderField = () => {
     switch (props.variant) {
       case "explanation": {
@@ -141,28 +144,26 @@ export function MenuFormField(props: MenuFormFieldProps) {
         }
 
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className={cn(
+            "flex gap-2 overflow-x-auto py-1 w-full",
+            "[mask-image:linear-gradient(to_right,black_0,black_calc(100%-16px),transparent_100%)]",
+            "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          )}>
             {options.map((option) => {
               const isSelected = Array.isArray(currentValue)
                 ? currentValue.includes(option.value)
                 : currentValue === option.value
 
               return (
-                <button
+                <Button
                   key={option.value}
                   type="button"
+                  btnStyle={isSelected ? "filled-red" : "filled-default"}
                   onClick={() => handleSelect(option.value)}
-                  className={cn(
-                    "rounded-full px-4 py-2 text-sm transition-colors",
-                    "border border-subtle",
-                    isSelected
-                      ? "bg-brand text-inverse border-brand"
-                      : "bg-bg-1 text-secondary hover:bg-bg-2",
-                    optionClassName,
-                  )}
+                  className={cn("shrink-0 px-4", optionClassName)}
                 >
                   {option.label}
-                </button>
+                </Button>
               )
             })}
           </div>
@@ -170,7 +171,11 @@ export function MenuFormField(props: MenuFormFieldProps) {
       }
       case "time": {
         const { timeInputProps } = props
-        return <TimeInput {...timeInputProps} />
+        return (
+          <div className="flex w-full items-center justify-end">
+            <TimeInput {...timeInputProps} className={cn("w-auto", timeInputProps?.className)} />
+          </div>
+        )
       }
       case "discount": {
         const {
@@ -442,7 +447,7 @@ export function MenuFormField(props: MenuFormFieldProps) {
         const isRateLocked = !rateDisabledProp && lockedBy === "price" && priceValue !== ""
 
         return (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-full">
             <div className="flex gap-2">
               <Input
                 {...priceRest}
@@ -509,6 +514,23 @@ export function MenuFormField(props: MenuFormFieldProps) {
         return <Input {...inputProps} />
       }
     }
+  }
+
+  if (isDescriptionVariant) {
+    return (
+      <div className={cn("w-full", className)}>
+        <div className={cn("flex flex-col gap-2", fieldWrapperClassName)}>
+          <div className={cn("flex items-center gap-1", titleClassName)}>
+            <span className="text-p1-b text-primary">{title}</span>
+            {required && <span className="text-brand">*</span>}
+          </div>
+          {renderField()}
+          {helperText && (
+            <p className="text-p2 text-subtle">{helperText}</p>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -38,9 +38,9 @@ const AccordionTrigger = React.forwardRef<
         )}
         {...props}
       >
-        <span>
+        <span className="flex items-center gap-1">
           {children}
-          {items && <span className="text-foreground"> ({count})</span>}
+          {items ? <span className="text-p3 text-secondary">({count})</span> : null}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-stroke-1 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
