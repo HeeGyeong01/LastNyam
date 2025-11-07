@@ -103,7 +103,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       <div
         ref={ref}
         className={cn(
-          "fixed inset-0 z-50 flex items-center justify-center",
+          "fixed inset-0 z-[100] flex items-center justify-center",
           open ? "opacity-100" : "opacity-0 pointer-events-none",
           "transition-opacity duration-200"
         )}
@@ -120,7 +120,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           className={cn(
             "relative bg-white rounded-lg shadow-lg",
             "w-full mx-4",
-            buttonShow ? "max-w-md" : "max-w-[200px]",
+            buttonShow ? "max-w-md" : "max-w-xs",
             "flex flex-col items-center",
             buttonShow ? "px-6 py-8" : "px-4 py-6",
             open ? "scale-100" : "scale-95",
@@ -145,14 +145,14 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
           {/* 제목 */}
           {title && (
-            <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+            <h2 className="h4-b text-primary mb-2 text-center">
               {title}
             </h2>
           )}
 
           {/* 설명 텍스트 */}
           {modalBodyShow && detail && (
-            <p className="text-sm text-gray-600 mb-6 text-center whitespace-pre-line">
+            <p className="p2 text-secondary mb-6 text-center whitespace-pre-line">
               {detail}
             </p>
           )}
@@ -182,7 +182,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                 className={cn(
                   variant === "single-button" ? "px-8" : "flex-1",
                   "px-6 py-3 rounded-lg",
-                  "bg-orange-500 text-white",
+                  "bg-brand text-inverse",
                   "hover:bg-orange-600",
                   "transition-colors duration-200",
                   "font-medium"
