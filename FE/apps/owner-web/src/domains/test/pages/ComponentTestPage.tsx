@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../orders/components/accordion';
 import { Input } from '../../../components/ui/ownerInput';
 import { DescriptionInput } from '../../../components/ui/descriptionInput';
@@ -6,6 +7,7 @@ import { TimeInput } from '../../../components/ui/timeInput';
 import { ImageUpload } from '../../../components/ui/imageUpload';
 import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
+import { Info, ExternalLink } from 'lucide-react';
 
 // 메뉴 타입 정의
 interface Menu {
@@ -16,6 +18,22 @@ interface Menu {
   menuPrice: number;
   categoryName: string;
 }
+
+const ownerRoutes = [
+  { path: '/owner/login', label: '로그인' },
+  { path: '/owner/signup', label: '회원가입' },
+  { path: '/owner/orders/list', label: '주문 리스트' },
+  { path: '/owner/orders/qr-scan', label: 'QR 스캔' },
+  { path: '/owner/orders/receipt-confirm', label: '영수증 확인' },
+  { path: '/owner/catalog/menu', label: '메뉴 관리' },
+  { path: '/owner/catalog/foocketing', label: '푸켓팅' },
+  { path: '/owner/catalog/closeout-sale', label: '마감 세일' },
+  { path: '/owner/insights/report', label: '주간 레포트' },
+  { path: '/owner/settings', label: '가게 설정' },
+  { path: '/owner/store-information/step1-input', label: '가게 정보 입력 1단계 - 기본 정보' },
+  { path: '/owner/store-information/step1-document', label: '가게 정보 입력 1단계 - 서류 업로드' },
+  { path: '/owner/store-information/step2', label: '가게 정보 입력 2단계' },
+];
 
 export default function ComponentTestPage() {
   const [loading, setLoading] = useState(false);
@@ -33,6 +51,8 @@ export default function ComponentTestPage() {
   const [modalOpen2, setModalOpen2] = useState(false);
   const [modalOpen3, setModalOpen3] = useState(false);
   const [modalOpen4, setModalOpen4] = useState(false);
+  const [modalOpen5, setModalOpen5] = useState(false);
+  const [modalOpen6, setModalOpen6] = useState(false);
   const [loadingModalOpen, setLoadingModalOpen] = useState(false);
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
 
@@ -121,6 +141,31 @@ export default function ComponentTestPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-8">
       <h1 className="text-3xl font-bold mb-8">컴포넌트 테스트 페이지</h1>
+
+      {/* Route 네비게이션 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">Owner Router 경로 모음</h2>
+        <p className="text-sm text-gray-600">
+          아래 링크를 클릭하면 각 페이지로 이동해 실제 화면을 확인할 수 있습니다.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {ownerRoutes.map((route) => (
+            <Link
+              key={route.path}
+              to={route.path}
+              className="group flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 transition-colors hover:border-brand hover:bg-brand-bg-3"
+            >
+              <span className="text-sm font-medium text-gray-900 group-hover:text-brand-strong">
+                {route.label}
+              </span>
+              <span className="flex items-center gap-2 text-xs text-gray-500 group-hover:text-brand">
+                {route.path}
+                <ExternalLink className="h-4 w-4" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Accordion 섹션 - 메뉴 카테고리별 표시 */}
       <section className="space-y-4">
@@ -682,6 +727,52 @@ export default function ComponentTestPage() {
               primaryButtonText="확인"
               secondaryButtonText="취소"
               iconShow={false}
+              xButtonShow={true}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">커스텀 아이콘 모달</h3>
+            <button
+              onClick={() => setModalOpen5(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              모달 열기 (커스텀 아이콘)
+            </button>
+            <Modal
+              open={modalOpen5}
+              onClose={() => setModalOpen5(false)}
+              title="정보 안내"
+              detail="icon prop에 Lucide 아이콘 컴포넌트를 전달해도 정상적으로 렌더링됩니다."
+              variant="two-button"
+              primaryButtonText="확인"
+              secondaryButtonText="닫기"
+              icon={Info}
+              iconShow={true}
+              iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-full bg-brand-bg-3"
+              iconClassName="h-6 w-6 text-brand"
+              xButtonShow={true}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">경고색 아이콘 모달</h3>
+            <button
+              onClick={() => setModalOpen6(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              모달 열기 (경고 아이콘)
+            </button>
+            <Modal
+              open={modalOpen6}
+              onClose={() => setModalOpen6(false)}
+              title="주의가 필요해요"
+              detail="iconWrapperClassName과 iconClassName으로 색상을 자유롭게 변경할 수 있습니다."
+              variant="two-button"
+              primaryButtonText="확인"
+              secondaryButtonText="닫기"
+              icon="exclamation"
+              iconShow={true}
               xButtonShow={true}
             />
           </div>

@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
-import OwnerLayout from '../layouts/OwnerLayout';
 import OwnerSettingPage from '../domains/settings/pages/OwnerSettingPage';
 import ReceiptConfirmPage from '../domains/orders/pages/ReceiptConfirmPage';
 import OrderListPage from '../domains/orders/pages/OrderListPage';
@@ -11,6 +10,9 @@ import ManageFoocketingPage from '../domains/catalog/pages/ManageFoocketingPage'
 import ManageCloseoutSalePage from '../domains/catalog/pages/ManageCloseoutSalePage';
 import SignUpPage from '../domains/auth/pages/SignUpPage';
 import LoginPage from '../domains/auth/pages/LoginPage';
+import StoreInformationStep1InputPage from '../domains/auth/pages/StoreInformation/StoreInformationStep1InputPage';
+import StoreInformationStep1DocumentPage from '../domains/auth/pages/StoreInformation/StoreInformationStep1DocumentPage';
+import StoreInformationStep2Page from '../domains/auth/pages/StoreInformation/StoreInformationStep2Page';
 import ComponentTestPage from '../domains/test/pages/ComponentTestPage';
 import HeaderFooterLayout from '../layouts/HeaderFooterLayout';
 
@@ -77,6 +79,23 @@ const router = createBrowserRouter([
           {
             path: 'settings',
             element: <OwnerSettingPage />,
+          },
+          {
+            path: 'store-information',
+            children: [
+              {
+                path: 'step1-input',
+                element: <StoreInformationStep1InputPage />,
+              },
+              {
+                path: 'step1-document',
+                element: <StoreInformationStep1DocumentPage />,
+              },
+              {
+                path: 'step2',
+                element: <StoreInformationStep2Page />,
+              },
+            ],
           },
           {
             path: 'test',

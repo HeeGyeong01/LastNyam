@@ -1,7 +1,8 @@
 import * as React from "react"
-import { X, CheckCircle } from "lucide-react"
+import { X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/solid"
 import { Button } from "@shared/src/components/Button"
 import { Spinner } from "./spinner"
 
@@ -10,8 +11,10 @@ export interface ModalProps {
   onClose: () => void
   title?: string
   detail?: string
-  icon?: LucideIcon | "check-circle" | "loading" | null
+  icon?: LucideIcon | "check-circle" | "exclamation" | "loading" | null
   iconShow?: boolean
+  iconWrapperClassName?: string
+  iconClassName?: string
   xButton?: boolean
   xButtonShow?: boolean
   buttonShow?: boolean
@@ -32,6 +35,8 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     detail,
     icon,
     iconShow = true,
+    iconWrapperClassName,
+    iconClassName,
     xButton = true,
     xButtonShow = true,
     buttonShow = true,
@@ -74,16 +79,33 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       
       if (icon === "check-circle") {
         return (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
-            <CheckCircle className="h-6 w-6 text-white" />
+          <div className={cn(
+            "flex h-12 w-12 items-center justify-center",
+            iconWrapperClassName
+          )}>
+            <CheckCircleIcon className={cn("h-full w-full text-success", iconClassName)} />
+          </div>
+        )
+      }
+      
+      if (icon === "exclamation") {
+        return (
+          <div className={cn(
+            "flex h-12 w-12 items-center justify-center",
+            iconWrapperClassName
+          )}>
+            <ExclamationTriangleIcon className={cn("h-full w-full text-warning", iconClassName)} />
           </div>
         )
       }
       
       if (icon === "loading") {
         return (
-          <div className="flex h-12 w-12 items-center justify-center">
-            <Spinner className="h-6 w-6 text-orange-500" />
+          <div className={cn(
+            "flex h-12 w-12 items-center justify-center",
+            iconWrapperClassName
+          )}>
+            <Spinner className={cn("h-6 w-6 text-orange-500", iconClassName)} />
           </div>
         )
       }
@@ -91,8 +113,11 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       if (typeof icon !== "string") {
         const IconComponent = icon
         return (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
-            <IconComponent className="h-6 w-6 text-white" />
+          <div className={cn(
+            "flex items-center justify-center",
+            iconWrapperClassName
+          )}>
+            <IconComponent className={cn(iconClassName)} />
           </div>
         )
       }
@@ -122,8 +147,8 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           className={cn(
             "relative z-10 bg-white rounded-lg shadow-lg",
             "w-[336px]",
-            "flex flex-col items-center gap-4",
-            buttonShow ? "max-w-md px-6 py-8" : "max-w-xs px-4 py-6",
+            "flex flex-col items-center gap-4 p-6",
+            buttonShow ? "max-w-md" : "max-w-xs",
             open ? "scale-100" : "scale-95",
             "transition-transform duration-200",
             className
