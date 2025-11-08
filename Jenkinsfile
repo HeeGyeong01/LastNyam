@@ -7,7 +7,42 @@ pipeline {
       defaultValue: false, 
       description: '🔥 모든 모듈 강제 빌드 (변경사항 무시)'
     )
+    
+    // ========== BE 모듈별 강제 빌드 ==========
+    booleanParam(
+      name: 'FORCE_BUILD_CUSTOMER',
+      defaultValue: false,
+      description: '👤 Customer 서비스 강제 빌드'
+    )
+    booleanParam(
+      name: 'FORCE_BUILD_OWNER',
+      defaultValue: false,
+      description: '🏪 Owner 서비스 강제 빌드'
+    )
+    booleanParam(
+      name: 'FORCE_BUILD_FS',
+      defaultValue: false,
+      description: '📥 Foocketing-Subscriber 강제 빌드'
+    )
+    booleanParam(
+      name: 'FORCE_BUILD_FP',
+      defaultValue: false,
+      description: '📤 Foocketing-Publisher 강제 빌드'
+    )
+    
+    // ========== FE 모듈별 강제 빌드 ==========
+    booleanParam(
+      name: 'FORCE_BUILD_FE_OWNER',
+      defaultValue: false,
+      description: '🏪 FE Owner 강제 빌드'
+    )
+    booleanParam(
+      name: 'FORCE_BUILD_FE_CUSTOMER',
+      defaultValue: false,
+      description: '👤 FE Customer 강제 빌드'
+    )
   }
+
 
   environment {
     REGISTRY = '941kjw'
@@ -15,12 +50,13 @@ pipeline {
     GRADLE_OPTS = '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
   }
 
+
   stages {
-    stage('Detect Branch & Changes') {
+    stage('브랜치 및 변경사항 감지') {
       steps {
         script {
           def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH
-          echo "🌿 Current Branch: ${branchName}"
+          echo "🌿 현재 브랜치: ${branchName}"
           
           def changes = sh(
             script: '''
@@ -43,22 +79,47 @@ pipeline {
             def isCommonChanged = commonModules.any { changes.contains("BE/${it}/") }
             def isMessagingChanged = changes.contains('BE/messaging/')
             
-            env.BUILD_CUSTOMER = (params.FORCE_BUILD_ALL || changes.contains('BE/customer/') || isCommonChanged).toString()
-            env.BUILD_OWNER = (params.FORCE_BUILD_ALL || changes.contains('BE/owner/') || isCommonChanged).toString()
-            env.BUILD_FS = (params.FORCE_BUILD_ALL || changes.contains('BE/foocketing-subscriber/') || isCommonChanged || isMessagingChanged).toString()
-            env.BUILD_FP = (params.FORCE_BUILD_ALL || changes.contains('BE/foocketing-publisher/') || isCommonChanged || isMessagingChanged).toString()
+            env.BUILD_CUSTOMER = (
+              params.FORCE_BUILD_ALL || 
+              params.FORCE_BUILD_CUSTOMER || 
+              changes.contains('BE/customer/') || 
+              isCommonChanged
+            ).toString()
+            
+            env.BUILD_OWNER = (
+              params.FORCE_BUILD_ALL || 
+              params.FORCE_BUILD_OWNER || 
+              changes.contains('BE/owner/') || 
+              isCommonChanged
+            ).toString()
+            
+            env.BUILD_FS = (
+              params.FORCE_BUILD_ALL || 
+              params.FORCE_BUILD_FS || 
+              changes.contains('BE/foocketing-subscriber/') || 
+              isCommonChanged || 
+              isMessagingChanged
+            ).toString()
+            
+            env.BUILD_FP = (
+              params.FORCE_BUILD_ALL || 
+              params.FORCE_BUILD_FP || 
+              changes.contains('BE/foocketing-publisher/') || 
+              isCommonChanged || 
+              isMessagingChanged
+            ).toString()
             
             env.IS_BE = 'true'
             env.IS_FE = 'false'
             
             echo """
 ┌─────────────────────────────────────────┐
-│      BE BUILD PLAN                      │
+│      BE 빌드 계획                        │
 ├─────────────────────────────────────────┤
-│ 👤 Customer              : ${env.BUILD_CUSTOMER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
-│ 🏪 Owner                 : ${env.BUILD_OWNER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
-│ 📥 Foocketing-Sub        : ${env.BUILD_FS == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
-│ 📤 Foocketing-Pub        : ${env.BUILD_FP == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
+│ 👤 Customer              : ${env.BUILD_CUSTOMER == 'true' ? '✅ 빌드' : '⏭️  건너뜀'} ${params.FORCE_BUILD_CUSTOMER ? '(강제)' : '      '} │
+│ 🏪 Owner                 : ${env.BUILD_OWNER == 'true' ? '✅ 빌드' : '⏭️  건너뜀'} ${params.FORCE_BUILD_OWNER ? '(강제)' : '      '} │
+│ 📥 Foocketing-Sub        : ${env.BUILD_FS == 'true' ? '✅ 빌드' : '⏭️  건너뜀'} ${params.FORCE_BUILD_FS ? '(강제)' : '      '} │
+│ 📤 Foocketing-Pub        : ${env.BUILD_FP == 'true' ? '✅ 빌드' : '⏭️  건너뜀'} ${params.FORCE_BUILD_FP ? '(강제)' : '      '} │
 └─────────────────────────────────────────┘
             """
           }
@@ -67,25 +128,36 @@ pipeline {
             def isOwnerChanged = changes.contains('FE/owner/')
             def isCustomerChanged = changes.contains('FE/customer/')
             
-            env.BUILD_FE_OWNER = (params.FORCE_BUILD_ALL || isOwnerChanged || isSharedChanged).toString()
-            env.BUILD_FE_CUSTOMER = (params.FORCE_BUILD_ALL || isCustomerChanged || isSharedChanged).toString()
+            env.BUILD_FE_OWNER = (
+              params.FORCE_BUILD_ALL || 
+              params.FORCE_BUILD_FE_OWNER || 
+              isOwnerChanged || 
+              isSharedChanged
+            ).toString()
+            
+            env.BUILD_FE_CUSTOMER = (
+              params.FORCE_BUILD_ALL || 
+              params.FORCE_BUILD_FE_CUSTOMER || 
+              isCustomerChanged || 
+              isSharedChanged
+            ).toString()
             
             env.IS_BE = 'false'
             env.IS_FE = 'true'
             
             echo """
 ┌─────────────────────────────────────────┐
-│      FE BUILD PLAN                      │
+│      FE 빌드 계획                        │
 ├─────────────────────────────────────────┤
-│ 🏪 Owner                 : ${env.BUILD_FE_OWNER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
-│ 👤 Customer              : ${env.BUILD_FE_CUSTOMER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
+│ 🏪 Owner                 : ${env.BUILD_FE_OWNER == 'true' ? '✅ 빌드' : '⏭️  건너뜀'} ${params.FORCE_BUILD_FE_OWNER ? '(강제)' : '      '} │
+│ 👤 Customer              : ${env.BUILD_FE_CUSTOMER == 'true' ? '✅ 빌드' : '⏭️  건너뜀'} ${params.FORCE_BUILD_FE_CUSTOMER ? '(강제)' : '      '} │
 ├─────────────────────────────────────────┤
-│ Shared 변경: ${isSharedChanged ? 'YES' : 'NO'}                │
+│ Shared 변경: ${isSharedChanged ? '예' : '아니오'}                      │
 └─────────────────────────────────────────┘
             """
           }
           else {
-            echo "⏭️ Skipping: Branch ${branchName} not configured"
+            echo "⏭️ 건너뜀: ${branchName} 브랜치는 설정되지 않았습니다"
             env.IS_BE = 'false'
             env.IS_FE = 'false'
           }
@@ -93,31 +165,105 @@ pipeline {
       }
     }
 
+
     // ==================== BE 빌드/배포 ====================
-    stage('BE - Prepare Build') {
+    stage('BE - 빌드 준비') {
       when { expression { return env.IS_BE == 'true' } }
       steps {
         dir('BE') {
-          echo '🔧 Setting gradlew permissions...'
+          echo '🔧 gradlew 실행 권한 설정 중...'
           sh 'chmod +x gradlew'
         }
       }
     }
+
+
+    stage('BE - 설정 파일 복사') {
+      when { expression { return env.IS_BE == 'true' } }
+      steps {
+        script {
+          withCredentials([
+            file(credentialsId: 'customer', variable: 'CUSTOMER_APP_YML'),
+            file(credentialsId: 'owner', variable: 'OWNER_APP_YML'),
+            file(credentialsId: 'actuator', variable: 'ACTUATOR_YML'),
+            file(credentialsId: 'authentication', variable: 'AUTHENTICATION_YML'),
+            file(credentialsId: 'database', variable: 'DATABASE_YML'),
+            file(credentialsId: 'messaging', variable: 'MESSAGING_YML'),
+            file(credentialsId: 'redis', variable: 'REDIS_YML'),
+            file(credentialsId: 's3', variable: 'S3_YML'),
+            file(credentialsId: 'subscriber', variable: 'SUBSCRIBER_YML'),
+            file(credentialsId: 'publisher', variable: 'PUBLISHER_YML')
+          ]) {
+            sh """
+              set -e
+              
+              # Customer
+              if [ "${env.BUILD_CUSTOMER}" == "true" ]; then
+                TARGET_DIR="${WORKSPACE}/BE/customer/src/main/resources"
+                cp -v \$CUSTOMER_APP_YML \$TARGET_DIR/application.yml
+                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
+                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
+                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
+                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
+                cp -v \$S3_YML \$TARGET_DIR/application-s3.yml
+                echo "✅ Customer 설정 파일 복사 완료"
+              fi
+              
+              # Owner
+              if [ "${env.BUILD_OWNER}" == "true" ]; then
+                TARGET_DIR="${WORKSPACE}/BE/owner/src/main/resources"
+                cp -v \$OWNER_APP_YML \$TARGET_DIR/application.yml
+                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
+                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
+                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
+                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
+                cp -v \$S3_YML \$TARGET_DIR/application-s3.yml
+                echo "✅ Owner 설정 파일 복사 완료"
+              fi
+              
+              # Foocketing-Subscriber
+              if [ "${env.BUILD_FS}" == "true" ]; then
+                TARGET_DIR="${WORKSPACE}/BE/foocketing-subscriber/src/main/resources"
+                cp -v \$SUBSCRIBER_YML \$TARGET_DIR/application.yml
+                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
+                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
+                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
+                cp -v \$MESSAGING_YML \$TARGET_DIR/application-messaging.yml
+                echo "✅ Foocketing-Subscriber 설정 파일 복사 완료"
+              fi
+              
+              # Foocketing-Publisher
+              if [ "${env.BUILD_FP}" == "true" ]; then
+                TARGET_DIR="${WORKSPACE}/BE/foocketing-publisher/src/main/resources"
+                cp -v \$PUBLISHER_YML \$TARGET_DIR/application.yml
+                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
+                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
+                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
+                cp -v \$MESSAGING_YML \$TARGET_DIR/application-messaging.yml
+                echo "✅ Foocketing-Publisher 설정 파일 복사 완료"
+              fi
+              
+              echo "✅ 모든 설정 파일 준비 완료"
+            """
+          }
+        }
+      }
+    }
     
-    stage('BE - Build & Push Images') {
+    stage('BE - 빌드 및 이미지 생성') {
       when { expression { return env.IS_BE == 'true' } }
       parallel {
         
-        
-        stage('Build Customer') {
+        stage('Customer 빌드') {
           when { expression { return env.BUILD_CUSTOMER == 'true' } }
           steps {
             script {
               try {
                 dir('BE') {
-                  echo '🔨 Building Customer Service...'
+                  echo '🔨 Customer 서비스 빌드 중...'
                   sh './gradlew :customer:clean :customer:bootJar --parallel --build-cache'
                   sh """
+                    docker pull ${REGISTRY}/customer:latest || true
                     docker build \
                       --cache-from ${REGISTRY}/customer:latest \
                       -t ${REGISTRY}/customer:${TAG} \
@@ -126,7 +272,7 @@ pipeline {
                   env.BUILD_CUSTOMER_SUCCESS = 'true'
                 }
               } catch (Exception e) {
-                echo "❌ Customer build failed: ${e.message}"
+                echo "❌ Customer 빌드 실패: ${e.message}"
                 env.BUILD_CUSTOMER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -134,15 +280,16 @@ pipeline {
           }
         }
         
-        stage('Build Owner') {
+        stage('Owner 빌드') {
           when { expression { return env.BUILD_OWNER == 'true' } }
           steps {
             script {
               try {
                 dir('BE') {
-                  echo '🔨 Building Owner Service...'
+                  echo '🔨 Owner 서비스 빌드 중...'
                   sh './gradlew :owner:clean :owner:bootJar --parallel --build-cache'
                   sh """
+                    docker pull ${REGISTRY}/owner:latest || true
                     docker build \
                       --cache-from ${REGISTRY}/owner:latest \
                       -t ${REGISTRY}/owner:${TAG} \
@@ -151,7 +298,7 @@ pipeline {
                   env.BUILD_OWNER_SUCCESS = 'true'
                 }
               } catch (Exception e) {
-                echo "❌ Owner build failed: ${e.message}"
+                echo "❌ Owner 빌드 실패: ${e.message}"
                 env.BUILD_OWNER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -159,15 +306,16 @@ pipeline {
           }
         }
         
-        stage('Build FS') {
+        stage('Foocketing-Subscriber 빌드') {
           when { expression { return env.BUILD_FS == 'true' } }
           steps {
             script {
               try {
                 dir('BE') {
-                  echo '🔨 Building Foocketing-Subscriber...'
+                  echo '🔨 Foocketing-Subscriber 빌드 중...'
                   sh './gradlew :foocketing-subscriber:clean :foocketing-subscriber:bootJar --parallel --build-cache'
                   sh """
+                    docker pull ${REGISTRY}/foocketing-subscriber:latest || true
                     docker build \
                       --cache-from ${REGISTRY}/foocketing-subscriber:latest \
                       -t ${REGISTRY}/foocketing-subscriber:${TAG} \
@@ -176,7 +324,7 @@ pipeline {
                   env.BUILD_FS_SUCCESS = 'true'
                 }
               } catch (Exception e) {
-                echo "❌ FS build failed: ${e.message}"
+                echo "❌ Foocketing-Subscriber 빌드 실패: ${e.message}"
                 env.BUILD_FS_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -184,15 +332,16 @@ pipeline {
           }
         }
         
-        stage('Build FP') {
+        stage('Foocketing-Publisher 빌드') {
           when { expression { return env.BUILD_FP == 'true' } }
           steps {
             script {
               try {
                 dir('BE') {
-                  echo '🔨 Building Foocketing-Publisher...'
+                  echo '🔨 Foocketing-Publisher 빌드 중...'
                   sh './gradlew :foocketing-publisher:clean :foocketing-publisher:bootJar --parallel --build-cache'
                   sh """
+                    docker pull ${REGISTRY}/foocketing-publisher:latest || true
                     docker build \
                       --cache-from ${REGISTRY}/foocketing-publisher:latest \
                       -t ${REGISTRY}/foocketing-publisher:${TAG} \
@@ -201,7 +350,7 @@ pipeline {
                   env.BUILD_FP_SUCCESS = 'true'
                 }
               } catch (Exception e) {
-                echo "❌ FP build failed: ${e.message}"
+                echo "❌ Foocketing-Publisher 빌드 실패: ${e.message}"
                 env.BUILD_FP_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -211,36 +360,35 @@ pipeline {
       }
     }
     
-    stage('BE - Deploy Services') {
+    stage('BE - 서비스 배포') {
       when { expression { return env.IS_BE == 'true' } }
       parallel {
         
-        
-        stage('Deploy Customer') {
+        stage('Customer 배포') {
           when { expression { return env.BUILD_CUSTOMER == 'true' && env.BUILD_CUSTOMER_SUCCESS == 'true' } }
           steps {
             script {
               try {
-                echo '🚀 Deploying Customer Service...'
+                echo '🚀 Customer 서비스 배포 중...'
                 sh """
                   set -e
                   cd /var/scripts
                   docker compose -f customer.yml up -d
                   
-                  echo "⏳ Waiting for service..."
-                  for i in {1..30}; do
+                  echo "⏳ 서비스 시작 대기 중..."
+                  for i in {1..60}; do
                     if docker compose ps customer | grep -q "Up"; then
-                      echo "✅ Customer service deployed"
+                      echo "✅ Customer 서비스 배포 완료"
                       exit 0
                     fi
                     sleep 1
                   done
-                  echo "❌ Deploy timeout"
+                  echo "❌ 배포 타임아웃"
                   exit 1
                 """
                 env.DEPLOY_CUSTOMER_SUCCESS = 'true'
               } catch (Exception e) {
-                echo "❌ Customer deploy failed: ${e.message}"
+                echo "❌ Customer 배포 실패: ${e.message}"
                 env.DEPLOY_CUSTOMER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -248,31 +396,31 @@ pipeline {
           }
         }
         
-        stage('Deploy Owner') {
+        stage('Owner 배포') {
           when { expression { return env.BUILD_OWNER == 'true' && env.BUILD_OWNER_SUCCESS == 'true' } }
           steps {
             script {
               try {
-                echo '🚀 Deploying Owner Service...'
+                echo '🚀 Owner 서비스 배포 중...'
                 sh """
                   set -e
                   cd /var/scripts
                   docker compose -f owner.yml up -d
                   
-                  echo "⏳ Waiting for service..."
-                  for i in {1..30}; do
+                  echo "⏳ 서비스 시작 대기 중..."
+                  for i in {1..60}; do
                     if docker compose ps owner | grep -q "Up"; then
-                      echo "✅ Owner service deployed"
+                      echo "✅ Owner 서비스 배포 완료"
                       exit 0
                     fi
                     sleep 1
                   done
-                  echo "❌ Deploy timeout"
+                  echo "❌ 배포 타임아웃"
                   exit 1
                 """
                 env.DEPLOY_OWNER_SUCCESS = 'true'
               } catch (Exception e) {
-                echo "❌ Owner deploy failed: ${e.message}"
+                echo "❌ Owner 배포 실패: ${e.message}"
                 env.DEPLOY_OWNER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -280,31 +428,31 @@ pipeline {
           }
         }
         
-        stage('Deploy FS') {
+        stage('Foocketing-Subscriber 배포') {
           when { expression { return env.BUILD_FS == 'true' && env.BUILD_FS_SUCCESS == 'true' } }
           steps {
             script {
               try {
-                echo '🚀 Deploying Foocketing-Subscriber...'
+                echo '🚀 Foocketing-Subscriber 배포 중...'
                 sh """
                   set -e
                   cd /var/scripts
                   docker compose -f foocketing-subscriber.yml up -d
                   
-                  echo "⏳ Waiting for service..."
-                  for i in {1..30}; do
+                  echo "⏳ 서비스 시작 대기 중..."
+                  for i in {1..60}; do
                     if docker compose ps foocketing-subscriber | grep -q "Up"; then
-                      echo "✅ FS deployed"
+                      echo "✅ Foocketing-Subscriber 배포 완료"
                       exit 0
                     fi
                     sleep 1
                   done
-                  echo "❌ Deploy timeout"
+                  echo "❌ 배포 타임아웃"
                   exit 1
                 """
                 env.DEPLOY_FS_SUCCESS = 'true'
               } catch (Exception e) {
-                echo "❌ FS deploy failed: ${e.message}"
+                echo "❌ Foocketing-Subscriber 배포 실패: ${e.message}"
                 env.DEPLOY_FS_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -312,12 +460,12 @@ pipeline {
           }
         }
         
-        stage('Deploy FP') {
+        stage('Foocketing-Publisher 배포') {
           when { expression { return env.BUILD_FP == 'true' && env.BUILD_FP_SUCCESS == 'true' } }
           steps {
             script {
               try {
-                echo '🚀 Deploying Foocketing-Publisher via ArgoCD...'
+                echo '🚀 Foocketing-Publisher ArgoCD 배포 중...'
                 withCredentials([string(credentialsId: 'argocd-token', variable: 'TOKEN')]) {
                   sh """
                     argocd app set foocketing-publisher \
@@ -325,19 +473,19 @@ pipeline {
                       --auth-token \$TOKEN
                     
                     argocd app sync foocketing-publisher \
-                      --prune --timeout 300 \
+                      --prune --timeout 600 \
                       --auth-token \$TOKEN
                     
                     argocd app wait foocketing-publisher \
-                      --health --timeout 300 \
+                      --health --timeout 600 \
                       --auth-token \$TOKEN
                     
-                    echo "✅ FP deployed"
+                    echo "✅ Foocketing-Publisher 배포 완료"
                   """
                 }
                 env.DEPLOY_FP_SUCCESS = 'true'
               } catch (Exception e) {
-                echo "❌ FP deploy failed: ${e.message}"
+                echo "❌ Foocketing-Publisher 배포 실패: ${e.message}"
                 env.DEPLOY_FP_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -347,13 +495,13 @@ pipeline {
       }
     }
 
+
     // ==================== FE 빌드/배포 ====================
-    stage('FE - Build & Deploy') {
+    stage('FE - 빌드 및 배포') {
       when { expression { return env.IS_FE == 'true' } }
       parallel {
         
-        
-        stage('Build FE Owner') {
+        stage('FE Owner 빌드') {
           when { expression { return env.BUILD_FE_OWNER == 'true' } }
           tools {
             nodejs 'NodeJS25'
@@ -362,23 +510,23 @@ pipeline {
             script {
               try {
                 dir('FE/apps/owner-web') {
-                  echo '🔨 Building FE Owner...'
+                  echo '🔨 FE Owner 빌드 중...'
                   sh 'npm install'
                   sh 'npm run build'
                   sh """
-                    echo "📦 Copying build artifacts to Nginx..."
+                    echo "📦 빌드 결과물을 Nginx로 복사 중..."
                     rm -rf /var/jenkins_home/nginx-build/owner/*
                     cp -r ./dist/* /var/jenkins_home/nginx-build/owner/
                     
-                    echo "🔄 Reloading Nginx..."
+                    echo "🔄 Nginx 재시작 중..."
                     docker exec nginx nginx -s reload
                     
-                    echo "✅ FE Owner deployed and Nginx reloaded"
+                    echo "✅ FE Owner 배포 완료"
                   """
                 }
                 env.BUILD_FE_OWNER_SUCCESS = 'true'
               } catch (Exception e) {
-                echo "❌ FE Owner build failed: ${e.message}"
+                echo "❌ FE Owner 빌드 실패: ${e.message}"
                 env.BUILD_FE_OWNER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -386,7 +534,7 @@ pipeline {
           }
         }
         
-        stage('Build FE Customer') {
+        stage('FE Customer 빌드') {
           when { expression { return env.BUILD_FE_CUSTOMER == 'true' } }
           tools {
             nodejs 'NodeJS25'
@@ -395,23 +543,23 @@ pipeline {
             script {
               try {
                 dir('FE/apps/customer-web') {
-                  echo '🔨 Building FE Customer...'
+                  echo '🔨 FE Customer 빌드 중...'
                   sh 'npm install'
                   sh 'npm run build'
                   sh """
-                    echo "📦 Copying build artifacts to Nginx..."
+                    echo "📦 빌드 결과물을 Nginx로 복사 중..."
                     rm -rf /var/jenkins_home/nginx-build/customer/*
                     cp -r ./dist/* /var/jenkins_home/nginx-build/customer/
                     
-                    echo "🔄 Reloading Nginx..."
+                    echo "🔄 Nginx 재시작 중..."
                     docker exec nginx nginx -s reload
                     
-                    echo "✅ FE Customer deployed and Nginx reloaded"
+                    echo "✅ FE Customer 배포 완료"
                   """
                 }
                 env.BUILD_FE_CUSTOMER_SUCCESS = 'true'
               } catch (Exception e) {
-                echo "❌ FE Customer build failed: ${e.message}"
+                echo "❌ FE Customer 빌드 실패: ${e.message}"
                 env.BUILD_FE_CUSTOMER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
               }
@@ -429,20 +577,20 @@ pipeline {
         
         if (env.IS_BE == 'true') {
           lines << "╔════════════════════════════════════════════╗"
-          lines << "║      BE BUILD & DEPLOY REPORT              ║"
+          lines << "║      BE 빌드 및 배포 결과                  ║"
           lines << "╠════════════════════════════════════════════╣"
           
           if (env.BUILD_CUSTOMER == 'true') {
-            lines << "║ 👤 Customer  Build: ${env.BUILD_CUSTOMER_SUCCESS == 'true' ? '✅' : '❌'} Deploy: ${env.DEPLOY_CUSTOMER_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
+            lines << "║ 👤 Customer  빌드: ${env.BUILD_CUSTOMER_SUCCESS == 'true' ? '✅' : '❌'} 배포: ${env.DEPLOY_CUSTOMER_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
           }
           if (env.BUILD_OWNER == 'true') {
-            lines << "║ 🏪 Owner     Build: ${env.BUILD_OWNER_SUCCESS == 'true' ? '✅' : '❌'} Deploy: ${env.DEPLOY_OWNER_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
+            lines << "║ 🏪 Owner     빌드: ${env.BUILD_OWNER_SUCCESS == 'true' ? '✅' : '❌'} 배포: ${env.DEPLOY_OWNER_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
           }
           if (env.BUILD_FS == 'true') {
-            lines << "║ 📥 Foocketing-Sub Build: ${env.BUILD_FS_SUCCESS == 'true' ? '✅' : '❌'} Deploy: ${env.DEPLOY_FS_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
+            lines << "║ 📥 FS        빌드: ${env.BUILD_FS_SUCCESS == 'true' ? '✅' : '❌'} 배포: ${env.DEPLOY_FS_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
           }
           if (env.BUILD_FP == 'true') {
-            lines << "║ 📤 Foocketing-Pub Build: ${env.BUILD_FP_SUCCESS == 'true' ? '✅' : '❌'} Deploy: ${env.DEPLOY_FP_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
+            lines << "║ 📤 FP        빌드: ${env.BUILD_FP_SUCCESS == 'true' ? '✅' : '❌'} 배포: ${env.DEPLOY_FP_SUCCESS == 'true' ? '✅' : '⏭️'} ║"
           }
           
           lines << "╚════════════════════════════════════════════╝"
@@ -451,14 +599,14 @@ pipeline {
         if (env.IS_FE == 'true') {
           lines << ""
           lines << "╔════════════════════════════════════════════╗"
-          lines << "║      FE BUILD & DEPLOY REPORT              ║"
+          lines << "║      FE 빌드 및 배포 결과                  ║"
           lines << "╠════════════════════════════════════════════╣"
           
           if (env.BUILD_FE_OWNER == 'true') {
-            lines << "║ 🏪 FE Owner      Build: ${env.BUILD_FE_OWNER_SUCCESS == 'true' ? '✅' : '❌'} ║"
+            lines << "║ 🏪 FE Owner      빌드: ${env.BUILD_FE_OWNER_SUCCESS == 'true' ? '✅' : '❌'}               ║"
           }
           if (env.BUILD_FE_CUSTOMER == 'true') {
-            lines << "║ 👤 FE Customer   Build: ${env.BUILD_FE_CUSTOMER_SUCCESS == 'true' ? '✅' : '❌'} ║"
+            lines << "║ 👤 FE Customer   빌드: ${env.BUILD_FE_CUSTOMER_SUCCESS == 'true' ? '✅' : '❌'}               ║"
           }
           
           lines << "╚════════════════════════════════════════════╝"
@@ -469,15 +617,15 @@ pipeline {
     }
     
     success {
-      echo "✅ Pipeline completed successfully!"
+      echo "✅ 파이프라인 실행 성공!"
     }
     
     failure {
-      echo "❌ Pipeline failed! Check logs above."
+      echo "❌ 파이프라인 실행 실패! 로그를 확인하세요."
     }
     
     unstable {
-      echo "⚠️ Pipeline completed with warnings (some modules failed)"
+      echo "⚠️ 파이프라인 불안정 (일부 모듈 실패)"
     }
     
     cleanup {
@@ -493,7 +641,7 @@ pipeline {
             ]
           )
         } catch (Exception e) {
-          echo "⚠️ Cleanup skipped: ${e.message}"
+          echo "⚠️ 정리 작업 건너뜀: ${e.message}"
         }
       }
     }
