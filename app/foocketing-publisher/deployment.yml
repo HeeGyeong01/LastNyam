@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foocketing-publisher
+  namespace: foocketing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: foocketing-publisher
+  template:
+    metadata:
+      labels:
+        app: foocketing-publisher
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/watcher/prometheus'
+        prometheus.io/port: '9092'
+    spec:
+      containers:
+      - name: publisher
+        image: 941kjw/foocketing-publisher:v1.0.0
+        ports:
+        - containerPort: 8080
+          name: http
+        - contianerPort: 9092
+          name: metrics
