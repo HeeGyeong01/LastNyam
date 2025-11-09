@@ -14,5 +14,5 @@ spec:
       targetPort: 8080
     - name: metrics
       protocol: TCP
-      port: 9093
-      targetPort: 9093
+      port: 9091
+      targetPort: 9091
