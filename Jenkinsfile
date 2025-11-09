@@ -456,7 +456,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose -f foocketing-subscriber.yml ps foocketing-subscriber | grep -q "Up"; then
+                    if docker compose -f foocketing-subscriber.yml ps subscriber | grep -q "Up"; then
                       echo "✅ Foocketing-Subscriber 배포 완료"
                       exit 0
                     fi
