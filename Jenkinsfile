@@ -182,6 +182,9 @@ pipeline {
       when { expression { return env.IS_BE == 'true' } }
       steps {
         script {
+
+          sh "chown -R \$(id -u):\$(id -g) \${WORKSPACE}/BE"
+
           withCredentials([
             file(credentialsId: 'customer', variable: 'CUSTOMER_APP_YML'),
             file(credentialsId: 'owner', variable: 'OWNER_APP_YML'),
@@ -198,48 +201,56 @@ pipeline {
               set -e
               
               # Customer
-              if [ "${env.BUILD_CUSTOMER}" == "true" ]; then
+              if [ "${env.BUILD_CUSTOMER}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/customer/src/main/resources"
-                cp -v \$CUSTOMER_APP_YML \$TARGET_DIR/application.yml
-                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$S3_YML \$TARGET_DIR/application-s3.yml
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$CUSTOMER_APP_YML \${TARGET_DIR}/application.yml
+                cp -v \$AUTHENTICATION_YML \${TARGET_DIR}/application-authentication.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$S3_YML \${TARGET_DIR}/application-s3.yml
                 echo "✅ Customer 설정 파일 복사 완료"
               fi
               
               # Owner
-              if [ "${env.BUILD_OWNER}" == "true" ]; then
+              if [ "${env.BUILD_OWNER}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/owner/src/main/resources"
-                cp -v \$OWNER_APP_YML \$TARGET_DIR/application.yml
-                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$S3_YML \$TARGET_DIR/application-s3.yml
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$OWNER_APP_YML \${TARGET_DIR}/application.yml
+                cp -v \$AUTHENTICATION_YML \${TARGET_DIR}/application-authentication.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$S3_YML \${TARGET_DIR}/application-s3.yml
                 echo "✅ Owner 설정 파일 복사 완료"
               fi
               
               # Foocketing-Subscriber
-              if [ "${env.BUILD_FS}" == "true" ]; then
+              if [ "${env.BUILD_FS}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/foocketing-subscriber/src/main/resources"
-                cp -v \$SUBSCRIBER_YML \$TARGET_DIR/application.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$MESSAGING_YML \$TARGET_DIR/application-messaging.yml
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$SUBSCRIBER_YML \${TARGET_DIR}/application.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$MESSAGING_YML \${TARGET_DIR}/application-messaging.yml
                 echo "✅ Foocketing-Subscriber 설정 파일 복사 완료"
               fi
               
               # Foocketing-Publisher
-              if [ "${env.BUILD_FP}" == "true" ]; then
+              if [ "${env.BUILD_FP}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/foocketing-publisher/src/main/resources"
-                cp -v \$PUBLISHER_YML \$TARGET_DIR/application.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$MESSAGING_YML \$TARGET_DIR/application-messaging.yml
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$PUBLISHER_YML \${TARGET_DIR}/application.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$AUTHENTICATION_YML \${TARGET_DIR}/application-authentication.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$MESSAGING_YML \${TARGET_DIR}/application-messaging.yml
                 echo "✅ Foocketing-Publisher 설정 파일 복사 완료"
               fi
               
@@ -377,7 +388,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose ps customer | grep -q "Up"; then
+                    if docker compose ps -f customer.yml customer | grep -q "Up"; then
                       echo "✅ Customer 서비스 배포 완료"
                       exit 0
                     fi
@@ -409,7 +420,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose ps owner | grep -q "Up"; then
+                    if docker compose -f owner.yml ps owner | grep -q "Up"; then
                       echo "✅ Owner 서비스 배포 완료"
                       exit 0
                     fi
@@ -441,7 +452,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose ps foocketing-subscriber | grep -q "Up"; then
+                    if docker compose -f foocketing-subscriber.yml ps foocketing-subscriber | grep -q "Up"; then
                       echo "✅ Foocketing-Subscriber 배포 완료"
                       exit 0
                     fi
