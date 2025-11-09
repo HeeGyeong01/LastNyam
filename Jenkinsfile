@@ -519,7 +519,7 @@ pipeline {
                     fi
                     
                     echo "기존 태그: `grep 'image:' \$MANIFEST_FILE`"
-                    sed -i "s|image: ${REGISTRY}/foocketing-publisher:.*|image: ${REGISTRY}/foocketing-publisher:${TAG}|g" "\$MANIFEST_FILE"
+                    sed -i "s|image: ${REGISTRY}/foocketing-publisher:.*|image: ${REGISTRY}/foocketing-publisher:${PUB_TAG}|g" "\$MANIFEST_FILE"
                     echo "수정된 태그: `grep 'image:' \$MANIFEST_FILE`"
                     
                     echo "==== 5. 변경사항 커밋 및 푸시 ===="
@@ -528,7 +528,7 @@ pipeline {
                       echo "⏭️ Manifest 파일에 변경사항이 없습니다. 푸시를 건너뜁니다."
                     else
                       git add "\$MANIFEST_FILE"
-                      git commit -m "CI: Set image for foocketing-publisher to ${TAG}"
+                      git commit -m "CI: Set image for foocketing-publisher to ${PUB_TAG}"
                       git push origin K8s
                       echo "✅ Manifest 레포지토리에 새로운 이미지 태그를 푸시했습니다."
                     fi
