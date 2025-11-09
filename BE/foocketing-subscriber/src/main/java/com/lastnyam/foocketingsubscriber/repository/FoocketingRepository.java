@@ -12,7 +12,7 @@ public interface FoocketingRepository extends JpaRepository<Foocketing, Integer>
     @Query("""
             SELECT COUNT(f.foocketingId)
             FROM Foocketing f
-            WHERE f.foocketingTime >= :start AND f.foocketingTime < :end;
+            WHERE f.foocketingTime >= :start AND f.foocketingTime < :end
             """)
     int getFoocketingCountBetween(LocalDateTime start, LocalDateTime end);
 }
