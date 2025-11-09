@@ -8,6 +8,11 @@ spec:
   selector:
     app: foocketing-publisher
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: metrics
+      protocol: TCP
+      port: 9093
+      targetPort: 9093

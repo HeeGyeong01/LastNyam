@@ -15,7 +15,7 @@ spec:
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/path: '/watcher/prometheus'
-        prometheus.io/port: '9092'
+        prometheus.io/port: '9093'
     spec:
       containers:
       - name: publisher
@@ -23,5 +23,5 @@ spec:
         ports:
         - containerPort: 8080
           name: http
-        - containerPort: 9092
+        - containerPort: 9093
           name: metrics
