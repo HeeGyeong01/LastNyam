@@ -502,7 +502,7 @@ pipeline {
                     echo "==== 2. Manifest 레포지토리 클론 ===="
                     # 작업 공간 충돌을 피하기 위해 임시 디렉터리에 클론
                     rm -rf /tmp/manifest-repo 
-                    git clone https://${GIT_USERNAME}:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
+                    git clone https://oauth2:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
                     cd /tmp/manifest-repo
 
                     echo "==== 3. K8s 브랜치로 이동 ===="
