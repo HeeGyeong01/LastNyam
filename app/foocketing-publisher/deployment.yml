@@ -23,5 +23,5 @@ spec:
         ports:
         - containerPort: 8080
           name: http
-        - contianerPort: 9092
+        - containerPort: 9092
           name: metrics
