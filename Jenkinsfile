@@ -356,18 +356,18 @@ pipeline {
                 dir('BE') {
                   echo '🔨 Foocketing-Publisher 빌드 중...'
                   sh './gradlew :foocketing-publisher:clean :foocketing-publisher:bootJar --parallel --build-cache'
-                  sh """
-                    withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                      echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                    }
+                  withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                      sh """
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin 
+                        docker build \
+                          -t ${REGISTRY}/foocketing-publisher:${PUB_TAG} \
+                          -f foocketing-publisher/Dockerfile .
 
-                    docker build \
-                      -t ${REGISTRY}/foocketing-publisher:${PUB_TAG} \
-                      -f foocketing-publisher/Dockerfile .
-
-                    echo "🚀 Docker Hub로 이미지 푸시 중..."
-                    docker push ${REGISTRY}/foocketing-publisher:${PUB_TAG}
-                  """
+                        echo "🚀 Docker Hub로 이미지 푸시 중..."
+                        docker push ${REGISTRY}/foocketing-publisher:${PUB_TAG}
+                      """
+                      
+                  }
                   env.BUILD_FP_SUCCESS = 'true'
                 }
               } catch (Exception e) {
