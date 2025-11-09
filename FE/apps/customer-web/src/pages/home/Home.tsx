@@ -114,6 +114,7 @@ export default function Home() {
       <div className="px-4 pb-20">
         <h1 className="text-2xl font-bold mb-4">Home</h1>
         <Input placeholder="Search" className="mb-6" />
+        <p className="mb-4 text-red-500">테스트: 카드 컴포넌트 렌더링 확인</p>
         
         {/* FoocketingCard 테스트 */}
         <div className="flex flex-col gap-6">
