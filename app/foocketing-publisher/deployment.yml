@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: publisher
-        image: 941kjw/foocketing-publisher:9d8fe31
+        image: 941kjw/foocketing-publisher:0c1bd5d
         ports:
         - containerPort: 8080
           name: http
