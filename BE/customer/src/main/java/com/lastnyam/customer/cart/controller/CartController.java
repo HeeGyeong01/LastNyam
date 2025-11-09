@@ -3,7 +3,7 @@ package com.lastnyam.customer.cart.controller;
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.customer.cart.dto.CartAddRequestDto;
 import com.lastnyam.customer.cart.dto.CartDeleteRequestDto;
-import com.lastnyam.customer.cart.dto.CartOrderRequestDto;
+import com.lastnyam.customer.cart.dto.CartOrderApproveRequestDto;
 import com.lastnyam.customer.cart.dto.CartOrderResponseDto;
 import com.lastnyam.customer.cart.dto.CartResponseDto;
 import com.lastnyam.customer.cart.dto.CartUpdateRequestDto;
@@ -91,19 +91,33 @@ public class CartController {
     }
 
     /**
-     * 장바구니 결제
-     * 장바구니의 모든 물품을 결제합니다.
-     * 카카오페이 결제를 사용합니다.
+     * 장바구니 결제 준비
+     * 장바구니의 모든 물품에 대한 카카오페이 결제를 준비합니다.
+     * 결제 준비 API를 호출하여 TID와 Redirect URL을 받습니다.
      *
      * @param userId 사용자 ID
-     * @param request 결제 요청 정보
-     * @return 결제 결과 정보
+     * @return 결제 준비 응답 (TID, Redirect URL 등)
      */
     @PostMapping("/{userId}/order")
     public ResponseEntity<ApiResponse<CartOrderResponseDto>> orderCart(
+            @PathVariable("userId") Integer userId) {
+        CartOrderResponseDto result = cartService.orderCart(userId);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+    }
+
+    /**
+     * 장바구니 결제 승인
+     * 사용자가 카카오톡에서 결제를 완료한 후, pg_token과 tid로 최종 승인을 요청합니다.
+     *
+     * @param userId 사용자 ID
+     * @param request 결제 승인 요청 정보 (tid, pgToken, partnerOrderId)
+     * @return 결제 승인 응답
+     */
+    @PostMapping("/{userId}/order/approve")
+    public ResponseEntity<ApiResponse<CartOrderResponseDto>> approveOrder(
             @PathVariable("userId") Integer userId,
-            @RequestBody CartOrderRequestDto request) {
-        CartOrderResponseDto result = cartService.orderCart(userId, request);
+            @RequestBody CartOrderApproveRequestDto request) {
+        CartOrderResponseDto result = cartService.approveOrder(userId, request);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 }

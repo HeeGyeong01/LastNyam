@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartOrderRequestDto {
-    // 카카오페이 결제를 위한 추가 정보가 필요할 수 있음
-    // 현재는 기본 구조만 제공
+public class CartOrderApproveRequestDto {
+    private String tid; // 결제 고유 번호
+    private String pgToken; // 결제 승인 토큰
+    private String partnerOrderId; // 가맹점 주문번호
 }
 

@@ -3,7 +3,7 @@ package com.lastnyam.customer.cart.service;
 import com.lastnyam.customer.cart.dto.CartAddRequestDto;
 import com.lastnyam.customer.cart.dto.CartDeleteRequestDto;
 import com.lastnyam.customer.cart.dto.CartItemResponseDto;
-import com.lastnyam.customer.cart.dto.CartOrderRequestDto;
+import com.lastnyam.customer.cart.dto.CartOrderApproveRequestDto;
 import com.lastnyam.customer.cart.dto.CartOrderResponseDto;
 import com.lastnyam.customer.cart.dto.CartResponseDto;
 import com.lastnyam.customer.cart.dto.CartUpdateRequestDto;
@@ -12,11 +12,18 @@ import com.lastnyam.customer.cart.repository.CartRepository;
 import com.lastnyam.customer.cart.repository.DiscountRepository;
 import com.lastnyam.customer.exception.BadRequestException;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.external.kakaopay.client.KakaoPayClient;
+import com.lastnyam.customer.external.kakaopay.config.KakaoPayConfig;
+import com.lastnyam.customer.external.kakaopay.dto.KakaoPayApproveRequest;
+import com.lastnyam.customer.external.kakaopay.dto.KakaoPayApproveResponse;
+import com.lastnyam.customer.external.kakaopay.dto.KakaoPayReadyRequest;
+import com.lastnyam.customer.external.kakaopay.dto.KakaoPayReadyResponse;
 import com.lastnyam.database.entity.Cart;
 import com.lastnyam.database.entity.CartItem;
 import com.lastnyam.database.entity.Discount;
 import com.lastnyam.database.entity.User;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +38,8 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final DiscountRepository discountRepository;
+    private final KakaoPayClient kakaoPayClient;
+    private final KakaoPayConfig kakaoPayConfig;
 
     @Transactional(readOnly = true)
     public CartResponseDto getCart(Integer userId) {
@@ -171,8 +180,15 @@ public class CartService {
         return getCart(userId);
     }
 
+    /**
+     * 장바구니 결제 준비
+     * 카카오페이 결제 준비 API를 호출하여 결제 정보를 전달하고 TID와 Redirect URL을 받습니다.
+     *
+     * @param userId 사용자 ID
+     * @return 결제 준비 응답 (TID, Redirect URL 등)
+     */
     @Transactional
-    public CartOrderResponseDto orderCart(Integer userId, CartOrderRequestDto request) {
+    public CartOrderResponseDto orderCart(Integer userId) {
         Cart cart = cartRepository.findByUserUserId(userId)
                 .orElseThrow(ResourceNotFoundException::ofCart);
 
@@ -187,11 +203,103 @@ public class CartService {
                 .mapToInt(item -> item.getDiscount().getDiscountPrice() * item.getCartItemAmount())
                 .sum();
 
-        // TODO: 카카오페이 결제 연동
-        // 현재는 기본 구조만 제공
-        log.info("카카오페이 결제 시작: userId={}, totalPrice={}", userId, totalPrice);
+        // 상품명 생성 (여러 상품이면 "외 N개" 형식)
+        String itemName = cartItems.stream()
+                .map(item -> item.getDiscount().getMenu().getMenuName())
+                .limit(1)
+                .findFirst()
+                .orElse("상품");
+        
+        if (cartItems.size() > 1) {
+            itemName += " 외 " + (cartItems.size() - 1) + "개";
+        }
 
-        // TODO: 주문 생성 및 저장 로직
+        // 총 수량 계산
+        int totalQuantity = cartItems.stream()
+                .mapToInt(CartItem::getCartItemAmount)
+                .sum();
+
+        // 가맹점 주문번호 생성 (UUID 기반)
+        String partnerOrderId = "ORDER_" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+        
+        // 부가세 계산 (총액의 10%)
+        int vatAmount = (int) Math.round(totalPrice / 11.0);
+        int taxFreeAmount = totalPrice - vatAmount;
+
+        // 카카오페이 결제 준비 요청 생성
+        KakaoPayReadyRequest readyRequest = KakaoPayReadyRequest.builder()
+                .cid(kakaoPayConfig.getCid())
+                .partnerOrderId(partnerOrderId)
+                .partnerUserId(String.valueOf(userId))
+                .itemName(itemName)
+                .quantity(totalQuantity)
+                .totalAmount(totalPrice)
+                .taxFreeAmount(taxFreeAmount)
+                .vatAmount(vatAmount)
+                .approvalUrl(kakaoPayConfig.getApprovalUrl())
+                .cancelUrl(kakaoPayConfig.getCancelUrl())
+                .failUrl(kakaoPayConfig.getFailUrl())
+                .build();
+
+        // 카카오페이 결제 준비 API 호출
+        KakaoPayReadyResponse readyResponse = kakaoPayClient.ready(readyRequest);
+
+        log.info("카카오페이 결제 준비 완료 - userId: {}, tid: {}, partnerOrderId: {}", 
+                userId, readyResponse.getTid(), partnerOrderId);
+
+        // TODO: 주문 정보를 임시 저장 (Redis 또는 DB에 tid와 partnerOrderId 저장)
+        // 결제 승인 시 사용하기 위해 필요
+
+        return CartOrderResponseDto.builder()
+                .orderId(null) // 결제 승인 후 주문 생성
+                .userId(userId)
+                .totalPrice(totalPrice)
+                .paymentStatus("READY") // 결제 준비 완료
+                .tid(readyResponse.getTid())
+                .partnerOrderId(partnerOrderId) // 결제 승인 시 필요
+                .nextRedirectAppUrl(readyResponse.getNextRedirectAppUrl())
+                .nextRedirectMobileUrl(readyResponse.getNextRedirectMobileUrl())
+                .nextRedirectPcUrl(readyResponse.getNextRedirectPcUrl())
+                .build();
+    }
+
+    /**
+     * 장바구니 결제 승인
+     * 사용자가 카카오톡에서 결제를 완료한 후, pg_token과 tid로 최종 승인을 요청합니다.
+     *
+     * @param userId 사용자 ID
+     * @param request 결제 승인 요청 정보 (tid, pgToken, partnerOrderId)
+     * @return 결제 승인 응답
+     */
+    @Transactional
+    public CartOrderResponseDto approveOrder(Integer userId, CartOrderApproveRequestDto request) {
+        // 카카오페이 결제 승인 요청 생성
+        KakaoPayApproveRequest approveRequest = KakaoPayApproveRequest.builder()
+                .cid(kakaoPayConfig.getCid())
+                .tid(request.getTid())
+                .partnerOrderId(request.getPartnerOrderId())
+                .partnerUserId(String.valueOf(userId))
+                .pgToken(request.getPgToken())
+                .build();
+
+        // 카카오페이 결제 승인 API 호출
+        KakaoPayApproveResponse approveResponse = kakaoPayClient.approve(approveRequest);
+
+        log.info("카카오페이 결제 승인 완료 - userId: {}, tid: {}, aid: {}, approvedAt: {}", 
+                userId, approveResponse.getTid(), approveResponse.getAid(), approveResponse.getApprovedAt());
+
+        // 장바구니 조회
+        Cart cart = cartRepository.findByUserUserId(userId)
+                .orElseThrow(ResourceNotFoundException::ofCart);
+
+        List<CartItem> cartItems = cartItemRepository.findByCartCartId(cart.getCartId());
+
+        // 총 가격 계산
+        int totalPrice = cartItems.stream()
+                .mapToInt(item -> item.getDiscount().getDiscountPrice() * item.getCartItemAmount())
+                .sum();
+
+        // TODO: 주문 생성 및 저장 로직 (DiscountTransaction 등)
         // 주문 생성 후 장바구니 비우기
         cartItemRepository.deleteAll(cartItems);
         cartRepository.delete(cart);
@@ -200,7 +308,10 @@ public class CartService {
                 .orderId(null) // TODO: 실제 주문 ID로 변경
                 .userId(userId)
                 .totalPrice(totalPrice)
-                .paymentStatus("PENDING") // TODO: 실제 결제 상태로 변경
+                .paymentStatus("APPROVED") // 결제 승인 완료
+                .tid(approveResponse.getTid())
+                .aid(approveResponse.getAid())
+                .approvedAt(approveResponse.getApprovedAt())
                 .build();
     }
 }

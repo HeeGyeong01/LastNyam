@@ -14,6 +14,16 @@ public class CartOrderResponseDto {
     private Integer userId;
     private Integer totalPrice;
     private String paymentStatus;
-    // 카카오페이 결제 관련 추가 필드가 필요할 수 있음
+    
+    // 결제 준비 응답 필드
+    private String tid; // 결제 고유 번호
+    private String partnerOrderId; // 가맹점 주문번호 (결제 승인 시 필요)
+    private String nextRedirectAppUrl; // 모바일 앱 redirect URL
+    private String nextRedirectMobileUrl; // 모바일 웹 redirect URL
+    private String nextRedirectPcUrl; // PC 웹 redirect URL
+    
+    // 결제 승인 응답 필드
+    private String aid; // 요청 고유 번호
+    private String approvedAt; // 결제 승인 시각
 }
 
