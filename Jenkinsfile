@@ -357,6 +357,10 @@ pipeline {
                   echo '🔨 Foocketing-Publisher 빌드 중...'
                   sh './gradlew :foocketing-publisher:clean :foocketing-publisher:bootJar --parallel --build-cache'
                   sh """
+                    withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                      echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                    }
+
                     docker build \
                       -t ${REGISTRY}/foocketing-publisher:${PUB_TAG} \
                       -f foocketing-publisher/Dockerfile .
