@@ -203,6 +203,7 @@ pipeline {
               # Customer
               if [ "${env.BUILD_CUSTOMER}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/customer/src/main/resources"
+                mkdir -p \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
                 cp -v \$CUSTOMER_APP_YML \${TARGET_DIR}/application.yml
@@ -217,6 +218,7 @@ pipeline {
               # Owner
               if [ "${env.BUILD_OWNER}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/owner/src/main/resources"
+                mkdir -p \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
                 cp -v \$OWNER_APP_YML \${TARGET_DIR}/application.yml
@@ -231,6 +233,7 @@ pipeline {
               # Foocketing-Subscriber
               if [ "${env.BUILD_FS}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/foocketing-subscriber/src/main/resources"
+                mkdir -p \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
                 cp -v \$SUBSCRIBER_YML \${TARGET_DIR}/application.yml
@@ -244,6 +247,7 @@ pipeline {
               # Foocketing-Publisher
               if [ "${env.BUILD_FP}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/foocketing-publisher/src/main/resources"
+                mkdir -p \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}
                 chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
                 cp -v \$PUBLISHER_YML \${TARGET_DIR}/application.yml
