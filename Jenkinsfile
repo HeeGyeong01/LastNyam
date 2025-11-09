@@ -48,6 +48,7 @@ pipeline {
     REGISTRY = '941kjw'
     TAG = "latest"
     GRADLE_OPTS = '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
+    PUB_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
   }
 
 
@@ -356,11 +357,12 @@ pipeline {
                   echo '🔨 Foocketing-Publisher 빌드 중...'
                   sh './gradlew :foocketing-publisher:clean :foocketing-publisher:bootJar --parallel --build-cache'
                   sh """
-                    docker pull ${REGISTRY}/foocketing-publisher:latest || true
                     docker build \
-                      --cache-from ${REGISTRY}/foocketing-publisher:latest \
-                      -t ${REGISTRY}/foocketing-publisher:${TAG} \
+                      -t ${REGISTRY}/foocketing-publisher:${PUB_TAG} \
                       -f foocketing-publisher/Dockerfile .
+
+                    echo "🚀 Docker Hub로 이미지 푸시 중..."
+                    docker push ${REGISTRY}/foocketing-publisher:${PUB_TAG}
                   """
                   env.BUILD_FP_SUCCESS = 'true'
                 }
@@ -480,25 +482,56 @@ pipeline {
           steps {
             script {
               try {
-                echo '🚀 Foocketing-Publisher ArgoCD 배포 중...'
-                withCredentials([string(credentialsId: 'argocd-token', variable: 'TOKEN')]) {
+                echo "🚀 Foocketing-Publisher GitOps 배포 시작 (Image Tag: ${TAG})"
+                
+                // Manifest 레포지토리에 push 권한이 있는 SSH 키 자격 증명을 사용합니다.
+                // Jenkins Credentials에 ID 'k8s-manifest-repo-ssh-key' 로 미리 등록해야 합니다.
+                withCredentials([usernamePassword(credentialsId: 'de12f27e-dd2d-4317-8046-a9ad86c3d720', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
                   sh """
-                    argocd app set foocketing-publisher \
-                      -p image.tag=${TAG} \
-                      --auth-token \$TOKEN
+                    #!/bin/sh
+                    set -e # 스크립트 중간에 오류 발생 시 즉시 중단
+
+                    echo "==== 1. Git 사용자 정보 설정 ===="
+                    git config --global user.name "Jenkins CI"
+                    git config --global user.email "lastnyam@gmail.com"
                     
-                    argocd app sync foocketing-publisher \
-                      --prune --timeout 600 \
-                      --auth-token \$TOKEN
+                    echo "==== 2. Manifest 레포지토리 클론 ===="
+                    # 작업 공간 충돌을 피하기 위해 임시 디렉터리에 클론
+                    rm -rf /tmp/manifest-repo 
+                    git clone https://${GIT_USERNAME}:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
+                    cd /tmp/manifest-repo
+
+                    echo "==== 3. K8s 브랜치로 이동 ===="
+                    git checkout K8s
+
+                    echo "==== 4. deployment.yaml 이미지 태그 수정 ===="
+                    # sed 명령어를 사용하여 image 태그 부분을 새로운 TAG로 교체합니다.
+                    # 파일 경로: app/foocketing-publisher/deployment.yml
+                    MANIFEST_FILE="app/foocketing-publisher/deployment.yml"
                     
-                    argocd app wait foocketing-publisher \
-                      --health --timeout 600 \
-                      --auth-token \$TOKEN
+                    if [ ! -f "\$MANIFEST_FILE" ]; then
+                      echo "❌ Manifest 파일(\$MANIFEST_FILE)을 찾을 수 없습니다!"
+                      exit 1
+                    fi
                     
-                    echo "✅ Foocketing-Publisher 배포 완료"
+                    echo "기존 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    sed -i "s|image: ${REGISTRY}/foocketing-publisher:.*|image: ${REGISTRY}/foocketing-publisher:${TAG}|g" "\$MANIFEST_FILE"
+                    echo "수정된 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    
+                    echo "==== 5. 변경사항 커밋 및 푸시 ===="
+                    # git diff로 실제 변경사항이 있을 때만 커밋 및 푸시
+                    if git diff --quiet; then
+                      echo "⏭️ Manifest 파일에 변경사항이 없습니다. 푸시를 건너뜁니다."
+                    else
+                      git add "\$MANIFEST_FILE"
+                      git commit -m "CI: Set image for foocketing-publisher to ${TAG}"
+                      git push origin K8s
+                      echo "✅ Manifest 레포지토리에 새로운 이미지 태그를 푸시했습니다."
+                    fi
                   """
-                }
+                } // end withCredentials
                 env.DEPLOY_FP_SUCCESS = 'true'
+
               } catch (Exception e) {
                 echo "❌ Foocketing-Publisher 배포 실패: ${e.message}"
                 env.DEPLOY_FP_SUCCESS = 'false'
