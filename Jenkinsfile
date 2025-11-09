@@ -48,6 +48,7 @@ pipeline {
     REGISTRY = '941kjw'
     TAG = "latest"
     GRADLE_OPTS = '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
+    PUB_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
   }
 
 
@@ -182,6 +183,9 @@ pipeline {
       when { expression { return env.IS_BE == 'true' } }
       steps {
         script {
+
+          sh "chown -R \$(id -u):\$(id -g) \${WORKSPACE}/BE"
+
           withCredentials([
             file(credentialsId: 'customer', variable: 'CUSTOMER_APP_YML'),
             file(credentialsId: 'owner', variable: 'OWNER_APP_YML'),
@@ -198,48 +202,60 @@ pipeline {
               set -e
               
               # Customer
-              if [ "${env.BUILD_CUSTOMER}" == "true" ]; then
+              if [ "${env.BUILD_CUSTOMER}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/customer/src/main/resources"
-                cp -v \$CUSTOMER_APP_YML \$TARGET_DIR/application.yml
-                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$S3_YML \$TARGET_DIR/application-s3.yml
+                mkdir -p \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$CUSTOMER_APP_YML \${TARGET_DIR}/application.yml
+                cp -v \$AUTHENTICATION_YML \${TARGET_DIR}/application-authentication.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$S3_YML \${TARGET_DIR}/application-s3.yml
                 echo "✅ Customer 설정 파일 복사 완료"
               fi
               
               # Owner
-              if [ "${env.BUILD_OWNER}" == "true" ]; then
+              if [ "${env.BUILD_OWNER}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/owner/src/main/resources"
-                cp -v \$OWNER_APP_YML \$TARGET_DIR/application.yml
-                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$S3_YML \$TARGET_DIR/application-s3.yml
+                mkdir -p \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$OWNER_APP_YML \${TARGET_DIR}/application.yml
+                cp -v \$AUTHENTICATION_YML \${TARGET_DIR}/application-authentication.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$S3_YML \${TARGET_DIR}/application-s3.yml
                 echo "✅ Owner 설정 파일 복사 완료"
               fi
               
               # Foocketing-Subscriber
-              if [ "${env.BUILD_FS}" == "true" ]; then
+              if [ "${env.BUILD_FS}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/foocketing-subscriber/src/main/resources"
-                cp -v \$SUBSCRIBER_YML \$TARGET_DIR/application.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$DATABASE_YML \$TARGET_DIR/application-database.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$MESSAGING_YML \$TARGET_DIR/application-messaging.yml
+                mkdir -p \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$SUBSCRIBER_YML \${TARGET_DIR}/application.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$MESSAGING_YML \${TARGET_DIR}/application-messaging.yml
                 echo "✅ Foocketing-Subscriber 설정 파일 복사 완료"
               fi
               
               # Foocketing-Publisher
-              if [ "${env.BUILD_FP}" == "true" ]; then
+              if [ "${env.BUILD_FP}" = "true" ]; then
                 TARGET_DIR="${WORKSPACE}/BE/foocketing-publisher/src/main/resources"
-                cp -v \$PUBLISHER_YML \$TARGET_DIR/application.yml
-                cp -v \$ACTUATOR_YML \$TARGET_DIR/application-actuator.yml
-                cp -v \$AUTHENTICATION_YML \$TARGET_DIR/application-authentication.yml
-                cp -v \$REDIS_YML \$TARGET_DIR/application-redis.yml
-                cp -v \$MESSAGING_YML \$TARGET_DIR/application-messaging.yml
+                mkdir -p \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}
+                chmod +w \${TARGET_DIR}/*.yml 2>/dev/null || true
+                cp -v \$PUBLISHER_YML \${TARGET_DIR}/application.yml
+                cp -v \$ACTUATOR_YML \${TARGET_DIR}/application-actuator.yml
+                cp -v \$AUTHENTICATION_YML \${TARGET_DIR}/application-authentication.yml
+                cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
+                cp -v \$MESSAGING_YML \${TARGET_DIR}/application-messaging.yml
                 echo "✅ Foocketing-Publisher 설정 파일 복사 완료"
               fi
               
@@ -340,13 +356,18 @@ pipeline {
                 dir('BE') {
                   echo '🔨 Foocketing-Publisher 빌드 중...'
                   sh './gradlew :foocketing-publisher:clean :foocketing-publisher:bootJar --parallel --build-cache'
-                  sh """
-                    docker pull ${REGISTRY}/foocketing-publisher:latest || true
-                    docker build \
-                      --cache-from ${REGISTRY}/foocketing-publisher:latest \
-                      -t ${REGISTRY}/foocketing-publisher:${TAG} \
-                      -f foocketing-publisher/Dockerfile .
-                  """
+                  withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                      sh """
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin 
+                        docker build \
+                          -t ${REGISTRY}/foocketing-publisher:${PUB_TAG} \
+                          -f foocketing-publisher/Dockerfile .
+
+                        echo "🚀 Docker Hub로 이미지 푸시 중..."
+                        docker push ${REGISTRY}/foocketing-publisher:${PUB_TAG}
+                      """
+                      
+                  }
                   env.BUILD_FP_SUCCESS = 'true'
                 }
               } catch (Exception e) {
@@ -377,7 +398,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose ps customer | grep -q "Up"; then
+                    if docker compose ps -f customer.yml customer | grep -q "Up"; then
                       echo "✅ Customer 서비스 배포 완료"
                       exit 0
                     fi
@@ -409,7 +430,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose ps owner | grep -q "Up"; then
+                    if docker compose -f owner.yml ps owner | grep -q "Up"; then
                       echo "✅ Owner 서비스 배포 완료"
                       exit 0
                     fi
@@ -441,7 +462,7 @@ pipeline {
                   
                   echo "⏳ 서비스 시작 대기 중..."
                   for i in {1..60}; do
-                    if docker compose ps foocketing-subscriber | grep -q "Up"; then
+                    if docker compose -f foocketing-subscriber.yml ps subscriber | grep -q "Up"; then
                       echo "✅ Foocketing-Subscriber 배포 완료"
                       exit 0
                     fi
@@ -465,25 +486,56 @@ pipeline {
           steps {
             script {
               try {
-                echo '🚀 Foocketing-Publisher ArgoCD 배포 중...'
-                withCredentials([string(credentialsId: 'argocd-token', variable: 'TOKEN')]) {
+                echo "🚀 Foocketing-Publisher GitOps 배포 시작 (Image Tag: ${TAG})"
+                
+                // Manifest 레포지토리에 push 권한이 있는 SSH 키 자격 증명을 사용합니다.
+                // Jenkins Credentials에 ID 'k8s-manifest-repo-ssh-key' 로 미리 등록해야 합니다.
+                withCredentials([usernamePassword(credentialsId: 'de12f27e-dd2d-4317-8046-a9ad86c3d720', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
                   sh """
-                    argocd app set foocketing-publisher \
-                      -p image.tag=${TAG} \
-                      --auth-token \$TOKEN
+                    #!/bin/sh
+                    set -e # 스크립트 중간에 오류 발생 시 즉시 중단
+
+                    echo "==== 1. Git 사용자 정보 설정 ===="
+                    git config --global user.name "Jenkins CI"
+                    git config --global user.email "lastnyam@gmail.com"
                     
-                    argocd app sync foocketing-publisher \
-                      --prune --timeout 600 \
-                      --auth-token \$TOKEN
+                    echo "==== 2. Manifest 레포지토리 클론 ===="
+                    # 작업 공간 충돌을 피하기 위해 임시 디렉터리에 클론
+                    rm -rf /tmp/manifest-repo 
+                    git clone https://oauth2:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
+                    cd /tmp/manifest-repo
+
+                    echo "==== 3. K8s 브랜치로 이동 ===="
+                    git checkout K8s
+
+                    echo "==== 4. deployment.yaml 이미지 태그 수정 ===="
+                    # sed 명령어를 사용하여 image 태그 부분을 새로운 TAG로 교체합니다.
+                    # 파일 경로: app/foocketing-publisher/deployment.yml
+                    MANIFEST_FILE="app/foocketing-publisher/deployment.yml"
                     
-                    argocd app wait foocketing-publisher \
-                      --health --timeout 600 \
-                      --auth-token \$TOKEN
+                    if [ ! -f "\$MANIFEST_FILE" ]; then
+                      echo "❌ Manifest 파일(\$MANIFEST_FILE)을 찾을 수 없습니다!"
+                      exit 1
+                    fi
                     
-                    echo "✅ Foocketing-Publisher 배포 완료"
+                    echo "기존 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    sed -i "s|image: ${REGISTRY}/foocketing-publisher:.*|image: ${REGISTRY}/foocketing-publisher:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                    echo "수정된 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    
+                    echo "==== 5. 변경사항 커밋 및 푸시 ===="
+                    # git diff로 실제 변경사항이 있을 때만 커밋 및 푸시
+                    if git diff --quiet; then
+                      echo "⏭️ Manifest 파일에 변경사항이 없습니다. 푸시를 건너뜁니다."
+                    else
+                      git add "\$MANIFEST_FILE"
+                      git commit -m "CI: Set image for foocketing-publisher to ${PUB_TAG}"
+                      git push origin K8s
+                      echo "✅ Manifest 레포지토리에 새로운 이미지 태그를 푸시했습니다."
+                    fi
                   """
-                }
+                } // end withCredentials
                 env.DEPLOY_FP_SUCCESS = 'true'
+
               } catch (Exception e) {
                 echo "❌ Foocketing-Publisher 배포 실패: ${e.message}"
                 env.DEPLOY_FP_SUCCESS = 'false'
