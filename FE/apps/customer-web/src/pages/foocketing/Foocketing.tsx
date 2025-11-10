@@ -8,6 +8,7 @@ import { clearLocationCache } from '@/lib/geolocation';
 import { useFoocketingCategory } from '@/hooks';
 // import { useFoocketingCategoryMock } from '@/hooks/useFoocketingCategoryMock';
 import { FoocketingCardHorizontal } from '@/components/cards';
+import NaverMap from '@/components/map/NaverMap';
 import type { FoocketingCategory, FoocketingItem, FoocketingSortType } from '@/types';
 
 export default function Foocketing() {
@@ -18,7 +19,11 @@ export default function Foocketing() {
     clearLocationCache();
   }, []);
 
-  // 푸켓팅 데이터 가져오기 (위치 정보는 API 함수에서 자동으로 가져옴)
+  // 지도 중심 좌표 상태 (지도 이동 시 업데이트)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+
+  // 푸켓팅 데이터 가져오기
+  // mapCenter가 있으면 지도 중심 좌표 사용, 없으면 API 함수에서 자동으로 가져옴
   const {
     category,
     foocketings,
@@ -28,7 +33,25 @@ export default function Foocketing() {
   } = useFoocketingCategory({
     initialCategory: 1, // 1: 베이커리
     sort: 'IMMINENT',
+    lat: mapCenter?.lat,
+    lng: mapCenter?.lng,
   });
+
+  // 디바운싱을 위한 timeout ref
+  const centerChangeTimeoutRef = useRef<number | null>(null);
+
+  // 지도 중심 변경 핸들러 (디바운싱 적용)
+  const handleMapCenterChange = useCallback((lat: number, lng: number) => {
+    // 이전 timeout 취소
+    if (centerChangeTimeoutRef.current) {
+      clearTimeout(centerChangeTimeoutRef.current);
+    }
+
+    // 디바운싱: 지도 이동이 끝난 후 500ms 후에 API 호출
+    centerChangeTimeoutRef.current = setTimeout(() => {
+      setMapCenter({ lat, lng });
+    }, 500);
+  }, []);
 
   // Tab과 연동하기 위한 카테고리 매핑
   // 1: 베이커리, 2: 회/초밥, 3: 김밥/분식, 4: 샐러드/포케, 5: 기타
@@ -125,7 +148,10 @@ export default function Foocketing() {
 
   // 드래그 중
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    e.preventDefault(); // 스크롤 방지
+    // cancelable이 true일 때만 preventDefault 호출 (경고 방지)
+    if (e.cancelable) {
+      e.preventDefault(); // 스크롤 방지
+    }
     
     // isDragging 상태를 직접 체크하지 않고, startY가 설정되어 있으면 드래그 중으로 간주
     if (startY === 0) return;
@@ -226,9 +252,9 @@ export default function Foocketing() {
       {/* Header와 Tab 높이만큼 공간 확보 (스크롤 방지) */}
       <div style={{ height: `${HEADER_TAB_HEIGHT}px` }} />
       
-      {/* 지도 영역 (나중에 네이버지도 추가) */}
+      {/* 지도 영역 */}
       <div 
-        className="fixed bg-gray-200 z-0" 
+        className="fixed z-0" 
         style={{ 
           top: `${HEADER_TAB_HEIGHT}px`,
           left: 0,
@@ -236,7 +262,15 @@ export default function Foocketing() {
           bottom: 0,
         }}
       >
-        {/* 네이버지도가 들어갈 영역 */}
+        <NaverMap 
+          className="w-full h-full"
+          markers={foocketings.map((item) => ({
+            lat: item.shop.lat,
+            lng: item.shop.lng,
+            title: item.shop.name,
+          }))}
+          onCenterChange={handleMapCenterChange}
+        />
       </div>
 
       {/* 바텀시트 */}
@@ -262,7 +296,7 @@ export default function Foocketing() {
         </div>
 
         {/* 바텀시트 내용 */}
-        <div className="h-full overflow-y-auto px-4 pb-4">
+        <div className="h-full overflow-y-auto px-4 pb-28">
           {loading && <p>로딩 중...</p>}
           {error && <p>에러: {error.message}</p>}
           

@@ -39,7 +39,7 @@ export function useFoocketingCategory(options: UseFoocketingCategoryOptions = {}
     
     try {
       const data = await getFoocketingList({
-        cat: selectedCategory,
+        category: selectedCategory,
         sort,
         // lat, lng가 있으면 전달하고, 없으면 API 함수에서 자동으로 가져옴
         ...(lat && lng ? { lat, lng } : {}),
@@ -58,21 +58,23 @@ export function useFoocketingCategory(options: UseFoocketingCategoryOptions = {}
   // 📍 API 요청 트리거 위치 1: changeCategory 호출 시
   const changeCategory = useCallback((newCategory: FoocketingCategory) => {
     setCategory(newCategory);
-    fetchFoocketings(newCategory); // ← API 요청 발생
-  }, [fetchFoocketings]);
+  }, []);
 
-  // 컴포넌트 마운트 시 초기 카테고리의 마감세일 목록 로드
-  // 📍 API 요청 트리거 위치 2: 컴포넌트 마운트 시
+  // 컴포넌트 마운트 시 또는 lat/lng 변경 시 초기 카테고리의 마감세일 목록 로드
+  // 📍 API 요청 트리거 위치 2: 컴포넌트 마운트 시 또는 lat/lng 변경 시
   useEffect(() => {
-    // React Strict Mode로 인한 이중 호출 방지
-    if (hasInitialFetch.current) {
+    // React Strict Mode로 인한 이중 호출 방지 (초기 마운트 시에만)
+    if (!hasInitialFetch.current) {
+      hasInitialFetch.current = true;
+      fetchFoocketings(category);
       return;
     }
-    hasInitialFetch.current = true;
-    
-    fetchFoocketings(category);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 초기 마운트 시에만 실행
+
+    // lat/lng가 변경되면 API 재호출
+    if (lat && lng) {
+      fetchFoocketings(category);
+    }
+  }, [lat, lng, fetchFoocketings, category]); // lat, lng 변경 시 실행
 
   return {
     category,        // 현재 선택된 카테고리
