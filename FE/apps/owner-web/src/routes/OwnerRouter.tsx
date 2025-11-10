@@ -17,6 +17,7 @@ import ComponentTestPage from "../domains/test/pages/ComponentTestPage";
 import HeaderFooterLayout from "../layouts/HeaderFooterLayout";
 import FooterOnlyLayout from "../layouts/FooterOnlyLayout";
 import LargeHeaderOnlyLayout from "../layouts/LargeHeaderOnlyLayout";
+import QRScanLayout from "@/layouts/QRScanLayout";
 
 const router = createBrowserRouter([
   {
@@ -95,18 +96,17 @@ const router = createBrowserRouter([
         ],
       },
       {
-        element: <HeaderFooterLayout />,
-        // element: <OwnerLayout />,
+        element: <QRScanLayout />,
         children: [
           {
-            path: "orders",
-            children: [
-              {
-                path: "qr-scan",
-                element: <QRScanPage />,
-              },
-            ],
+            path: "orders/qr-scan",
+            element: <QRScanPage />,
           },
+        ],
+      },
+      {
+        element: <HeaderFooterLayout />,
+        children: [
           {
             path: "catalog",
             children: [
