@@ -11,4 +11,5 @@ public class FoocketingResult {
 
     private Integer rank;
     private ShopInfo shop;
+    private String qrUrl;
 }

@@ -175,7 +175,7 @@ public class FoocketingQueryRepository {
                     FROM foocketings f
                     JOIN menus m ON f.menu_id = m.menu_id
                     JOIN shops s ON m.shop_id = s.shop_id
-                    JOIN shop_ratings sr ON sr.shop_id = s.shop_id
+                    LEFT JOIN shop_ratings sr ON sr.shop_id = s.shop_id
                     WHERE f.foocketing_time > ?
                     """);
 

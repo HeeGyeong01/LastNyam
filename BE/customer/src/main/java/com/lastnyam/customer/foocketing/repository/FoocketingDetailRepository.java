@@ -92,7 +92,7 @@ public class FoocketingDetailRepository {
 
         public void buildBaseQuery(Double lng, Double lat, Integer targetId) {
             sql.append("""
-                    SELECT f.foocketing_id, f.foocketing_amount
+                    SELECT f.foocketing_id, f.foocketing_amount,
                             f.foocketing_time,m.menu_name,m.menu_price,m.menu_image,m.menu_description,
                             s.shop_name, s.shop_lat, s.shop_lng,
                             ST_Distance(
@@ -104,7 +104,7 @@ public class FoocketingDetailRepository {
                     FROM foocketings f
                     JOIN menus m ON f.menu_id = m.menu_id
                     JOIN shops s ON m.shop_id = s.shop_id
-                    JOIN shop_ratings sr ON sr.shop_id = s.shop_id
+                    LEFT JOIN shop_ratings sr ON sr.shop_id = s.shop_id
                     WHERE f.foocketing_id = ?
                     LIMIT 1
                     """);

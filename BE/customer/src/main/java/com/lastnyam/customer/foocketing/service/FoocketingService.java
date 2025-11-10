@@ -38,7 +38,7 @@ public class FoocketingService {
         Foocketing foocketing = foocketingRepository.findById(foocketingId)
                 .orElseThrow(ResourceNotFoundException::ofFoocketing);
 
-        //.....?? QR 이미지 경로?
+        //?? QR 이미지는 어디로 들어감?
         return null;
     }
 }
