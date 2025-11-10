@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/common';
 
-export default function ShoppingBag() {
+export default function Cart() {
   return (
     <>
       <PageHeader title="장바구니" variant="light" />

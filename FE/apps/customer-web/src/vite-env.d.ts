@@ -1,5 +1,11 @@
-// Vite 프로젝트의 전역 타입 정의를 담은 파일입니다.
-
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
 
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string;
+  // 필요한 환경변수 추가
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

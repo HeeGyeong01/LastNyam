@@ -4,7 +4,7 @@ import Home from '../pages/home';
 import { Login, KakaoCallback, AdditionalInfo, SignupComplete } from '../pages/auth';
 import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from '../pages/foocketing';
 import { Sale, SaleDetail } from '../pages/sale';
-import { ShoppingBag, ShoppingSuccess } from '../pages/shopping';
+import { Cart, PaymentSuccess } from '../pages/cart';
 import Likes from '../pages/likes';
 import { Search, SearchResult } from '../pages/search';
 import OrderList from '../pages/order';
@@ -63,12 +63,12 @@ export const router = createBrowserRouter([
         element: <SaleDetail />,
       },
       {
-        path: '/shopping-bag',
-        element: <ShoppingBag />,
+        path: '/cart',
+        element: <Cart />,
       },
       {
-        path: '/shopping-success',
-        element: <ShoppingSuccess />,
+        path: '/payment-success',
+        element: <PaymentSuccess />,
       },
       {
         path: '/likes',
