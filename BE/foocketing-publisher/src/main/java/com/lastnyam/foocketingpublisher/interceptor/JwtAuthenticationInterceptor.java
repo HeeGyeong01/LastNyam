@@ -5,8 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * JWT 토큰 검증을 위한 Interceptor
@@ -14,13 +14,13 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * @UserId 어노테이션이 있는 경우 JWT 검증을 수행합니다. 실제 userId 추출은 ArgumentResolver에서 처리합니다.
  */
 @Slf4j
-//@Component
+@Component
 @RequiredArgsConstructor
-public class JwtAuthenticationInterceptor implements HandlerInterceptor {
+public class JwtAuthenticationInterceptor {
 
     private final JwtService jwtService;
 
-    @Override
+    //    @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         // HandlerMethod가 아닌 경우 통과 (예: 리소스 핸들러)
