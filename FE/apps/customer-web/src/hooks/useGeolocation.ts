@@ -22,7 +22,7 @@ export function useGeolocation() {
     return {
       lat: cached.lat,
       lng: cached.lng,
-      loading: cached.lat === 37.5665 && cached.lng === 126.9780 ? false : true, // 기본 위치면 이미 로드된 것으로 간주
+      loading: cached.lat === 126.9780 && cached.lng === 37.5665 ? false : true, // 기본 위치면 이미 로드된 것으로 간주
       error: null,
     };
   });

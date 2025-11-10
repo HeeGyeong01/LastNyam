@@ -2,12 +2,12 @@ import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 
 interface FoocketingCardHorizontalProps {
-  openTime: string;
+  openTime: string; // ISO 8601 형식 (예: "2025-11-10T14:00:00")
   menuName: string;
   originalPrice: number;
   shopName: string;
   menuProfileImage: string;
-  distance: string;
+  distance: number; // km 단위 (예: 1.2)
   rating: number;
   reviewCount: number;
   discountedPrice?: number;
@@ -28,6 +28,12 @@ export default function FoocketingCardHorizontal({
   onClick,
   className = '',
 }: FoocketingCardHorizontalProps) {
+  // 시간 포맷팅 (ISO 8601 → "HH:mm")
+  const formattedOpenTime = (() => {
+    const date = new Date(openTime);
+    return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  })();
+
   const formattedOriginalPrice = originalPrice.toLocaleString('ko-KR');
   const formattedDiscountedPrice = discountedPrice.toLocaleString('ko-KR');
   const formattedReviewCount = reviewCount.toLocaleString('ko-KR');
@@ -40,7 +46,7 @@ export default function FoocketingCardHorizontal({
       {/* 오픈시간 배지 (왼쪽) */}
       <div className="flex flex-col w-[72px] items-center justify-center gap-0.5 relative self-stretch bg-brand-bg-2 rounded-lg">
         <div className="relative w-fit p2-b text-brand whitespace-nowrap">
-          {openTime}
+          {formattedOpenTime}
         </div>
         <div className="relative w-fit p3-b text-brand whitespace-nowrap">
           OPEN
@@ -72,7 +78,7 @@ export default function FoocketingCardHorizontal({
 
         {/* 거리 */}
         <div className="relative self-stretch caption1 text-secondary">
-          {distance}
+          {distance}km
         </div>
 
         {/* 가격 */}
