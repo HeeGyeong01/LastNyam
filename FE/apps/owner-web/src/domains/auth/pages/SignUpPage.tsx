@@ -114,7 +114,7 @@ export default function SignUpPage() {
         onPrimaryClick={handleStoreRegistration}
         icon="check-circle"
         iconShow={true}
-        xButtonShow={true}
+        xButtonShow={false}
       />
     </div>
   );
