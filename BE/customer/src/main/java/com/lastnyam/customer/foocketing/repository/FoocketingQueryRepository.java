@@ -181,7 +181,7 @@ public class FoocketingQueryRepository {
                      ST_DWithin(
                         ST_Point(s.shop_lng, s.shop_lat)::geography,
                         ST_Point(?,?)::geography,
-                        3000
+                        1000
                      )
                      AND f.foocketing_time <= ? AND f.foocketing_close_time > ?                     
                     """);
