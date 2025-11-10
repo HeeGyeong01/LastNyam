@@ -5,8 +5,8 @@ interface FoocketingCardHorizontalProps {
   openTime: string;
   menuName: string;
   originalPrice: number;
-  storeName: string;
-  storeProfileImage: string;
+  shopName: string;
+  menuProfileImage: string;
   distance: string;
   rating: number;
   reviewCount: number;
@@ -19,8 +19,8 @@ export default function FoocketingCardHorizontal({
   openTime,
   menuName,
   originalPrice,
-  storeName,
-  storeProfileImage,
+  shopName,
+  menuProfileImage,
   distance,
   rating,
   reviewCount,
@@ -65,7 +65,7 @@ export default function FoocketingCardHorizontal({
             </div>
 
             <div className="relative flex-1 caption2 text-tertiary overflow-hidden text-ellipsis line-clamp-1">
-              {storeName}
+              {shopName}
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function FoocketingCardHorizontal({
         <img
           className="absolute top-[calc(50%_-_44px)] left-[calc(50%_-_44px)] w-[88px] h-[88px] object-cover"
           alt={menuName}
-          src={storeProfileImage}
+          src={menuProfileImage}
         />
       </div>
     </div>

@@ -1,14 +1,12 @@
 // 마감세일 관련 타입
 export type DiscountCategory = 
-  | 'all' 
-  | 'korean' 
-  | 'chinese' 
-  | 'japanese' 
-  | 'western' 
-  | 'cafe' 
-  | 'etc';
+  | '베이커리' 
+  | '회/초밥' 
+  | '김밥/분식' 
+  | '샐러드/포케' 
+  | '기타';
 
-export type DiscountSortType = 'distance' | 'discount' | 'deadline';
+export type DiscountSortType = 'FAVORITES' | 'RATING' | 'CLOSEST' | 'DISCOUNT' | 'PRICE';
 
 export interface DiscountItem {
   discountId: number;

@@ -1,25 +1,45 @@
 import { apiClient } from './client';
+import { getLocation } from '@/lib/geolocation';
 import type {
-  FoocketingListResponse,
+  FoocketingListData,
   FoocketingDetail,
   FoocketingEntryResponse,
   FoocketingResult,
   FoocketingSortType,
+  FoocketingCategory,
+  ApiResponseWrapper,
 } from '@/types';
 
 /**
  * 1. 푸켓팅 목록 조회
  * GET /api/foocketing?sort={sortType}&lat={latitude}&lng={longitude}
+ * 
+ * @param params.sort - 정렬 타입 (선택)
+ * @param params.lat - 위도 (선택, 없으면 자동으로 가져옴)
+ * @param params.lng - 경도 (선택, 없으면 자동으로 가져옴)
  */
 export const getFoocketingList = async (
   params: {
+    cat?: FoocketingCategory;
     sort?: FoocketingSortType;
     lat?: number;
     lng?: number;
   } = {}
-): Promise<FoocketingListResponse> => {
-  const response = await apiClient.get('/api/foocketing', { params });
-  return response.data;
+): Promise<FoocketingListData> => {
+  // 위치 정보가 없으면 자동으로 가져오기
+  const location = params.lat && params.lng 
+    ? { lat: params.lat, lng: params.lng }
+    : await getLocation();
+
+  const response = await apiClient.get<ApiResponseWrapper<FoocketingListData>>('/api/foocketing', {
+    params: {
+      ...params,
+      lat: location.lat,
+      lng: location.lng,
+    },
+  });
+  // 응답 구조: { data: { content: [], nextCursor, hasNextPage }, status, code, message }
+  return response.data.data;
 };
 
 /**

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 
-export default function SaleDetail() {
+export default function DiscountDetail() {
   const { id } = useParams();
 
   return (

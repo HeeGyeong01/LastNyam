@@ -3,7 +3,7 @@ export * from './common';
 export * from './auth';
 export * from './user';
 export * from './foocketing';
-export * from './sale';
+export * from './discount';
 export * from './shop';
 export * from './cart';
 export * from './order';
