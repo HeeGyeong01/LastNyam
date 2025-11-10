@@ -80,7 +80,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div className={cn(containerVariants({ size, className }))}>
         <input
           type={type}
-          className="flex-1 bg-transparent text-primary placeholder:text-tertiary p2-r focus:outline-none"
+          className="flex-1 bg-transparent p1 text-primary placeholder:text-tertiary focus:outline-none"
           ref={inputRef}
           value={isControlled ? value : undefined}
           defaultValue={!isControlled ? value : undefined}
