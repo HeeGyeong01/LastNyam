@@ -5,7 +5,7 @@
  * 실제 프로젝트에서는 이 파일을 삭제하고 아래 패턴을 참고하여 사용하세요.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tab } from './Tab';
 
 // 예시 1: 기본 사용법
@@ -64,8 +64,7 @@ export function IndexBasedTabExample() {
 
 // 예시 3: API 호출과 함께 사용
 export function ApiTabExample() {
-  const [selectedCategory, setSelectedCategory] = useState('마감예일');
-  const [data, setData] = useState([]);
+  const [data] = useState([]);
 
   const fetchData = async (category: string) => {
     // API 호출 예시
@@ -75,8 +74,7 @@ export function ApiTabExample() {
     console.log(`Fetching data for category: ${category}`);
   };
 
-  const handleTabChange = (index: number, label: string) => {
-    setSelectedCategory(label);
+  const handleTabChange = (_index: number, label: string) => {
     fetchData(label);
   };
 
