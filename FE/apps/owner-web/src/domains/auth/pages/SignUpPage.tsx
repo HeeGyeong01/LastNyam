@@ -81,7 +81,7 @@ export default function SignUpPage() {
   // 가게 등록 페이지로 이동
   const handleStoreRegistration = () => {
     setModalOpen(false);
-    navigate('/owner/store-information/step1-input/', { replace: true });
+    navigate('/owner/store-information/step1-document/', { replace: true });
     return true; // Modal이 자동으로 onClose를 호출하지 않도록 함
   };
 
