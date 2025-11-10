@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * JWT 토큰 검증을 위한 Interceptor
@@ -16,11 +17,11 @@ import org.springframework.web.method.HandlerMethod;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationInterceptor {
+public class JwtAuthenticationInterceptor implements HandlerInterceptor {
 
     private final JwtService jwtService;
 
-    //    @Override
+    @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         // HandlerMethod가 아닌 경우 통과 (예: 리소스 핸들러)
