@@ -14,9 +14,10 @@ public class FoocketingQueryService {
 
     private final FoocketingQueryRepository queryRepository;
 
-    public CursorResponse<FoocketingBriefInfo> getFoocketingsOf(SortType sort, Double lat, Double lng, String cursor) {
+    public CursorResponse<FoocketingBriefInfo> getFoocketingsOf(SortType sort, Double lat, Double lng,
+                                                                Integer categoryId, String cursor) {
 
-        return queryRepository.findFoocketingsNear(sort, lat, lng, cursor);
+        return queryRepository.findFoocketingsNear(sort, lat, lng, categoryId, cursor);
     }
 
     public CursorResponse<FoocketingBriefInfo> searchFoocketingsOf(SortType sort, String keyword, Double lat,

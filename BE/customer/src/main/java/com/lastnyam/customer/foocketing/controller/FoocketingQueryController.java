@@ -23,8 +23,10 @@ public class FoocketingQueryController {
     public ResponseEntity<ApiResponse<?>> getFoocketingList(@RequestParam("sort") SortType sort,
                                                             @RequestParam("lat") Double lat,
                                                             @RequestParam("lng") Double lng,
+                                                            @RequestParam("cat") Integer categoryId,
                                                             @RequestParam(value = "cursor", required = false) String cursor) {
-        CursorResponse<FoocketingBriefInfo> foocketingInfoList = queryService.getFoocketingsOf(sort, lat, lng, cursor);
+        CursorResponse<FoocketingBriefInfo> foocketingInfoList = queryService.getFoocketingsOf(sort, lat, lng,
+                categoryId, cursor);
 
         return ResponseEntity.ok(ApiResponse.ofSuccess(foocketingInfoList));
     }

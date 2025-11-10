@@ -29,11 +29,12 @@ public class FoocketingQueryRepository {
     private final JdbcTemplate jdbcTemplate;
 
     public CursorResponse<FoocketingBriefInfo> findFoocketingsNear(SortType sort, Double lat, Double lng,
+                                                                   Integer categoryId,
                                                                    String cursor) {
         QueryBuilder queryBuilder = new QueryBuilder();
 
         queryBuilder.buildBaseQuery(lat, lng);
-
+        queryBuilder.addCategoryCondition(categoryId);
         if (cursor != null) {
             queryBuilder.buildCursorQuery(parseCursor(cursor));
         }
@@ -173,21 +174,26 @@ public class FoocketingQueryRepository {
                             COALESCE(sr.shop_rating_sum, 0) as shop_rating_sum, 
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count
                     FROM foocketings f
-                    JOIN menus m ON f.menu_id = m.menu_id
-                    JOIN shops s ON m.shop_id = s.shop_id
-                    LEFT JOIN shop_ratings sr ON sr.shop_id = s.shop_id
-                    WHERE f.foocketing_time > ?
+                    INNER JOIN menus m ON f.menu_id = m.menu_id
+                    INNER JOIN shops s ON m.shop_id = s.shop_id
+                    LEFT JOIN shop_ratings sr ON s.shop_id = sr.shop_id
+                    WHERE
+                     ST_DWithin(
+                        ST_Point(s.shop_lng, s.shop_lat)::geography,
+                        ST_Point(?,?)::geography,
+                        3000
+                     )
+                     AND f.foocketing_time <= ? AND f.foocketing_close_time > ?                     
                     """);
 
             params.add(lon);
             params.add(lat);
+            params.add(lon);
+            params.add(lat);
 
             LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-
-            LocalDateTime flooredTime = now.withMinute((now.getMinute() / 30) * 30)
-                    .withSecond(0)
-                    .withNano(0);
-            params.add(flooredTime);
+            params.add(now);
+            params.add(now);
         }
 
         public String getSql() {
@@ -201,8 +207,14 @@ public class FoocketingQueryRepository {
             params.add(cursor.getId());
         }
 
+        public void addCategoryCondition(Integer categoryId) {
+            sql.append(" AND m.category_id = ?");
+            params.add(categoryId);
+        }
+
         public void addSortCondition(SortType type) {
-            sql.append(" ORDER BY f.foocketing_time ASC");
+
+            sql.append(" ORDER BY f.foocketing_close_time ASC");
             switch (type) {
                 case CLOSEST -> sql.append(" ,distance ASC");
                 case PRICE -> sql.append(" ,m.menu_price DESC");
