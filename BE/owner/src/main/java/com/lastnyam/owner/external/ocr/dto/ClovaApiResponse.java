@@ -1,7 +1,7 @@
 package com.lastnyam.owner.external.ocr.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.lastnyam.owner.dto.BusinessLicenseOcrResponse;
+
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
