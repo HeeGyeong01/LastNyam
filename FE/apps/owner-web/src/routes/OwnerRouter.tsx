@@ -16,7 +16,7 @@ import StoreInformationStep2Page from "../domains/auth/pages/StoreInformation/St
 import ComponentTestPage from "../domains/test/pages/ComponentTestPage";
 import HeaderFooterLayout from "../layouts/HeaderFooterLayout";
 import FooterOnlyLayout from "../layouts/FooterOnlyLayout";
-import QRScanLayout from "../layouts/QRScanLayout";
+import LargeHeaderOnlyLayout from "../layouts/LargeHeaderOnlyLayout";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +32,51 @@ const router = createBrowserRouter([
         element: <SignUpPage />,
       },
       {
+        path: "store-information",
+        children: [
+          {
+            element: (
+              <LargeHeaderOnlyLayout
+                headerProps={{
+                  pageName: "가게 등록하기",
+                  pageExplanation: "가게 정보를 입력하고 서비스를 이용하세요",
+                  currentStep: 1,
+                  totalSteps: 2,
+                }}
+              />
+            ),
+            children: [
+              {
+                path: "step1-input",
+                element: <StoreInformationStep1InputPage />,
+              },
+              {
+                path: "step1-document",
+                element: <StoreInformationStep1DocumentPage />,
+              },
+            ],
+          },
+          {
+            element: (
+              <LargeHeaderOnlyLayout
+                headerProps={{
+                  pageName: "가게 등록하기",
+                  pageExplanation: "가게 정보를 입력하고 서비스를 이용하세요",
+                  currentStep: 2,
+                  totalSteps: 2,
+                }}
+              />
+            ),
+            children: [
+              {
+                path: "step2",
+                element: <StoreInformationStep2Page />,
+              },
+            ],
+          },
+        ],
+      },
+      {
         element: <FooterOnlyLayout />,
         children: [
           {
@@ -41,16 +86,11 @@ const router = createBrowserRouter([
                 path: "list",
                 element: <OrderListPage />,
               },
+              {
+                path: "receipt-confirm",
+                element: <ReceiptConfirmPage />,
+              },
             ],
-          },
-        ],
-      },
-      {
-        element: <QRScanLayout />,
-        children: [
-          {
-            path: "orders/qr-scan",
-            element: <QRScanPage />,
           },
         ],
       },
@@ -62,8 +102,8 @@ const router = createBrowserRouter([
             path: "orders",
             children: [
               {
-                path: "receipt-confirm",
-                element: <ReceiptConfirmPage />,
+                path: "qr-scan",
+                element: <QRScanPage />,
               },
             ],
           },
@@ -96,23 +136,6 @@ const router = createBrowserRouter([
           {
             path: "settings",
             element: <OwnerSettingPage />,
-          },
-          {
-            path: "store-information",
-            children: [
-              {
-                path: "step1-input",
-                element: <StoreInformationStep1InputPage />,
-              },
-              {
-                path: "step1-document",
-                element: <StoreInformationStep1DocumentPage />,
-              },
-              {
-                path: "step2",
-                element: <StoreInformationStep2Page />,
-              },
-            ],
           },
           {
             path: "test",

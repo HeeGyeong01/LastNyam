@@ -29,6 +29,12 @@ export interface OrderStatusBoardProps {
 
 const STATUS_ORDER: OrderStatus[] = ["PENDING_APPROVAL", "PREPARING_FOOD", "WAITING_PICKUP"]
 
+const EMPTY_MESSAGE: Partial<Record<OrderStatus, string>> = {
+  PENDING_APPROVAL: "현재 새로운 주문이 없습니다.",
+  PREPARING_FOOD: "현재 조리중인 주문이 없습니다.",
+  WAITING_PICKUP: "현재 수령 대기 중인 주문이 없습니다.",
+}
+
 export function OrderStatusBoard({
   transactions,
   className,
@@ -84,7 +90,7 @@ export function OrderStatusBoard({
                   </div>
                 ) : (
                   <div className="rounded-xl bg-bg-2/60 p-4 text-center text-p2 text-secondary">
-                    현재 상태의 주문이 없습니다.
+                  {EMPTY_MESSAGE[section.status] ?? "현재 상태의 주문이 없습니다."}
                   </div>
                 )}
               </div>

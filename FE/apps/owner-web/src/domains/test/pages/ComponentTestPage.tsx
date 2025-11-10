@@ -8,9 +8,21 @@ import { ImageUpload } from '../../../components/ui/imageUpload';
 import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
 import { MenuFormField } from '../../../components/ui/menuFormField';
+import { MenuListItem, type MenuSelectState } from '../../../components/ui/menuListItem';
 import { type OrderStatus, type TransactionType } from '../../orders/components/orderStatusCard';
 import { OrderStatusBoard, type OrderStatusBoardTransaction } from '../../orders/components/orderStatusBoard';
 import { Info, ExternalLink } from 'lucide-react';
+
+function reorderById<T extends { id: number }>(list: T[], sourceId: number, targetId: number) {
+  const next = [...list];
+  const sourceIndex = next.findIndex((item) => item.id === sourceId);
+  const targetIndex = next.findIndex((item) => item.id === targetId);
+  if (sourceIndex === -1 || targetIndex === -1) return list;
+
+  const [removed] = next.splice(sourceIndex, 1);
+  next.splice(targetIndex, 0, removed);
+  return next;
+}
 
 // 메뉴 타입 정의
 interface Menu {
@@ -50,6 +62,7 @@ export default function ComponentTestPage() {
   const [timeValue, setTimeValue] = useState('');
   const [timeValue30, setTimeValue30] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('signature');
+  const [menuSelectState, setMenuSelectState] = useState<MenuSelectState>('unselected');
   const [discountInfo, setDiscountInfo] = useState<{ discountPrice?: number; discountRate?: number }>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [modalOpen1, setModalOpen1] = useState(false);
@@ -62,6 +75,77 @@ export default function ComponentTestPage() {
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
 
   const menuBasePrice = 12000;
+
+  const [menuCards, setMenuCards] = useState(() => [
+    {
+      id: 1,
+      menuName: '메뉴이름',
+      price: 12000,
+      categoryName: '카테고리',
+      imageUrl: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80',
+    },
+    {
+      id: 2,
+      menuName: '메뉴이름 (이미지 없음)',
+      price: 11800,
+      categoryName: '카테고리',
+    },
+    {
+      id: 3,
+      menuName: '메뉴이름',
+      price: 12000,
+      categoryName: '카테고리',
+      variant: 'closeout-sale' as const,
+      saleQuantity: 20,
+      discountRate: 30,
+      discountPrice: 8400,
+      originalPrice: 12000,
+    },
+    {
+      id: 4,
+      menuName: '메뉴이름',
+      price: 9500,
+      categoryName: '카테고리',
+      variant: 'foocketing' as const,
+      foocketingQuantity: 12,
+      foocketingTime: '17:30',
+    },
+  ]);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+
+  const handleDragStart = (id: number) => (event: React.DragEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setDraggingId(id);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(id));
+    event.dataTransfer.setDragImage(event.currentTarget, 10, 10);
+  };
+
+  const handleDragOverCard = (id: number) => (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (dragOverId !== id) {
+      setDragOverId(id);
+    }
+    if (draggingId && draggingId !== id) {
+      setMenuCards((prev) => reorderById(prev, draggingId, id));
+    }
+  };
+
+  const handleDropCard = (id: number) => (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const sourceId = draggingId ?? Number(event.dataTransfer.getData('text/plain'));
+    if (!sourceId || sourceId === id) return;
+
+    setMenuCards((prev) => reorderById(prev, sourceId, id));
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverId(null);
+  };
 
   interface Transaction extends OrderStatusBoardTransaction {
     totalAmount: number;
@@ -322,6 +406,66 @@ export default function ComponentTestPage() {
           transactions={transactions}
           onAdvanceStatus={handleAdvanceStatus}
         />
+      </section>
+
+      {/* MenuListItem showcase */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">MenuListItem 컴포넌트</h2>
+        <p className="text-sm text-gray-600">
+          메뉴 관리, 마감 세일, 푸켓팅, 메뉴 선택 화면에서 사용할 수 있는 카드 형태 컴포넌트입니다.
+        </p>
+        <div className="rounded-3xl border border-stroke-3 bg-bg-0 p-6 shadow-[0_32px_80px_-50px_rgba(15,23,42,0.18)]">
+          <div className="flex flex-col gap-3">
+            {menuCards.map((card) => (
+              <MenuListItem
+                key={card.id}
+                menuName={card.menuName}
+                price={card.price}
+                categoryName={card.categoryName}
+                imageUrl={card.imageUrl}
+                variant={card.variant ?? "default"}
+                saleQuantity={card.saleQuantity}
+                discountRate={card.discountRate}
+                discountPrice={card.discountPrice}
+                originalPrice={card.originalPrice}
+                foocketingQuantity={card.foocketingQuantity}
+                foocketingTime={card.foocketingTime}
+                dragHandleProps={{
+                  onDragStart: handleDragStart(card.id),
+                  onDragEnd: handleDragEnd,
+                }}
+                containerProps={{
+                  onDragOver: handleDragOverCard(card.id),
+                  onDrop: handleDropCard(card.id),
+                  onDragLeave: (event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                      setDragOverId((prev) => (prev === card.id ? null : prev));
+                    }
+                  },
+                }}
+                isDragging={draggingId === card.id}
+                isDragOver={dragOverId === card.id}
+              />
+            ))}
+            <MenuListItem
+              menuName="메뉴이름"
+              price={11000}
+              categoryName="카테고리"
+              variant="select-menu"
+              selectState={menuSelectState}
+              onToggleSelect={(checked) =>
+                setMenuSelectState(checked ? "selected" : "unselected")
+              }
+            />
+            <MenuListItem
+              menuName="메뉴이름"
+              price={11000}
+              categoryName="카테고리"
+              variant="select-menu"
+              selectState="selected"
+            />
+          </div>
+        </div>
       </section>
 
       {/* Route 네비게이션 */}

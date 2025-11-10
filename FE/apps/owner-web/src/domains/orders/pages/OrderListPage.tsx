@@ -17,7 +17,7 @@ export default function OrderListPage() {
   // 빈 상태 화면
   if (orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 pb-20">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] px-6">
         {/* 고양이 아이콘 */}
         <div className="relative w-[108px] h-[106px] rounded-full bg-[#FFF1C7] mb-6 overflow-hidden">
           <img 
