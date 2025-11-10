@@ -1,6 +1,8 @@
 package com.lastnyam.customer.shop.dto;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +25,15 @@ public class ShopDetailResponseDto {
     private LocalTime shopPickupEndTime;
     private Integer categoryId;
     private Integer ownerId;
+
+    // 추가 정보
+    private Double rating;          // 평균 별점
+    private Integer ratingCount;    // 별점 개수
+    private Double distanceMeters;  // 현재 위치로부터 거리 (미터) - null 허용
+
+    // 하위 컬렉션
+	private List<ShopDiscountItemDto> discounts;
+    private List<ShopFoocketingItemDto> foocketings;
 }
 
 

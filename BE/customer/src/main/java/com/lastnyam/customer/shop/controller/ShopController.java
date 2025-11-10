@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,8 +24,12 @@ public class ShopController {
     private final ShopService shopService;
 
     @GetMapping("/{shopId}")
-    public ResponseEntity<ApiResponse<ShopDetailResponseDto>> getShop(@PathVariable("shopId") Integer shopId) {
-        ShopDetailResponseDto result = shopService.getShopDetail(shopId);
+    public ResponseEntity<ApiResponse<ShopDetailResponseDto>> getShop(
+            @PathVariable("shopId") Integer shopId,
+            @RequestParam(value = "lat", required = false) Double lat,
+            @RequestParam(value = "lng", required = false) Double lng
+    ) {
+        ShopDetailResponseDto result = shopService.getShopDetail(shopId, lat, lng);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 
