@@ -1,7 +1,6 @@
 // Todo: 사업자 등록증 업로드 기능 구현 - 사진 넣으면 바로 OCR 연결
 
 import { useRef, useState, type DragEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@shared/src/components/Button";
 import { cn } from "@/lib/utils";
@@ -21,7 +20,6 @@ function formatFileSize(size: number) {
 }
 
 export default function StoreInformationStep1DocumentPage() {
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -66,10 +64,6 @@ export default function StoreInformationStep1DocumentPage() {
     event.preventDefault();
     setIsDragActive(false);
     handleFileSelect(event.dataTransfer.files);
-  };
-
-  const handleManualInputClick = () => {
-    navigate("/owner/store-information/step1-input");
   };
 
   return (
