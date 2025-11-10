@@ -259,7 +259,7 @@ pipeline {
                 echo "✅ Foocketing-Publisher 설정 파일 복사 완료"
               fi
               
-              echo "✅ 모든 설정 파일 준비 완료"
+              echo "✅ 모든 설정 파일 준비 완료!"
             """
           }
         }
