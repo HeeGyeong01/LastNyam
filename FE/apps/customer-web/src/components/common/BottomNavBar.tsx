@@ -16,7 +16,7 @@ export default function BottomNavBar() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-bg-0">
+    <nav className="fixed bottom-0 left-0 right-0 bg-bg-0 z-50">
       <div className="flex w-full max-w-[500px] mx-auto px-6 py-4 justify-between items-start">
         {navItems.map((item) => (
           <BottomNavItem
