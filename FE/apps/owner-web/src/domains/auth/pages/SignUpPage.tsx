@@ -5,10 +5,21 @@ import { Button } from '@shared/src/components/Button';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { Modal } from '../../../components/ui/modal';
 
+const DEFAULT_OWNER_API_BASE_URL = 'https://k13a101.p.ssafy.io';
+const OWNER_API_BASE_URL =
+  import.meta.env.VITE_OWNER_API_BASE_URL ?? DEFAULT_OWNER_API_BASE_URL;
+const REGISTER_ENDPOINT = '/api/owner/auth/register';
+
+const buildRegisterUrl = () =>
+  OWNER_API_BASE_URL
+    ? `${OWNER_API_BASE_URL.replace(/\/$/, '')}${REGISTER_ENDPOINT}`
+    : REGISTER_ENDPOINT;
+
 export default function SignUpPage() {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,12 +28,48 @@ export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignUp = async () => {
+    if (!isFormValid || isSubmitting) {
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      // 회원가입 호출
+      const payload = {
+        email: email.trim(),
+        password,
+      };
+
+      const url = buildRegisterUrl();
+      console.log('SignUp request →', url, payload);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseBody = await response
+        .json()
+        .catch(() => null) as { message?: string; status?: string } | null;
+
+      console.log('SignUp response ←', response.status, responseBody);
+
+      if (!response.ok || responseBody?.status !== 'SUCCESS') {
+        const errorMessage =
+          responseBody?.message || '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.';
+        throw new Error(errorMessage);
+      }
+
       setModalOpen(true);
     } catch (error) {
       console.error('회원가입 오류:', error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : '회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      window.alert(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -34,7 +81,7 @@ export default function SignUpPage() {
   // 가게 등록 페이지로 이동
   const handleStoreRegistration = () => {
     setModalOpen(false);
-    navigate('/owner/settings', { replace: true });
+    navigate('/owner/store-information/step1-input/', { replace: true });
     return true; // Modal이 자동으로 onClose를 호출하지 않도록 함
   };
 
@@ -73,22 +120,22 @@ export default function SignUpPage() {
               <EyeIcon className="w-5 h-5" />
             )
           }
-          onIconClick={() => setShowPassword(!showPassword)}
+          onIconClick={() => setShowPassword((prev) => !prev)}
           showClearButton={false}
         />
         <Input
-          type={showPassword ? 'text' : 'password'}
+          type={showConfirmPassword ? 'text' : 'password'}
           placeholder="비밀번호 확인"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           icon={
-            showPassword ? (
+            showConfirmPassword ? (
               <EyeSlashIcon className="w-5 h-5" />
             ) : (
               <EyeIcon className="w-5 h-5" />
             )
           }
-          onIconClick={() => setShowPassword(!showPassword)}
+          onIconClick={() => setShowConfirmPassword((prev) => !prev)}
           showClearButton={false}
         />
 
