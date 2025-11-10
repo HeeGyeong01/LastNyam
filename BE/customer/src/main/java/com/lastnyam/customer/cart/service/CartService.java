@@ -18,6 +18,7 @@ import com.lastnyam.customer.external.kakaopay.dto.KakaoPayApproveRequest;
 import com.lastnyam.customer.external.kakaopay.dto.KakaoPayApproveResponse;
 import com.lastnyam.customer.external.kakaopay.dto.KakaoPayReadyRequest;
 import com.lastnyam.customer.external.kakaopay.dto.KakaoPayReadyResponse;
+import com.lastnyam.customer.external.kakaopay.store.KakaoPayTempStore;
 import com.lastnyam.database.entity.Cart;
 import com.lastnyam.database.entity.CartItem;
 import com.lastnyam.database.entity.Discount;
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Service
@@ -40,6 +42,7 @@ public class CartService {
     private final DiscountRepository discountRepository;
     private final KakaoPayClient kakaoPayClient;
     private final KakaoPayConfig kakaoPayConfig;
+    private final KakaoPayTempStore kakaoPayTempStore;
 
     @Transactional(readOnly = true)
     public CartResponseDto getCart(Integer userId) {
@@ -226,6 +229,20 @@ public class CartService {
         int vatAmount = (int) Math.round(totalPrice / 11.0);
         int taxFreeAmount = totalPrice - vatAmount;
 
+        // 콜백에 전달할 쿼리 파라미터 부착 (userId, partner_order_id)
+        String approvalUrlWithParams = UriComponentsBuilder.fromHttpUrl(kakaoPayConfig.getApprovalUrl())
+                .queryParam("userId", userId)
+                .queryParam("partner_order_id", partnerOrderId)
+                .build().toUriString();
+        String cancelUrlWithParams = UriComponentsBuilder.fromHttpUrl(kakaoPayConfig.getCancelUrl())
+                .queryParam("userId", userId)
+                .queryParam("partner_order_id", partnerOrderId)
+                .build().toUriString();
+        String failUrlWithParams = UriComponentsBuilder.fromHttpUrl(kakaoPayConfig.getFailUrl())
+                .queryParam("userId", userId)
+                .queryParam("partner_order_id", partnerOrderId)
+                .build().toUriString();
+
         // 카카오페이 결제 준비 요청 생성
         KakaoPayReadyRequest readyRequest = KakaoPayReadyRequest.builder()
                 .cid(kakaoPayConfig.getCid())
@@ -236,9 +253,9 @@ public class CartService {
                 .totalAmount(totalPrice)
                 .taxFreeAmount(taxFreeAmount)
                 .vatAmount(vatAmount)
-                .approvalUrl(kakaoPayConfig.getApprovalUrl())
-                .cancelUrl(kakaoPayConfig.getCancelUrl())
-                .failUrl(kakaoPayConfig.getFailUrl())
+                .approvalUrl(approvalUrlWithParams)
+                .cancelUrl(cancelUrlWithParams)
+                .failUrl(failUrlWithParams)
                 .build();
 
         // 카카오페이 결제 준비 API 호출
@@ -247,8 +264,8 @@ public class CartService {
         log.info("카카오페이 결제 준비 완료 - userId: {}, tid: {}, partnerOrderId: {}", 
                 userId, readyResponse.getTid(), partnerOrderId);
 
-        // TODO: 주문 정보를 임시 저장 (Redis 또는 DB에 tid와 partnerOrderId 저장)
-        // 결제 승인 시 사용하기 위해 필요
+        // Ready 응답으로 받은 tid를 partnerOrderId와 매핑하여 임시 저장
+        kakaoPayTempStore.put(partnerOrderId, readyResponse.getTid());
 
         return CartOrderResponseDto.builder()
                 .orderId(null) // 결제 승인 후 주문 생성
