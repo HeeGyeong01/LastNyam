@@ -132,8 +132,8 @@ public class CartService {
                 .orElseThrow(ResourceNotFoundException::ofCart);
 
         CartItem cartItem = cartItemRepository
-                .findByCartCartIdAndDiscountDiscountId(cart.getCartId(), request.getDiscountId())
-                .orElseThrow(() -> BadRequestException.ofInput("장바구니에 해당 물품이 없습니다."));
+                .findByCartCartIdAndCartItemId(cart.getCartId(), request.getCartItemId())
+                .orElseThrow(() -> BadRequestException.ofInput("장바구니에 해당 아이템이 없습니다."));
 
         if (request.getCartItemAmount() <= 0) {
             throw BadRequestException.ofInput("물품 개수는 1개 이상이어야 합니다.");
@@ -156,8 +156,8 @@ public class CartService {
                 .orElseThrow(ResourceNotFoundException::ofCart);
 
         CartItem cartItem = cartItemRepository
-                .findByCartCartIdAndDiscountDiscountId(cart.getCartId(), request.getDiscountId())
-                .orElseThrow(() -> BadRequestException.ofInput("장바구니에 해당 물품이 없습니다."));
+                .findByCartCartIdAndCartItemId(cart.getCartId(), request.getCartItemId())
+                .orElseThrow(() -> BadRequestException.ofInput("장바구니에 해당 아이템이 없습니다."));
 
         cartItemRepository.delete(cartItem);
 

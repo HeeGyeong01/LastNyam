@@ -63,7 +63,7 @@ public class CartController {
      * 장바구니에 있는 특정 물품의 개수를 수정합니다.
      *
      * @param userId 사용자 ID
-     * @param request 수정할 물품 정보 (discountId, cartItemAmount)
+     * @param request 수정할 물품 정보 (cartItemId, cartItemAmount)
      * @return 업데이트된 장바구니 정보
      */
     @PatchMapping("/{userId}")
@@ -79,7 +79,7 @@ public class CartController {
      * 장바구니에서 특정 물품을 제거합니다.
      *
      * @param userId 사용자 ID
-     * @param request 제거할 물품 정보 (discountId)
+     * @param request 제거할 물품 정보 (cartItemId)
      * @return 업데이트된 장바구니 정보
      */
     @DeleteMapping("/{userId}")

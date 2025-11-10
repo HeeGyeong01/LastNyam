@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartDeleteRequestDto {
-    private Integer discountId;
+    private Integer cartItemId;
 }
 
