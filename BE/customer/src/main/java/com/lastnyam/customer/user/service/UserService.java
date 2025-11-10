@@ -10,6 +10,7 @@ import com.lastnyam.customer.user.repository.UserRepository;
 import com.lastnyam.database.entity.FoodCategory;
 import com.lastnyam.database.entity.User;
 import com.lastnyam.database.entity.UserFavorite;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserFavoriteRepository userFavoriteRepository;
+    private final EntityManager entityManager;
 
     @Transactional
     public UserOnboardingResponseDto updateOnboardingProfile(Integer userId, UserOnboardingRequestDto request) {
@@ -41,12 +43,15 @@ public class UserService {
 
         // 새로운 선호 카테고리 저장
         List<UserFavorite> userFavorites = request.getCategoryIds().stream()
-                .map(categoryId -> UserFavorite.builder()
-                        .user(user)
-                        .foodCategory(FoodCategory.builder()
-                                .categoryId(categoryId)
-                                .build())
-                        .build())
+                .map(categoryId -> {
+                    // FoodCategory 프록시 참조 (실제 조회 없이 외래키만 설정)
+                    FoodCategory foodCategory = entityManager.getReference(FoodCategory.class, categoryId);
+
+                    return UserFavorite.builder()
+                            .user(user)
+                            .foodCategory(foodCategory)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         userFavoriteRepository.saveAll(userFavorites);
