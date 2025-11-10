@@ -50,7 +50,7 @@ public class CartController {
      * @param request 추가할 물품 정보 (discountId, cartItemAmount)
      * @return 업데이트된 장바구니 정보
      */
-    @PutMapping("/{userId}")
+    @PostMapping("/{userId}")
     public ResponseEntity<ApiResponse<CartResponseDto>> addItemToCart(
             @PathVariable("userId") Integer userId,
             @RequestBody CartAddRequestDto request) {
