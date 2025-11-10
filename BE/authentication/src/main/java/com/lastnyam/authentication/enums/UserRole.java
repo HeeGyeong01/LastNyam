@@ -1,5 +1,5 @@
 package com.lastnyam.authentication.enums;
 
 public enum UserRole {
-    USER, ADMIN, OWNER;
+    USER, ANONYMOUS, OWNER, ADMIN;
 }
