@@ -45,10 +45,12 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4">
+    <div className="mx-[52px] flex flex-col items-center justify-center min-h-screen">
       {/* 로고 섹션 */}
-      <div className="text-center">
-        <h1 className="font-kr-h1 kr-h1 text-brand">회원가입</h1>
+      <div className="text-center mb-12">
+        <div className="inline-flex flex-col items-center leading-none">
+          <span className="logo-fill font-kr-h1 kr-h1">회원가입</span>
+        </div>
       </div>
 
       {/* 입력 폼 */}

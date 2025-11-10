@@ -15,9 +15,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white">
+    <div className="flex mx-[52px] min-h-screen flex-col items-center justify-center bg-white">
       {/* 로고 섹션 */}
-      <div className="mb-8 text-center">
+      <div className="mb-4 text-center">
          <div className="logo-wrapper inline-flex flex-col items-center leading-none">
           {/* LAST */}
           <div className="relative">
@@ -30,7 +30,7 @@ export default function LoginPage() {
              <span className="logo-fill font-en-h1 en-h1">NYAM</span>
           </div>
           {/* 사장님 */}
-          <div className="relative mt-1">
+          <div className="relative -mt-2">
              <span className="logo-outline-sm text-brand-subtle font-kr-h3 kr-h3">사장님</span>
              <span className="logo-fill-sm font-kr-h3 kr-h3">사장님</span>
           </div>
