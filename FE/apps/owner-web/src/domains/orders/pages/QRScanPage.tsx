@@ -42,7 +42,7 @@ export default function QRScanPage() {
     navigate(scannedData);
   };
 
-  const handleError = (error: any) => {
+  const handleError = () => {
     setError("카메라를 사용할 수 없습니다.");
   };
 
