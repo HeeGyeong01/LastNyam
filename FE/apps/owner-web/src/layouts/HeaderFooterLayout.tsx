@@ -6,7 +6,7 @@ export default function HeaderFooterLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 overflow-y-auto pt-16 pb-20 px-5">
+      <main className="flex-1 overflow-y-auto pt-16 pb-20">
         <Outlet />
       </main>
       <Footer />

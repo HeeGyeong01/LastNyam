@@ -97,7 +97,7 @@ export function MenuListItem(props: MenuListItemProps) {
     <div
       {...containerProps}
       className={cn(
-        "rounded-2xl border border-stroke-3 bg-bg-0 shadow-[0_12px_32px_-18px_rgba(15,23,42,0.12)] transition-all duration-200",
+        "border-b border-stroke-3 bg-bg-0 transition-all duration-200",
         isDragging ? "opacity-70 scale-[0.98]" : "",
         isDragOver ? "ring-2 ring-brand/60" : "",
         containerProps?.className,
@@ -105,7 +105,7 @@ export function MenuListItem(props: MenuListItemProps) {
     >
       <div
         className={cn(
-          "flex w-full items-center gap-2 px-4 py-3 text-primary",
+          "flex w-full items-center gap-2 py-3 text-primary",
           className,
         )}
       >
