@@ -19,6 +19,12 @@ export default function QRScanPage() {
       setScannedData(result[0].rawValue);
       setShowSuccessModal(true);
 
+      if (!result[0].rawValue.startsWith("/owner/orders/receipt-confirm")) {
+        setShowSuccessModal(false);
+        setScanning(true);
+        return;
+      }
+
       // 5초 후에 자동으로 스캔 모드로 복귀
       timerRef.current = setTimeout(() => {
         setShowSuccessModal(false);
@@ -33,9 +39,7 @@ export default function QRScanPage() {
       clearTimeout(timerRef.current);
     }
     setShowSuccessModal(false);
-    navigate("/owner/orders/receipt-confirm", {
-      state: { qrData: scannedData },
-    });
+    navigate(scannedData);
   };
 
   const handleError = (error: any) => {
