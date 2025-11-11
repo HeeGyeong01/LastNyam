@@ -563,7 +563,7 @@ pipeline {
               try {
                 dir('FE/apps/owner-web') {
                   echo '🔨 FE Owner 빌드 중...'
-                  sh 'npm install'
+                  sh 'npm ci'
                   sh 'npm run build'
                   sh """
                     echo "📦 빌드 결과물을 Nginx로 복사 중..."
@@ -596,18 +596,24 @@ pipeline {
               try {
                 dir('FE/apps/customer-web') {
                   echo '🔨 FE Customer 빌드 중...'
-                  sh 'npm install'
-                  sh 'npm run build'
-                  sh """
-                    echo "📦 빌드 결과물을 Nginx로 복사 중..."
-                    rm -rf /var/jenkins_home/nginx-build/customer/*
-                    cp -r ./dist/* /var/jenkins_home/nginx-build/customer/
-                    
-                    echo "🔄 Nginx 재시작 중..."
-                    docker exec nginx nginx -s reload
-                    
-                    echo "✅ FE Customer 배포 완료"
-                  """
+                  sh 'npm ci'
+                  withCredentials([
+                    file(credentialsId: 'customer-env', variable: 'CUSTOMER_ENV'),
+                  ]){
+                    sh """
+                      npm ci
+                      cp -r \${CUSTOMER_ENV} ./.env
+                      npm run build
+                      echo "📦 빌드 결과물을 Nginx로 복사 중..."
+                      rm -rf /var/jenkins_home/nginx-build/customer/*
+                      cp -r ./dist/* /var/jenkins_home/nginx-build/customer/
+                      
+                      echo "🔄 Nginx 재시작 중..."
+                      docker exec nginx nginx -s reload
+                      
+                      echo "✅ FE Customer 배포 완료"
+                    """
+                  }
                 }
                 env.BUILD_FE_CUSTOMER_SUCCESS = 'true'
               } catch (Exception e) {
