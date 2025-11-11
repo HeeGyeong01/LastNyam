@@ -114,12 +114,11 @@ export default function ComponentTestPage() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
 
-  const handleDragStart = (id: number) => (event: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragStart = (id: number) => (event: React.DragEvent<HTMLDivElement>) => {
     event.stopPropagation();
     setDraggingId(id);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(id));
-    event.dataTransfer.setDragImage(event.currentTarget, 10, 10);
   };
 
   const handleDragOverCard = (id: number) => (event: React.DragEvent<HTMLDivElement>) => {
@@ -431,6 +430,7 @@ export default function ComponentTestPage() {
                 foocketingQuantity={card.foocketingQuantity}
                 foocketingTime={card.foocketingTime}
                 dragHandleProps={{
+                  draggable: true,
                   onDragStart: handleDragStart(card.id),
                   onDragEnd: handleDragEnd,
                 }}
@@ -444,7 +444,6 @@ export default function ComponentTestPage() {
                   },
                 }}
                 isDragging={draggingId === card.id}
-                isDragOver={dragOverId === card.id}
               />
             ))}
             <MenuListItem

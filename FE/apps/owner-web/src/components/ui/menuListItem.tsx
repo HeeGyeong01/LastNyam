@@ -30,10 +30,9 @@ interface MenuListItemProps {
   reorderable?: boolean
   className?: string
   actionsClassName?: string
-  dragHandleProps?: React.ButtonHTMLAttributes<HTMLButtonElement>
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
   containerProps?: React.HTMLAttributes<HTMLDivElement>
   isDragging?: boolean
-  isDragOver?: boolean
 }
 
 export function MenuListItem(props: MenuListItemProps) {
@@ -59,7 +58,6 @@ export function MenuListItem(props: MenuListItemProps) {
     dragHandleProps,
     containerProps,
     isDragging = false,
-    isDragOver = false,
   } = props
 
   const formattedPrice = React.useMemo(() => formatCurrency(price), [price])
@@ -97,15 +95,14 @@ export function MenuListItem(props: MenuListItemProps) {
     <div
       {...containerProps}
       className={cn(
-        "border-b border-stroke-3 bg-bg-0 transition-all duration-200",
-        isDragging ? "opacity-70 scale-[0.98]" : "",
-        isDragOver ? "ring-2 ring-brand/60" : "",
+        "border-b border-stroke-3 bg-bg-0 transition-all duration-150",
+        isDragging ? "opacity-50" : "",
         containerProps?.className,
       )}
     >
       <div
         className={cn(
-          "flex w-full items-center gap-2 py-3 text-primary",
+          "flex w-full items-center gap-2 py-3 px-4 text-primary",
           className,
         )}
       >
@@ -199,26 +196,26 @@ export function MenuListItem(props: MenuListItemProps) {
 }
 
 interface InternalDragHandleProps {
-  dragHandleProps?: React.ButtonHTMLAttributes<HTMLButtonElement>
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
 
 function DragHandle({ dragHandleProps }: InternalDragHandleProps) {
-  const { className, draggable, ...restProps } = dragHandleProps ?? {}
-  const resolvedDraggable = draggable ?? true
+  const { className, ...restProps } = dragHandleProps ?? {}
 
   return (
-    <button
-      type="button"
-      aria-label="메뉴 순서 변경"
-      draggable={resolvedDraggable}
+    <div
       {...restProps}
+      role="button"
+      tabIndex={0}
+      aria-label="메뉴 순서 변경"
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-stroke-2 hover:border-stroke-3 hover:bg-bg-1 focus:outline-none focus:ring-2 focus:ring-brand/40 cursor-grab active:cursor-grabbing",
+        "flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-stroke-2 hover:border-stroke-3 hover:bg-bg-1 focus:outline-none focus:ring-2 focus:ring-brand/40 cursor-grab active:cursor-grabbing touch-none",
         className,
       )}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     >
-      <GripVertical className="h-4 w-4" />
-    </button>
+      <GripVertical className="h-4 w-4 pointer-events-none" style={{ userSelect: 'none' }} />
+    </div>
   )
 }
 
