@@ -78,7 +78,7 @@ export default function ReportPage() {
   // TODO: 실제로는 useEffect나 React Query로 API 호출
   const reportData = sampleData
   return (
-    <div className="bg-bg-2 px-[18px] pt-3 pb-6 flex flex-col gap-2.5 items-start justify-center flex-1 overflow-y-auto">
+    <div className="min-h-full bg-bg-2 px-[18px] pt-3 pb-6 flex flex-col gap-2.5 items-start justify-start">
       <div className="flex flex-col gap-2.5 items-center justify-start w-full">
         <div className="py-3 flex flex-col gap-2.5 items-start justify-center w-full flex-shrink-0">
           {/* Date Range Header */}
