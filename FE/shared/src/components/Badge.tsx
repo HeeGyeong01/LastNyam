@@ -13,6 +13,14 @@ const badgeVariants = cva(
         'gray': 'bg-bg-1 text-tertiary',
         'white': 'bg-bg-0 text-primary',
       },
+      size: {
+        'default': 'caption2-b',
+        'lg': 'p2-b',
+      },
+    },
+    defaultVariants: {
+      badgeStyle: 'red',
+      size: 'default',
     },
   }
 );
@@ -22,7 +30,7 @@ export interface BadgeProps
     VariantProps<typeof badgeVariants> {}
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, badgeStyle, ...props }, ref) => {
+  ({ className, badgeStyle, size, ...props }, ref) => {
     return (
       <div
         className={cn(badgeVariants({ badgeStyle, className }))}
