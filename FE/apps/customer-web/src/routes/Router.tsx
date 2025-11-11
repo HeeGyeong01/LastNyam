@@ -3,7 +3,8 @@ import { MainLayout } from '../components/layout';
 import Home from '../pages/home';
 import { Login, KakaoCallback, AdditionalInfo, SignupComplete } from '../pages/auth';
 import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from '../pages/foocketing';
-import { Discount, DiscountDetail } from '../pages/discount';
+import { Discount } from '../pages/discount';
+import { ShopDetail } from '../pages/shop';
 import { Cart, PaymentSuccess } from '../pages/cart';
 import Likes from '../pages/likes';
 import { Search, SearchResult } from '../pages/search';
@@ -59,8 +60,8 @@ export const router = createBrowserRouter([
         element: <Discount />,
       },
       {
-        path: '/discount/:id',
-        element: <DiscountDetail />,
+        path: '/shop/:id',
+        element: <ShopDetail />,
       },
       {
         path: '/cart',

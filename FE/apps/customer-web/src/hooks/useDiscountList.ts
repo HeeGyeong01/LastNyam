@@ -2,16 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import type { DiscountCategory, DiscountItem, DiscountSortType } from '@/types';
 import { getDiscountList } from '@/api';
 
-interface UseDiscountCategoryOptions {
+interface UseDiscountListOptions {
   initialCategory?: DiscountCategory;
   sort?: DiscountSortType;
   lat?: number;
   lng?: number;
 }
 
-export function useDiscountCategory(options: UseDiscountCategoryOptions = {}) {
+export function useDiscountList(options: UseDiscountListOptions = {}) {
   const {
-    initialCategory = '베이커리',
+    initialCategory = 1,
     sort = 'FAVORITES',
     lat,
     lng,

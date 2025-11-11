@@ -48,10 +48,25 @@ export const getFoocketingList = async (
  * GET /api/foocketing/{foocketingId}
  */
 export const getFoocketingDetail = async (
-  foocketingId: number
+  foocketingId: number,
+  params: {
+    lat?: number;
+    lng?: number;
+  } = {}
 ): Promise<FoocketingDetail> => {
-  const response = await apiClient.get(`/api/foocketing/${foocketingId}`);
-  return response.data;
+  // 위치 정보가 없으면 자동으로 가져오기
+  const location = params.lat && params.lng 
+    ? { lat: params.lat, lng: params.lng }
+    : await getLocation();
+    
+  const response = await apiClient.get<ApiResponseWrapper<FoocketingDetail>>(`/api/foocketing/${foocketingId}` , {
+    params: {
+      lat: location.lat,
+      lng: location.lng,
+      },
+    }
+  );
+  return response.data.data;
 };
 
 /**

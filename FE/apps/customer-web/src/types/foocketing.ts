@@ -10,13 +10,19 @@ export type FoocketingCategory =
 // 마감순, 거리순, 정가순
 export type FoocketingSortType = 'IMMINENT' | 'CLOSEST' | 'PRICE ' ;
 
-// 실제 API 응답 구조에 맞춘 타입
+// 푸켓팅 메뉴 (리스트용)
 export interface FoocketingMenu {
   name: string;
   price: number;
   photoUrl: string;
 }
 
+// 푸켓팅 메뉴 (상세용 - menuDescription 추가)
+export interface FoocketingMenuDetail extends FoocketingMenu {
+  menuDescription: string;
+}
+
+// 푸켓팅 가게
 export interface FoocketingShop {
   name: string;
   lat: number;
@@ -26,6 +32,7 @@ export interface FoocketingShop {
   ratingCount: number;
 }
 
+// 각각의 푸켓팅 아이템
 export interface FoocketingItem {
   foocketingId: number;
   openTime: string;
@@ -33,7 +40,7 @@ export interface FoocketingItem {
   shop: FoocketingShop;
 }
 
-// API 응답의 data 부분
+// API 응답의 data(푸켓팅 목록) 부분
 export interface FoocketingListData {
   content: FoocketingItem[];
   nextCursor: string | null;
@@ -43,25 +50,22 @@ export interface FoocketingListData {
 // 전체 API 응답 (ApiResponseWrapper 사용)
 export type FoocketingListResponse = FoocketingListData;
 
-export interface FoocketingDetail extends FoocketingItem {
-  shopAddress: string;
-  shopPhone: string;
-  menuItems: Array<{
-    menuId: number;
-    name: string;
-    description: string;
-    price: number;
-    imageUrl: string;
-  }>;
-  terms: string;
+// 푸켓팅 상세 조회 응답
+// FoocketingItem을 상속받되, menu 타입만 FoocketingMenuDetail로 변경하고 추가 필드 포함
+export interface FoocketingDetail extends Omit<FoocketingItem, 'menu'> {
+  maxAvailable: number;
+  currentViewing: number;
+  menu: FoocketingMenuDetail;
 }
 
+// 푸켓팅 참여 응답
 export interface FoocketingEntryResponse {
   success: boolean;
   entryId: number;
   message: string;
 }
 
+// 푸켓팅 결과
 export interface FoocketingResult {
   foocketingId: number;
   userId: number;
