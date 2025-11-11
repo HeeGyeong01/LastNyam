@@ -2,34 +2,45 @@
 export interface ShopDetail {
   shopId: number;
   shopName: string;
-  description: string;
-  address: string;
-  phone: string;
-  imageUrl: string;
-  category: string;
+  shopLat: number;
+  shopLng: number;
+  shopAddress: string;
+  shopDescription: string;
+  shopBanner: string;
+  shopCloses: string; // "21:00:00" 형식
+  shopPickupEndTime: string; // "20:30:00" 형식
+  categoryId: number;
+  ownerId: number;
   rating: number;
-  reviewCount: number;
-  openTime: string;
-  closeTime: string;
-  discountItems: Array<{
+  ratingCount: number;
+  distanceMeters: number;
+  discounts: Array<{
     discountId: number;
     menuName: string;
     originalPrice: number;
-    discountPrice: number;
     discountRate: number;
-    imageUrl: string;
+    price: number; // 할인된 가격
+    menuImage: string | null;
+    menuDescription: string;
     stock: number;
-    deadline: string;
+  }>;
+  foocketings: Array<{
+    foocketingId: number;
+    openTime: string; // ISO 8601 형식
+    menuName: string;
+    originalPrice: number;
+    price: number;
   }>;
 }
 
-export interface Shop {
-  shopId: number;
-  shopName: string;
-  category: string;
-  imageUrl: string;
-  rating: number;
-  distance?: number;
-  address: string;
-}
+// export interface Shop {
+//   shopId: number;
+//   shopName: string;
+//   category: string;
+//   imageUrl: string;
+//   rating: number;
+//   distance?: number;
+//   address: string;
+// }
+
 

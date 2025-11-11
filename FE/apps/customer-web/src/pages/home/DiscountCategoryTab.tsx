@@ -12,11 +12,11 @@ interface CategoryButton {
 }
 
 const categories: CategoryButton[] = [
-  { id: '베이커리', label: '베이커리', IconComponent: BakeryIcon },
-  { id: '회/초밥', label: '회/초밥', IconComponent: SushiIcon },
-  { id: '김밥/분식', label: '김밥/분식', IconComponent: KimbapIcon },
-  { id: '샐러드/포케', label: '샐러드/포케', IconComponent: SaladIcon },
-  { id: '기타', label: '기타', IconComponent: EtcIcon },
+  { id: 1, label: '베이커리', IconComponent: BakeryIcon },
+  { id: 2, label: '회/초밥', IconComponent: SushiIcon },
+  { id: 3, label: '김밥/분식', IconComponent: KimbapIcon },
+  { id: 4, label: '샐러드/포케', IconComponent: SaladIcon },
+  { id: 5, label: '기타', IconComponent: EtcIcon },
 ];
 
 interface DiscountCategoryTabProps {
