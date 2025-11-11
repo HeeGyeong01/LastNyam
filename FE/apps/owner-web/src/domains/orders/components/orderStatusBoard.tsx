@@ -57,7 +57,7 @@ export function OrderStatusBoard({
 
   return (
     <div className={className}>
-      <Accordion type={accordionType} collapsible>
+      <Accordion type={accordionType} collapsible={accordionType === "single" ? true : undefined}>
         {sections.map((section) => (
           <AccordionItem key={section.status} value={section.status}>
             <AccordionTrigger items={section.transactions}>{section.label}</AccordionTrigger>

@@ -9,6 +9,7 @@ import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
 import { MenuFormField } from '../../../components/ui/menuFormField';
 import { MenuListItem, type MenuSelectState } from '../../../components/ui/menuListItem';
+import { AddMenuModal } from '../../../components/ui/addMenuModal';
 import { type OrderStatus, type TransactionType } from '../../orders/components/orderStatusCard';
 import { OrderStatusBoard, type OrderStatusBoardTransaction } from '../../orders/components/orderStatusBoard';
 import { Info, ExternalLink } from 'lucide-react';
@@ -73,6 +74,7 @@ export default function ComponentTestPage() {
   const [modalOpen6, setModalOpen6] = useState(false);
   const [loadingModalOpen, setLoadingModalOpen] = useState(false);
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
+  const [addMenuModalOpen, setAddMenuModalOpen] = useState(false);
 
   const menuBasePrice = 12000;
 
@@ -114,12 +116,11 @@ export default function ComponentTestPage() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
 
-  const handleDragStart = (id: number) => (event: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragStart = (id: number) => (event: React.DragEvent<HTMLDivElement>) => {
     event.stopPropagation();
     setDraggingId(id);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(id));
-    event.dataTransfer.setDragImage(event.currentTarget, 10, 10);
   };
 
   const handleDragOverCard = (id: number) => (event: React.DragEvent<HTMLDivElement>) => {
@@ -431,6 +432,7 @@ export default function ComponentTestPage() {
                 foocketingQuantity={card.foocketingQuantity}
                 foocketingTime={card.foocketingTime}
                 dragHandleProps={{
+                  draggable: true,
                   onDragStart: handleDragStart(card.id),
                   onDragEnd: handleDragEnd,
                 }}
@@ -444,7 +446,6 @@ export default function ComponentTestPage() {
                   },
                 }}
                 isDragging={draggingId === card.id}
-                isDragOver={dragOverId === card.id}
               />
             ))}
             <MenuListItem
@@ -884,6 +885,45 @@ export default function ComponentTestPage() {
                   {discountInfo.discountRate !== undefined ? `${discountInfo.discountRate}%` : '-'}
                 </span>
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AddMenuModal 섹션 */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">AddMenuModal 컴포넌트</h2>
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">메뉴 추가 모달</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setAddMenuModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              메뉴 추가 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={addMenuModalOpen}
+              onClose={() => setAddMenuModalOpen(false)}
+              onSave={(data) => {
+                console.log('저장된 메뉴 데이터:', data);
+              }}
+              categories={[
+                { value: 'signature', label: '대표 메뉴' },
+                { value: 'rice', label: '식사류' },
+                { value: 'noodle', label: '면/분식' },
+                { value: 'dessert', label: '디저트' },
+              ]}
+            />
+
+            <div className="rounded-md border border-dashed border-subtle bg-bg-1 p-4 text-sm text-secondary">
+              <p className="text-primary font-semibold mb-2">사용 예시:</p>
+              <p>1. "메뉴 추가 모달 열기" 버튼을 클릭합니다.</p>
+              <p>2. 이미지를 업로드하고 메뉴 정보를 입력합니다.</p>
+              <p>3. 카테고리를 선택합니다.</p>
+              <p>4. "저장하기" 버튼을 클릭하면 콘솔에 데이터가 출력됩니다.</p>
             </div>
           </div>
         </div>

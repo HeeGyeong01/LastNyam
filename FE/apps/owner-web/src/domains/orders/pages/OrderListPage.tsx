@@ -159,7 +159,7 @@ export default function OrderListPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-0">
-      <section className="pt-6">
+      <section className="px-4 pt-6">
         <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
           <div className="space-y-2">
             <h1 className="h5-b text-primary">수령 처리하기</h1>
