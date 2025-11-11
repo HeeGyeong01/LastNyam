@@ -1,6 +1,6 @@
 import { PageHeader } from '@/components/common';
 
-export default function Sale() {
+export default function Discount() {
   return (
     <>
       <PageHeader title="마감세일" variant="light" />

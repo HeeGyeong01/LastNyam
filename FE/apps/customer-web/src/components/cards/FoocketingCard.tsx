@@ -5,8 +5,8 @@ interface FoocketingCardProps {
   openTime: string;
   menuName: string;
   originalPrice: number;
-  storeName: string;
-  storeProfileImage: string;
+  shopName: string;
+  menuProfileImage: string;
   distance: string;
   rating: number;
   reviewCount: number;
@@ -19,8 +19,8 @@ export default function FoocketingCard({
   openTime,
   menuName,
   originalPrice,
-  storeName,
-  storeProfileImage,
+  shopName,
+  menuProfileImage,
   distance,
   rating,
   reviewCount,
@@ -42,7 +42,7 @@ export default function FoocketingCard({
         <img
           className="absolute top-[calc(50%_-_72px)] left-[calc(50%_-_72px)] w-36 h-36 object-cover"
           alt={menuName}
-          src={storeProfileImage}
+          src={menuProfileImage}
         />
 
         {/* 오픈시간 배지 */}
@@ -74,7 +74,7 @@ export default function FoocketingCard({
             </div>
 
             <div className="relative flex-1 caption2 text-tertiary overflow-hidden text-ellipsis line-clamp-1">
-              {storeName}
+              {shopName}
             </div>
           </div>
         </div>
