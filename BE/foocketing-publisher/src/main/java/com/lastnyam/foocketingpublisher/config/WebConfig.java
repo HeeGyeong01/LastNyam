@@ -2,13 +2,11 @@ package com.lastnyam.foocketingpublisher.config;
 
 import com.lastnyam.foocketingpublisher.interceptor.JwtAuthenticationInterceptor;
 import com.lastnyam.foocketingpublisher.resolver.UserIdArgumentResolver;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
 
 /**
  * Web 설정 (Interceptor 및 ArgumentResolver 등록)
@@ -20,11 +18,11 @@ public class WebConfig implements WebMvcConfigurer {
     private final JwtAuthenticationInterceptor jwtAuthenticationInterceptor;
     private final UserIdArgumentResolver userIdArgumentResolver;
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(jwtAuthenticationInterceptor)
-                .addPathPatterns("/api/**");
-    }
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(jwtAuthenticationInterceptor)
+//                .addPathPatterns("/api/**");
+//    }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {

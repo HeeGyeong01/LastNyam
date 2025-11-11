@@ -11,8 +11,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * JWT 토큰 검증을 위한 Interceptor
- * @UserId 어노테이션이 있는 경우 JWT 검증을 수행합니다.
- * 실제 userId 추출은 ArgumentResolver에서 처리합니다.
+ *
+ * @UserId 어노테이션이 있는 경우 JWT 검증을 수행합니다. 실제 userId 추출은 ArgumentResolver에서 처리합니다.
  */
 @Slf4j
 @Component
@@ -22,24 +22,23 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
     private final JwtService jwtService;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
         // HandlerMethod가 아닌 경우 통과 (예: 리소스 핸들러)
-        if (!(handler instanceof HandlerMethod)) {
+        if (!(handler instanceof HandlerMethod handlerMethod)) {
             return true;
         }
 
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        
         // @UserId 어노테이션이 있는 파라미터가 있는지 확인
         boolean hasUserIdParameter = hasUserIdParameter(handlerMethod);
-        
+
         if (!hasUserIdParameter) {
             return true;
         }
 
         // Authorization 헤더에서 토큰 추출
         String token = extractTokenFromRequest(request);
-        
+
         if (token == null) {
             log.warn("JWT 토큰이 없습니다.");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -54,7 +53,7 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
         }
 
         log.debug("JWT 토큰 검증 완료");
-        
+
         return true;
     }
 
