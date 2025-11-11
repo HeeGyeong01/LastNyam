@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, Settings, Presentation, Calculator, ChevronRight, Store } from "lucide-react";
+import { ClipboardList, Settings, Presentation, Calculator, ChevronRight, Store, TestTube } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@shared/src/components/Button";
 
@@ -32,6 +32,11 @@ export default function OwnerSettingPage() {
     {
       icon: Calculator,
       label: "거래 기록",
+    },
+    {
+      icon: TestTube,
+      label: "오너 테스트",
+      onClick: () => navigate("/owner/test"),
     },
   ];
 

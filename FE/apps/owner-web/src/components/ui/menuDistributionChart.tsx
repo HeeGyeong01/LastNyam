@@ -18,7 +18,7 @@ export function MenuDistributionChart({ data }: MenuDistributionChartProps) {
   const activeData = data[activeIndex]
 
   return (
-    <div className="mx-auto w-full max-w-[150px] h-[150px]">
+    <div className="mx-auto w-full max-w-[150px] h-[150px] [&_*]:outline-none [&_*]:focus:outline-none">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
