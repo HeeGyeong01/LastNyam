@@ -1,5 +1,6 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
+import { formatTimeToHHmm } from '@/lib/time';
 
 interface FoocketingCardHorizontalProps {
   openTime: string; // ISO 8601 형식 (예: "2025-11-10T14:00:00")
@@ -29,10 +30,7 @@ export default function FoocketingCardHorizontal({
   className = '',
 }: FoocketingCardHorizontalProps) {
   // 시간 포맷팅 (ISO 8601 → "HH:mm")
-  const formattedOpenTime = (() => {
-    const date = new Date(openTime);
-    return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-  })();
+  const formattedOpenTime = formatTimeToHHmm(openTime);
 
   const formattedOriginalPrice = originalPrice.toLocaleString('ko-KR');
   const formattedDiscountedPrice = discountedPrice.toLocaleString('ko-KR');

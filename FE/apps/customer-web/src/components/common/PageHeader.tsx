@@ -5,8 +5,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const headerVariants = cva(
-  // 기본 스타일
-  'w-full h-12 px-4 py-2 flex items-center justify-between relative',
+  // 기본 스타일 (sticky로 최상단 고정)
+  'w-full h-12 px-4 py-2 flex items-center justify-between relative sticky top-0 z-20',
   {
     variants: {
       variant: {

@@ -24,6 +24,8 @@ export interface FoocketingMenuDetail extends FoocketingMenu {
 
 // 푸켓팅 가게
 export interface FoocketingShop {
+  shopId: number;
+  bannerUrl: string;
   name: string;
   lat: number;
   lng: number;

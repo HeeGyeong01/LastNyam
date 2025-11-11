@@ -72,22 +72,11 @@ export default function Foocketing() {
   // Header와 Tab 높이 (PageHeader: 48px, Tab: 약 48px)
   const HEADER_TAB_HEIGHT = 96;
   
-  // 지도 padding 계산 (가려진 영역을 고려한 중심점 조정)
-  // DraggableBottomSheet minHeight + BottomNavBar 높이
-  const BOTTOM_SHEET_MIN_HEIGHT = 144;
-  const BOTTOM_NAV_BAR_HEIGHT = 80; // 필요에 따라 조정
-  const mapPadding = {
-    top: 0, // 지도 컨테이너가 이미 top: HEADER_TAB_HEIGHT로 설정되어 있음
-    bottom: BOTTOM_SHEET_MIN_HEIGHT + BOTTOM_NAV_BAR_HEIGHT,
-    left: 0,
-    right: 0,
-  };
-
 
   return (
-    <>
+    <div className="w-full">
       {/* Header와 Tab은 fixed로 상단 고정 */}
-      <div className="fixed top-0 left-0 right-0 z-20 bg-white">
+      <div className="fixed top-0 left-0 right-0 z-20 bg-white max-w-[500px] mx-auto">
         <PageHeader title="푸켓팅" variant="light" />
         <Tab
           tabLabels={categoryLabels}
@@ -101,11 +90,9 @@ export default function Foocketing() {
       
       {/* 지도 영역 */}
       <div 
-        className="fixed z-0" 
+        className="fixed z-0 max-w-[500px] mx-auto left-0 right-0" 
         style={{ 
           top: `${HEADER_TAB_HEIGHT}px`,
-          left: 0,
-          right: 0,
           bottom: 0,
         }}
       >
@@ -117,7 +104,8 @@ export default function Foocketing() {
             title: item.shop.name,
           }))}
           onCenterChange={handleMapCenterChange}
-          padding={mapPadding}
+          // 지도 padding 계산 (가려진 영역을 고려한 중심점 조정)
+          padding={{ bottom: 224 }}
         />
       </div>
 
@@ -125,6 +113,7 @@ export default function Foocketing() {
       <DraggableBottomSheet
         headerOffset={HEADER_TAB_HEIGHT}
         defaultHeightRatio={0.4}
+        className="max-w-[500px] mx-auto"
       >
         <div className="h-full overflow-y-auto px-4 pb-28">
           {loading && <p>로딩 중...</p>}
@@ -144,6 +133,6 @@ export default function Foocketing() {
           )}
         </div>
       </DraggableBottomSheet>
-    </>
+    </div>
   );
 }
