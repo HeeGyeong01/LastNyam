@@ -4,19 +4,12 @@ import { Input } from '@shared/src/components/Input';
 import { Button } from '@shared/src/components/Button';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { Modal } from '../../../components/ui/modal';
-
-const DEFAULT_OWNER_API_BASE_URL = 'https://k13a101.p.ssafy.io';
-const OWNER_API_BASE_URL =
-  import.meta.env.VITE_OWNER_API_BASE_URL ?? DEFAULT_OWNER_API_BASE_URL;
-const REGISTER_ENDPOINT = '/api/owner/auth/register';
-
-const buildRegisterUrl = () =>
-  OWNER_API_BASE_URL
-    ? `${OWNER_API_BASE_URL.replace(/\/$/, '')}${REGISTER_ENDPOINT}`
-    : REGISTER_ENDPOINT;
+import { authApi } from '../apis/auth.api';
+import { useOwnerStore } from '../../../store/useOwnerStore';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { login } = useOwnerStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,32 +27,24 @@ export default function SignUpPage() {
 
     try {
       setIsSubmitting(true);
-      const payload = {
+      
+      console.log('SignUp request →', { email: email.trim() });
+
+      // API 호출
+      const response = await authApi.register({
         email: email.trim(),
         password,
-      };
-
-      const url = buildRegisterUrl();
-      console.log('SignUp request →', url, payload);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
       });
 
-      const responseBody = await response
-        .json()
-        .catch(() => null) as { message?: string; status?: string } | null;
+      console.log('SignUp response ←', response);
 
-      console.log('SignUp response ←', response.status, responseBody);
-
-      if (!response.ok || responseBody?.status !== 'SUCCESS') {
-        const errorMessage =
-          responseBody?.message || '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.';
-        throw new Error(errorMessage);
+      // 회원가입 성공 시 토큰이 있으면 로그인 상태로 설정
+      if (response.data?.accessToken) {
+        login(
+          email.trim(),
+          response.data.accessToken,
+          response.data.refreshToken
+        );
       }
 
       setModalOpen(true);
@@ -115,9 +100,9 @@ export default function SignUpPage() {
           onChange={(e) => setPassword(e.target.value)}
           icon={
             showPassword ? (
-              <EyeSlashIcon className="w-5 h-5" />
-            ) : (
               <EyeIcon className="w-5 h-5" />
+            ) : (
+              <EyeSlashIcon className="w-5 h-5" />
             )
           }
           onIconClick={() => setShowPassword((prev) => !prev)}
@@ -130,9 +115,9 @@ export default function SignUpPage() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           icon={
             showConfirmPassword ? (
-              <EyeSlashIcon className="w-5 h-5" />
-            ) : (
               <EyeIcon className="w-5 h-5" />
+            ) : (
+              <EyeSlashIcon className="w-5 h-5" />
             )
           }
           onIconClick={() => setShowConfirmPassword((prev) => !prev)}

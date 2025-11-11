@@ -1,82 +1,180 @@
 'use client';
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@shared/src/components/Input';
 import { Button } from '@shared/src/components/Button';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { authApi } from '../apis/auth.api';
+import { useOwnerStore } from '../../../store/useOwnerStore';
+import { Modal } from '../../../components/ui/modal';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useOwnerStore();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showShopModal, setShowShopModal] = useState(false);
 
-  const handleLogin = () => {
-    console.log('로그인:', { username, password });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLogin();
+  };
+
+  const handleLogin = async () => {
+    if (!username || !password || isSubmitting) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      console.log('Login request →', { email: username.trim() });
+
+      // API 호출
+      const response = await authApi.login({
+        email: username.trim(),
+        password,
+      });
+
+      console.log('Login response ←', response);
+
+      // 로그인 성공 시 토큰 저장
+      if (response.data?.accessToken && response.data?.ownerId) {
+        login(
+          username.trim(),
+          response.data.accessToken,
+          response.data.refreshToken,
+          response.data.ownerId
+        );
+        
+        // 가게 목록 조회
+        try {
+          const shopsResponse = await authApi.getShops(
+            response.data.ownerId,
+            response.data.accessToken
+          );
+
+          console.log('Shop list response ←', shopsResponse);
+
+          // 가게가 없으면 모달 표시
+          if (!shopsResponse.data?.shops || shopsResponse.data.shops.length === 0) {
+            setShowShopModal(true);
+          } else {
+            // 가게가 있으면 주문 목록 페이지로 이동
+            navigate('/owner/orders/list', { replace: true });
+          }
+        } catch (shopError) {
+          console.error('가게 목록 조회 오류:', shopError);
+          // 가게 목록 조회 실패해도 일단 모달 표시
+          setShowShopModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('로그인 오류:', error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : '로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      window.alert(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRegisterShop = () => {
+    setShowShopModal(false);
+    navigate('/owner/store-information/step1-input');
+  };
+
+  const handleSkipRegisterShop = () => {
+    setShowShopModal(false);
+    navigate('/owner/orders/list', { replace: true });
   };
 
   return (
-    <div className="flex mx-[52px] min-h-screen flex-col items-center justify-center bg-white">
-      {/* 로고 섹션 */}
-      <div className="mb-4 text-center">
-         <div className="logo-wrapper inline-flex flex-col items-center leading-none">
-          {/* LAST */}
-          <div className="relative">
-             <span className="logo-outline text-brand font-en-h1 en-h1">LAST</span>
-             <span className="logo-fill font-en-h1 en-h1">LAST</span>
-          </div>
-          {/* NYAM */}
-          <div className="relative -mt-4">
-             <span className="logo-outline text-brand font-en-h1 en-h1">NYAM</span>
-             <span className="logo-fill font-en-h1 en-h1">NYAM</span>
-          </div>
-          {/* 사장님 */}
-          <div className="relative -mt-2">
-             <span className="logo-outline-sm text-brand-subtle font-kr-h3 kr-h3">사장님</span>
-             <span className="logo-fill-sm font-kr-h3 kr-h3">사장님</span>
+    <>
+      <div className="flex mx-[52px] min-h-screen flex-col items-center justify-center bg-white">
+        {/* 로고 섹션 */}
+        <div className="mb-4 text-center">
+           <div className="logo-wrapper inline-flex flex-col items-center leading-none">
+            {/* LAST */}
+            <div className="relative">
+               <span className="logo-outline text-brand font-en-h1 en-h1">LAST</span>
+               <span className="logo-fill font-en-h1 en-h1">LAST</span>
+            </div>
+            {/* NYAM */}
+            <div className="relative -mt-4">
+               <span className="logo-outline text-brand font-en-h1 en-h1">NYAM</span>
+               <span className="logo-fill font-en-h1 en-h1">NYAM</span>
+            </div>
+            {/* 사장님 */}
+            <div className="relative -mt-2">
+               <span className="logo-outline-sm text-brand-subtle font-kr-h3 kr-h3">사장님</span>
+               <span className="logo-fill-sm font-kr-h3 kr-h3">사장님</span>
+            </div>
           </div>
         </div>
+
+        {/* 입력 폼 */}
+        <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-3">
+          <Input
+            placeholder="아이디를 입력하세요"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            showClearButton={false}
+          />
+          <Input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="비밀번호를 입력하세요"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            icon={
+              showPassword ? (
+                <EyeIcon className="w-5 h-5" />
+              ) : (
+                <EyeSlashIcon className="w-5 h-5" />
+              )
+            }
+            onIconClick={() => setShowPassword(!showPassword)}
+            showClearButton={false}
+          />
+
+          <Button
+            type="submit"
+            btnStyle="filled-red"
+            size="lg"
+            className="w-full"
+            disabled={!username || !password || isSubmitting}
+          >
+            로그인
+          </Button>
+
+          <div className="mt-4 text-center">
+            <span className="p2-r text-secondary">아직 회원이 아니신가요? </span>
+            <a href="/owner/signup" className="p2-b text-brand hover:underline">
+              회원가입
+            </a>
+          </div>
+        </form>
       </div>
 
-      {/* 입력 폼 */}
-      <div className="w-full max-w-sm space-y-3">
-        <Input
-          placeholder="아이디를 입력하세요"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          showClearButton={false}
-        />
-        <Input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="비밀번호를 입력하세요"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          icon={
-            showPassword ? (
-              <EyeSlashIcon className="w-5 h-5" />
-            ) : (
-              <EyeIcon className="w-5 h-5" />
-            )
-          }
-          onIconClick={() => setShowPassword(!showPassword)}
-          showClearButton={false}
-        />
-
-        <Button
-          btnStyle="filled-red"
-          size="lg"
-          className="w-full"
-          onClick={handleLogin}
-        >
-          로그인
-        </Button>
-
-        <div className="mt-4 text-center">
-          <span className="p2-r text-secondary">아직 회원이 아니신가요? </span>
-          <a href="/owner/signup" className="p2-b text-brand hover:underline">
-            회원가입
-          </a>
-        </div>
-      </div>
-    </div>
+      {/* 가게 등록 모달 */}
+      <Modal
+        open={showShopModal}
+        onClose={handleSkipRegisterShop}
+        title="가게를 등록하시겠어요?"
+        detail="등록된 가게가 없습니다.\n가게를 등록하고 서비스를 이용하세요."
+        icon="exclamation"
+        variant="two-button"
+        primaryButtonText="가게 등록하기"
+        secondaryButtonText="나중에"
+        onPrimaryClick={handleRegisterShop}
+        onSecondaryClick={handleSkipRegisterShop}
+      />
+    </>
   );
 }
