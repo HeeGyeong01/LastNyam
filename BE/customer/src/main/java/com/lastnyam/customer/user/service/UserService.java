@@ -3,8 +3,11 @@ package com.lastnyam.customer.user.service;
 import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.customer.exception.BadRequestException;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.user.dto.CursorResponse;
+import com.lastnyam.customer.user.dto.FavoriteShopInfo;
 import com.lastnyam.customer.user.dto.UserOnboardingRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingResponseDto;
+import com.lastnyam.customer.user.repository.FavoriteQueryRepository;
 import com.lastnyam.customer.user.repository.UserFavoriteRepository;
 import com.lastnyam.customer.user.repository.UserRepository;
 import com.lastnyam.database.entity.FoodCategory;
@@ -26,6 +29,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserFavoriteRepository userFavoriteRepository;
     private final EntityManager entityManager;
+    private final FavoriteQueryRepository queryRepository;
 
     @Transactional
     public UserOnboardingResponseDto updateOnboardingProfile(Integer userId, UserOnboardingRequestDto request) {
@@ -77,5 +81,24 @@ public class UserService {
                 .userId(userId)
                 .savedCategoryIds(savedCategoryIds)
                 .build();
+    }
+
+    /**
+     * 사용자가 찜한 가게 목록 조회
+     *
+     * @param userId 사용자 ID
+     * @param lat    위도
+     * @param lng    경도
+     * @param cursor 커서 (페이징용)
+     * @return 찜한 가게 목록 (커서 기반 페이징)
+     */
+    @Transactional(readOnly = true)
+    public CursorResponse<FavoriteShopInfo> getFavoriteShops(Integer userId, Double lat, Double lng,
+                                                             String cursor) {
+        // 사용자 존재 확인
+        userRepository.findById(userId)
+                .orElseThrow(ResourceNotFoundException::ofUser);
+
+        return queryRepository.findFavoriteShop(userId, lat, lng, cursor);
     }
 }

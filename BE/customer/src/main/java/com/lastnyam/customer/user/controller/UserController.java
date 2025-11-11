@@ -3,6 +3,8 @@ package com.lastnyam.customer.user.controller;
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
 import com.lastnyam.customer.security.dto.UserInfoResponse;
+import com.lastnyam.customer.user.dto.CursorResponse;
+import com.lastnyam.customer.user.dto.FavoriteShopInfo;
 import com.lastnyam.customer.user.dto.UploadUrlRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingResponseDto;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -84,6 +87,26 @@ public class UserController {
 
         PresignedUrlResponse resp = s3Service.generatePresignedUploadUrl(s3Req);
         return ResponseEntity.ok(ApiResponse.ofSuccess(resp));
+    }
+
+    /**
+     * 내가 찜한 가게 리스트 조회
+     * 특정 사용자가 찜한 가게 목록을 반환합니다.
+     *
+     * @param userId 사용자 ID
+     * @param lat    위도
+     * @param lng    경도
+     * @param cursor 커서 (페이징용, 선택사항)
+     * @return 찜한 가게 목록 (커서 기반 페이징)
+     */
+    @GetMapping("/{userId}/favorite")
+    public ResponseEntity<ApiResponse<CursorResponse<FavoriteShopInfo>>> getFavoriteShops(
+            @PathVariable("userId") Integer userId,
+            @RequestParam("lat") Double lat,
+            @RequestParam("lng") Double lng,
+            @RequestParam(value = "cursor", required = false) String cursor) {
+        CursorResponse<FavoriteShopInfo> result = userService.getFavoriteShops(userId, lat, lng, cursor);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 
 }
