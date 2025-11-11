@@ -42,7 +42,7 @@ export default function ReceiptConfirmPage({
   const title = `${transactionTypeLabel} ${transactionId}`;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-bg-2">
       {/* 헤더 */}
       <LargeHeader
         pageName="주문 상세보기"
@@ -50,7 +50,7 @@ export default function ReceiptConfirmPage({
       />
 
       {/* 메인 콘텐츠 */}
-      <div className="flex-1 bg-bg-2 px-4 py-3 pb-[180px]">
+      <div className="flex-1 bg-bg-2 px-4 py-3 pb-[180px] min-h-[calc(100vh-200px)]">
         <div className="bg-bg-0 p-5 space-y-5">
           {/* 타이틀 및 설명 */}
           <div className="space-y-1">
