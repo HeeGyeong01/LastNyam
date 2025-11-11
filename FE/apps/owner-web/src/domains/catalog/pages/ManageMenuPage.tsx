@@ -150,7 +150,7 @@ export default function ManageMenuPage() {
               </div>
             </section>
 
-            <section className="bg-bg-0 shadow-sm overflow-hidden pb-4">
+            <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
