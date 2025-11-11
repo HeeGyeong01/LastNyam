@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+import { AddMenuModal, type MenuFormData } from "@/components/ui/addMenuModal"
 
 interface MenuItem {
   id: number
@@ -91,6 +92,7 @@ function SortableMenuItem({ menu }: { menu: MenuItem }) {
 
 export default function ManageMenuPage() {
   const [menus, setMenus] = React.useState(SAMPLE_MENUS)
+  const [isAddMenuModalOpen, setIsAddMenuModalOpen] = React.useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -117,9 +119,30 @@ export default function ManageMenuPage() {
   }, [])
 
   const handleAddMenu = React.useCallback(() => {
-    // TODO: 연결된 모달/페이지로 이동
-    window.alert("새 메뉴를 추가하는 동작이 연결될 예정입니다.")
+    setIsAddMenuModalOpen(true)
   }, [])
+
+  const handleSaveNewMenu = React.useCallback((data: MenuFormData) => {
+    // 새 메뉴 ID 생성 (현재 최대 ID + 1)
+    const newId = Math.max(...menus.map((m) => m.id), 0) + 1
+    
+    // 이미지 URL 생성 (File 객체를 URL로 변환)
+    let imageUrl: string | undefined
+    if (data.image) {
+      imageUrl = URL.createObjectURL(data.image)
+    }
+
+    const newMenu: MenuItem = {
+      id: newId,
+      menuName: data.name,
+      price: parseInt(data.price, 10) || 0,
+      categoryName: typeof data.category === 'string' ? data.category : data.category[0] || '기타',
+      imageUrl,
+    }
+
+    setMenus((prev) => [...prev, newMenu])
+    setIsAddMenuModalOpen(false)
+  }, [menus])
 
   const handleSaveMenus = React.useCallback(() => {
     // TODO: 저장 API 연동
@@ -182,6 +205,20 @@ export default function ManageMenuPage() {
           </Button>
         </div>
       </div>
+
+      {/* 메뉴 추가 모달 */}
+      <AddMenuModal
+        open={isAddMenuModalOpen}
+        onClose={() => setIsAddMenuModalOpen(false)}
+        onSave={handleSaveNewMenu}
+        categories={[
+          { value: '시그니처', label: '시그니처' },
+          { value: '디저트', label: '디저트' },
+          { value: '음료', label: '음료' },
+          { value: '식사류', label: '식사류' },
+          { value: '면/분식', label: '면/분식' },
+        ]}
+      />
     </div>
   )
 }
