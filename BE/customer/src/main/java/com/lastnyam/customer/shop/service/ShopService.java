@@ -1,8 +1,8 @@
 package com.lastnyam.customer.shop.service;
 
 import com.lastnyam.customer.shop.dto.ShopFoocketingItemDto;
-import com.lastnyam.customer.exception.BadRequestException;
-import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.shop.exception.ShopErrorCode;
+import com.lastnyam.customer.shop.exception.ShopException;
 import com.lastnyam.customer.shop.dto.ShopDiscountItemDto;
 import com.lastnyam.customer.shop.dto.ShopDetailResponseDto;
 import com.lastnyam.customer.shop.dto.ShopFavoriteResponseDto;
@@ -40,7 +40,7 @@ public class ShopService {
     @Transactional(readOnly = true)
     public ShopDetailResponseDto getShopDetail(Integer shopId, Double currentLat, Double currentLng) {
         Shop shop = shopRepository.findById(shopId)
-                .orElseThrow(ResourceNotFoundException::ofShop);
+                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
 
         // 별점 조회
         ShopRating rating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
@@ -106,13 +106,13 @@ public class ShopService {
     @Transactional
     public ShopFavoriteResponseDto addFavorite(Integer shopId, Integer userId) {
         if (favoriteRepository.existsByUserUserIdAndShopShopId(userId, shopId)) {
-            throw BadRequestException.ofInput("이미 찜한 가게입니다.");
+            throw new ShopException(ShopErrorCode.ALREADY_FAVORITED);
         }
 
         Shop shop = shopRepository.findById(shopId)
-                .orElseThrow(ResourceNotFoundException::ofShop);
+                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         User user = userRepository.findById(userId)
-                .orElseThrow(ResourceNotFoundException::ofUser);
+                .orElseThrow(() -> new ShopException(ShopErrorCode.USER_NOT_FOUND));
 
         Favorite favorite = Favorite.builder()
                 .shop(shop)
@@ -131,7 +131,7 @@ public class ShopService {
     @Transactional
     public ShopFavoriteResponseDto removeFavorite(Integer shopId, Integer userId) {
         Favorite favorite = favoriteRepository.findByUserUserIdAndShopShopId(userId, shopId)
-                .orElseThrow(ResourceNotFoundException::ofFavorite);
+                .orElseThrow(() -> new ShopException(ShopErrorCode.FAVORITE_NOT_FOUND));
 
         favoriteRepository.delete(favorite);
 

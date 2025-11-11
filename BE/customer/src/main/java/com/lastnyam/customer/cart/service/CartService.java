@@ -10,8 +10,10 @@ import com.lastnyam.customer.cart.dto.CartUpdateRequestDto;
 import com.lastnyam.customer.cart.repository.CartItemRepository;
 import com.lastnyam.customer.cart.repository.CartRepository;
 import com.lastnyam.customer.cart.repository.DiscountRepository;
-import com.lastnyam.customer.exception.BadRequestException;
-import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.cart.repository.DiscountTransactionItemRepository;
+import com.lastnyam.customer.cart.repository.DiscountTransactionRepository;
+import com.lastnyam.customer.cart.exception.CartErrorCode;
+import com.lastnyam.customer.cart.exception.CartException;
 import com.lastnyam.customer.external.kakaopay.client.KakaoPayClient;
 import com.lastnyam.customer.external.kakaopay.config.KakaoPayConfig;
 import com.lastnyam.customer.external.kakaopay.dto.KakaoPayApproveRequest;
@@ -22,7 +24,12 @@ import com.lastnyam.customer.external.kakaopay.store.KakaoPayTempStore;
 import com.lastnyam.database.entity.Cart;
 import com.lastnyam.database.entity.CartItem;
 import com.lastnyam.database.entity.Discount;
+import com.lastnyam.database.entity.DiscountTransaction;
+import com.lastnyam.database.entity.DiscountTransactionItem;
+import com.lastnyam.database.entity.Shop;
 import com.lastnyam.database.entity.User;
+import com.lastnyam.database.entity.enums.TransactionStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,6 +47,8 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final DiscountRepository discountRepository;
+    private final DiscountTransactionRepository discountTransactionRepository;
+    private final DiscountTransactionItemRepository discountTransactionItemRepository;
     private final KakaoPayClient kakaoPayClient;
     private final KakaoPayConfig kakaoPayConfig;
     private final KakaoPayTempStore kakaoPayTempStore;
@@ -47,7 +56,7 @@ public class CartService {
     @Transactional(readOnly = true)
     public CartResponseDto getCart(Integer userId) {
         Cart cart = cartRepository.findByUserUserId(userId)
-                .orElseThrow(ResourceNotFoundException::ofCart);
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_NOT_FOUND));
 
         List<CartItem> cartItems = cartItemRepository.findByCartCartId(cart.getCartId());
         
@@ -77,7 +86,7 @@ public class CartService {
     @Transactional
     public CartResponseDto addItemToCart(Integer userId, CartAddRequestDto request) {
         Discount discount = discountRepository.findById(request.getDiscountId())
-                .orElseThrow(ResourceNotFoundException::ofDiscount);
+                .orElseThrow(() -> new CartException(CartErrorCode.DISCOUNT_NOT_FOUND));
 
         // 장바구니 조회 또는 생성
         Cart cart = cartRepository.findByUserUserId(userId)
@@ -98,7 +107,7 @@ public class CartService {
             
             // 다른 가게의 물품을 담으려고 하면 에러
             if (!existingShopId.equals(newShopId)) {
-                throw BadRequestException.ofInput("이미 장바구니에 다른 가게의 물품이 있습니다. 한 번에 하나의 가게의 물품만 담을 수 있습니다.");
+                throw new CartException(CartErrorCode.DIFFERENT_SHOP_ITEMS);
             }
         }
 
@@ -132,14 +141,14 @@ public class CartService {
     @Transactional
     public CartResponseDto updateCartItemAmount(Integer userId, CartUpdateRequestDto request) {
         Cart cart = cartRepository.findByUserUserId(userId)
-                .orElseThrow(ResourceNotFoundException::ofCart);
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_NOT_FOUND));
 
         CartItem cartItem = cartItemRepository
                 .findByCartCartIdAndCartItemId(cart.getCartId(), request.getCartItemId())
-                .orElseThrow(() -> BadRequestException.ofInput("장바구니에 해당 아이템이 없습니다."));
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
         if (request.getCartItemAmount() <= 0) {
-            throw BadRequestException.ofInput("물품 개수는 1개 이상이어야 합니다.");
+            throw new CartException(CartErrorCode.INVALID_ITEM_QUANTITY);
         }
 
         CartItem updatedItem = CartItem.builder()
@@ -156,11 +165,11 @@ public class CartService {
     @Transactional
     public CartResponseDto removeItemFromCart(Integer userId, CartDeleteRequestDto request) {
         Cart cart = cartRepository.findByUserUserId(userId)
-                .orElseThrow(ResourceNotFoundException::ofCart);
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_NOT_FOUND));
 
         CartItem cartItem = cartItemRepository
                 .findByCartCartIdAndCartItemId(cart.getCartId(), request.getCartItemId())
-                .orElseThrow(() -> BadRequestException.ofInput("장바구니에 해당 아이템이 없습니다."));
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
         cartItemRepository.delete(cartItem);
 
@@ -193,12 +202,12 @@ public class CartService {
     @Transactional
     public CartOrderResponseDto orderCart(Integer userId) {
         Cart cart = cartRepository.findByUserUserId(userId)
-                .orElseThrow(ResourceNotFoundException::ofCart);
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_NOT_FOUND));
 
         List<CartItem> cartItems = cartItemRepository.findByCartCartId(cart.getCartId());
         
         if (cartItems.isEmpty()) {
-            throw BadRequestException.ofInput("장바구니가 비어있습니다.");
+            throw new CartException(CartErrorCode.CART_EMPTY);
         }
 
         // 총 가격 계산
@@ -243,6 +252,25 @@ public class CartService {
                 .queryParam("partner_order_id", partnerOrderId)
                 .build().toUriString();
 
+        // 결제 요청 시점에 거래(승인 대기) 및 아이템 생성
+        Shop shop = cartItems.get(0).getDiscount().getMenu().getShop();
+        DiscountTransaction transaction = DiscountTransaction.builder()
+                .transactionStatus(TransactionStatus.PENDING_APPROVAL)
+                .createdAt(LocalDateTime.now())
+                .user(User.builder().userId(userId).build())
+                .shop(shop)
+                .build();
+        discountTransactionRepository.save(transaction);
+
+        List<DiscountTransactionItem> transactionItems = cartItems.stream()
+                .map(item -> DiscountTransactionItem.builder()
+                        .transactionAmount(item.getCartItemAmount())
+                        .discountTransaction(transaction)
+                        .discount(item.getDiscount())
+                        .build())
+                .collect(Collectors.toList());
+        discountTransactionItemRepository.saveAll(transactionItems);
+
         // 카카오페이 결제 준비 요청 생성
         KakaoPayReadyRequest readyRequest = KakaoPayReadyRequest.builder()
                 .cid(kakaoPayConfig.getCid())
@@ -268,10 +296,10 @@ public class CartService {
         kakaoPayTempStore.put(partnerOrderId, readyResponse.getTid());
 
         return CartOrderResponseDto.builder()
-                .orderId(null) // 결제 승인 후 주문 생성
+                .orderId(transaction.getTransactionId())
                 .userId(userId)
                 .totalPrice(totalPrice)
-                .paymentStatus("READY") // 결제 준비 완료
+                .paymentStatus("PENDING_APPROVAL")
                 .tid(readyResponse.getTid())
                 .partnerOrderId(partnerOrderId) // 결제 승인 시 필요
                 .nextRedirectAppUrl(readyResponse.getNextRedirectAppUrl())
@@ -307,7 +335,7 @@ public class CartService {
 
         // 장바구니 조회
         Cart cart = cartRepository.findByUserUserId(userId)
-                .orElseThrow(ResourceNotFoundException::ofCart);
+                .orElseThrow(() -> new CartException(CartErrorCode.CART_NOT_FOUND));
 
         List<CartItem> cartItems = cartItemRepository.findByCartCartId(cart.getCartId());
 
