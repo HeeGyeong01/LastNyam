@@ -6,11 +6,11 @@ interface FoocketingCardHorizontalProps {
   openTime: string; // ISO 8601 형식 (예: "2025-11-10T14:00:00")
   menuName: string;
   originalPrice: number;
-  shopName: string;
+  shopName?: string;
   menuProfileImage: string;
-  distance: number; // km 단위 (예: 1.2)
-  rating: number;
-  reviewCount: number;
+  distance?: number; // km 단위 (예: 1.2)
+  rating?: number;
+  reviewCount?: number;
   discountedPrice?: number;
   onClick?: () => void;
   className?: string;
@@ -34,7 +34,7 @@ export default function FoocketingCardHorizontal({
 
   const formattedOriginalPrice = originalPrice.toLocaleString('ko-KR');
   const formattedDiscountedPrice = discountedPrice.toLocaleString('ko-KR');
-  const formattedReviewCount = reviewCount.toLocaleString('ko-KR');
+  const formattedReviewCount = reviewCount?.toLocaleString('ko-KR');
 
   return (
     <div
@@ -64,7 +64,7 @@ export default function FoocketingCardHorizontal({
             <div className="inline-flex items-center relative flex-[0_0_auto] gap-1">
               <StarIcon className="w-3 h-3 text-[#F79616]" />
               <div className="relative w-fit caption2 text-tertiary whitespace-nowrap">
-                {rating.toFixed(1)} ({formattedReviewCount})
+                {rating?.toFixed(1)} ({formattedReviewCount ? `(${formattedReviewCount})` : ''})
               </div>
             </div>
 
@@ -91,9 +91,9 @@ export default function FoocketingCardHorizontal({
       </div>
 
       {/* 이미지 영역 (오른쪽) */}
-      <div className="relative w-[88px] h-[88px] bg-[#e6e6e6] rounded-lg overflow-hidden aspect-square">
+      <div className="relative w-[88px] h-[88px] rounded-lg overflow-hidden aspect-square">
         <img
-          className="absolute top-[calc(50%_-_44px)] left-[calc(50%_-_44px)] w-[88px] h-[88px] object-cover"
+          className="h-full w-full object-cover object-center"
           alt={menuName}
           src={menuProfileImage}
         />

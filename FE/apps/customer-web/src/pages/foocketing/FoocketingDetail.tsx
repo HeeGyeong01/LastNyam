@@ -10,11 +10,13 @@ import { BottomSheet } from '@/components/common';
 import NaverMap from '@/components/map/NaverMap';
 import { formatTimeToKorean, formatISOStringToKorean } from '@/lib/time';
 import { Button } from '@shared/components/Button';
+import { useNavigate } from 'react-router-dom';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const navigate = useNavigate();
 
   const {
     data: detail,
@@ -143,6 +145,9 @@ export default function FoocketingDetail() {
                 reviewCount={detail.shop.ratingCount}
                 saleMenu={detail.menu.name}
                 distance={`${detail.shop.distance.toFixed(1)} km`}
+                onClick={() => {
+                  navigate(`/shop/${detail.shop.shopId}`);
+                }}
               />
               
               {/* 가게 위치 지도 */}

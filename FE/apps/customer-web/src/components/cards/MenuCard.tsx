@@ -37,7 +37,7 @@ export default function MenuCard({
 
   return (
     <div
-      className={cn('w-full pb-5 inline-flex justify-start items-start gap-3 cursor-pointer', className)}
+      className={cn('w-full pb-5 flex justify-start items-start gap-3 cursor-pointer', className)}
       onClick={onClick}
     >
       {/* 정보 영역 (왼쪽) */}
@@ -93,10 +93,10 @@ export default function MenuCard({
       </div>
 
       {/* 이미지 영역 (오른쪽) */}
-      <div className="w-[88px] h-[88px] relative bg-[#e6e6e6] rounded-lg overflow-hidden flex-shrink-0">
+      <div className="w-[88px] h-[88px] relative rounded-lg overflow-hidden flex-shrink-0">
         {foodImage && (
           <img
-            className="h-full top-0 absolute object-cover"
+            className="h-full w-full object-cover object-center"
             alt={foodName}
             src={foodImage}
           />
