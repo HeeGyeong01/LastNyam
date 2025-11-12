@@ -1,9 +1,13 @@
 // Todo: 사업자 등록증 업로드 기능 구현 - 사진 넣으면 바로 OCR 연결
 
-import { useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@shared/src/components/Button";
 import { cn } from "@/lib/utils";
+import { storeInformationApi } from "../../apis/storeInformation.api";
+import { useOwnerStore } from "@/store/useOwnerStore";
 
 const ACCEPTED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf", ".tiff"] as const;
 const DISPLAY_EXTENSIONS = [".jpg", ".png", ".pdf", ".tiff"].join(", ");
@@ -21,10 +25,36 @@ function formatFileSize(size: number) {
 
 export default function StoreInformationStep1DocumentPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
 
+  const accessToken = useOwnerStore((state) => state.accessToken);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  useEffect(() => {
+    if (!isUploading) return
+
+    const { style } = document.body
+    const previousOverflow = style.overflow
+    const previousPosition = style.position
+    const previousWidth = style.width
+    const previousTop = style.top
+    const scrollY = window.scrollY
+
+    style.overflow = "hidden"
+    style.position = "fixed"
+    style.width = "100%"
+    style.top = `-${scrollY}px`
+
+    return () => {
+      style.overflow = previousOverflow
+      style.position = previousPosition
+      style.width = previousWidth
+      style.top = previousTop
+      window.scrollTo(0, scrollY)
+    }
+  }, [isUploading])
 
   const validateFile = (file: File) => {
     const isAcceptableExtension = ACCEPTED_EXTENSIONS.some((extension) =>
@@ -56,8 +86,15 @@ export default function StoreInformationStep1DocumentPage() {
       return;
     }
 
+    if (!accessToken) {
+      setSelectedFile(null);
+      setErrorMessage("인증이 필요합니다. 다시 로그인한 후 시도해주세요.");
+      return;
+    }
+
     setSelectedFile(file);
     setErrorMessage(null);
+    void handleUpload(file, accessToken);
   };
 
   const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
@@ -66,9 +103,48 @@ export default function StoreInformationStep1DocumentPage() {
     handleFileSelect(event.dataTransfer.files);
   };
 
+  const handleUpload = async (file: File, token: string) => {
+    setIsUploading(true);
+    setErrorMessage(null);
+
+    try {
+      console.log("🔐 업로드에 사용되는 accessToken 길이:", token?.length);
+
+      console.log("📤 사업자등록증 업로드 시작:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      const businessLicense = await storeInformationApi.uploadBusinessLicense(file, token);
+
+      console.log("✅ 사업자등록증 OCR 응답:", businessLicense);
+
+      navigate("/owner/store-information/step1-input", {
+        replace: true,
+        state: {
+          businessLicense,
+        },
+      });
+    } catch (error) {
+      console.error("⚠️ 사업자등록증 업로드 실패:", error);
+      const message =
+        error instanceof Error
+          ? error.message === "인증 실패"
+            ? "인증이 필요합니다. 다시 로그인한 후 시도해주세요."
+            : error.message
+          : "사업자 등록증 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.";
+      setErrorMessage(message);
+      setSelectedFile(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
-    <section className="mx-auto flex w-full max-w-[412px] flex-col items-center gap-6 py-10 text-center">
-      <div className="flex w-full flex-col items-center gap-4">
+    <>
+      <section className="relative mx-auto flex w-full max-w-[412px] flex-col gap-6 px-4 pb-32 pt-10 text-center">
+        <div className="flex w-full flex-col items-stretch gap-4">
         <h3 className="h5-b text-primary">사업자 등록증 업로드</h3>
 
         <label
@@ -150,13 +226,27 @@ export default function StoreInformationStep1DocumentPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <p className="p2 text-secondary">업로드 없이 입력하고 싶으시다면?</p>
-        <a href="/owner/store-information/step1-input" className="p2-b text-brand hover:underline">
-            직접입력
-        </a>
-      </div>
-    </section>
+        <div className="flex items-center gap-2">
+          <p className="p2 text-secondary">업로드 없이 입력하고 싶으시다면?</p>
+          <a href="/owner/store-information/step1-input" className="p2-b text-brand hover:underline">
+              직접입력
+          </a>
+        </div>
+      </section>
+
+      <Modal
+        open={isUploading}
+        onClose={() => {}}
+        title="인식 중..."
+        detail="잠시만 기다려주세요."
+        icon="loading"
+        iconShow
+        xButton={false}
+        xButtonShow={false}
+        buttonShow={false}
+        className="w-[288px]"
+      />
+    </>
   );
 }
 

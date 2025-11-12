@@ -1,23 +1,36 @@
 // TODO: Step1 입력값과 연동하여 기본값 설정 및 최종 등록 API 연결
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { MenuFormField } from "@/components/ui/menuFormField";
-import { ImageUpload } from "@/components/ui/imageUpload";
+import { ImageUpload, type UploadedFileInfo } from "@/components/ui/imageUpload";
+import { useOwnerStore } from "@/store/useOwnerStore";
 import { Button } from "@shared/src/components/Button";
+import {
+  storeInformationApi,
+  type CreateShopRequest,
+} from "../../apis/storeInformation.api";
 
 const FORM_ID = "store-information-step2-form";
 const ACTION_BAR_ID = "store-information-step2-action-bar";
 
-const CATEGORY_OPTIONS = [
-  { value: "bakery", label: "제과/제빵" },
-  { value: "sushi", label: "회/초밥" },
-  { value: "korean", label: "한식" },
-  { value: "cafe", label: "카페/디저트" },
-  { value: "western", label: "양식" },
-  { value: "etc", label: "기타" },
-] ;
+const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: "베이커리", label: "베이커리" },
+  { value: "회/초밥", label: "회/초밥" },
+  { value: "김밥/분식", label: "김밥/분식" },
+  { value: "샐러드/포케", label: "샐러드/포케" },
+  { value: "기타", label: "기타" },
+];
+
+const DEFAULT_SHOP_LAT = 37.501452;
+const DEFAULT_SHOP_LNG = 127.039474;
 
 interface Step2FormValues {
   storeName: string;
@@ -28,10 +41,50 @@ interface Step2FormValues {
   pickupClosingTime: string;
 }
 
+interface FromStep1State {
+  storeName?: string | null;
+  address?: string | null;
+  shopLat?: number | null;
+  shopLng?: number | null;
+  lat?: number | null;
+  lng?: number | null;
+  storeLat?: number | null;
+  storeLng?: number | null;
+  storeCategory?: string | null;
+}
+
+interface Step2LocationState {
+  fromStep1?: FromStep1State;
+}
+
+const toFullTime = (time: string) => {
+  if (!time) {
+    return time;
+  }
+  return time.length === 5 && time.includes(":") ? `${time}:00` : time;
+};
+
+const resolveCategoryValue = (rawValue: string) => {
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    return "";
+  }
+  const matched = CATEGORY_OPTIONS.find(
+    (option) => option.value === trimmed || option.label === trimmed,
+  );
+  return matched?.value ?? trimmed;
+};
+
 export default function StoreInformationStep2Page() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const accessToken = useOwnerStore((state) => state.accessToken);
+  const ownerId = useOwnerStore((state) => state.ownerId);
+  const shops = useOwnerStore((state) => state.shops);
+  const setShops = useOwnerStore((state) => state.setShops);
+
+  const [imageFile, setImageFile] = useState<UploadedFileInfo | null>(null);
   const [formValues, setFormValues] = useState<Step2FormValues>({
     storeName: "",
     address: "",
@@ -40,6 +93,9 @@ export default function StoreInformationStep2Page() {
     storeClosingTime: "",
     pickupClosingTime: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fromStep1Ref = useRef<FromStep1State | null>(null);
 
   const handleFieldChange =
     (field: keyof Step2FormValues) =>
@@ -75,8 +131,93 @@ export default function StoreInformationStep2Page() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // TODO: 실제 등록 API 연동 후 성공 시 이동 경로 조정
-    navigate("/owner/orders/list");
+    void (async () => {
+      if (isSubmitting) {
+        return;
+      }
+
+      if (!imageFile?.fileUrl) {
+        alert("가게 배너 이미지를 등록해주세요.");
+        return;
+      }
+
+      if (!ownerId || !accessToken) {
+        alert("가게 등록을 위해 다시 로그인해주세요.");
+        return;
+      }
+
+      const fromStep1 = fromStep1Ref.current;
+
+      setIsSubmitting(true);
+
+      try {
+        const categoryName = resolveCategoryValue(
+          formValues.storeCategory ||
+            fromStep1?.storeCategory ||
+            "",
+        ).trim();
+
+        if (!categoryName) {
+          throw new Error("가게 카테고리를 선택해주세요.");
+        }
+
+        const payload: CreateShopRequest = {
+          shopName: formValues.storeName.trim(),
+          shopLat: DEFAULT_SHOP_LAT,
+          shopLng: DEFAULT_SHOP_LNG,
+          shopAddress: formValues.address.trim(),
+          shopDescription: formValues.storeDescription.trim(),
+          shopBanner: imageFile.fileUrl,
+          shopCloses: toFullTime(formValues.storeClosingTime.trim()),
+          shopPickupEndTime: toFullTime(formValues.pickupClosingTime.trim()),
+          category: categoryName,
+        };
+
+        const createShopResponse = await storeInformationApi.createShop(
+          ownerId,
+          payload,
+          accessToken,
+        );
+
+        const { shopId } = createShopResponse;
+
+        if (!shopId) {
+          throw new Error("가게 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        }
+
+        const createdShop = {
+          shopId,
+          shopName: payload.shopName,
+          shopLat: payload.shopLat,
+          shopLng: payload.shopLng,
+          shopAddress: payload.shopAddress,
+          shopDescription: payload.shopDescription,
+          shopBanner: payload.shopBanner,
+          shopCloses: payload.shopCloses,
+          shopPickupEndTime: payload.shopPickupEndTime,
+          categoryName: payload.category,
+        };
+
+        const nextShops = [
+          ...shops.filter((shop) => shop.shopId !== shopId),
+          createdShop,
+        ];
+
+        setShops(nextShops);
+
+        alert("가게 등록이 완료되었습니다.");
+        navigate("/owner/orders/list", { replace: true });
+      } catch (error) {
+        console.error("⚠️ 가게 등록 실패:", error);
+        const message =
+          error instanceof Error
+            ? error.message
+            : "가게 등록 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        alert(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    })();
   };
 
   const isFormValid =
@@ -87,6 +228,32 @@ export default function StoreInformationStep2Page() {
     formValues.storeCategory.trim().length > 0 &&
     formValues.storeClosingTime.trim().length > 0 &&
     formValues.pickupClosingTime.trim().length > 0;
+
+  useEffect(() => {
+    const state = location.state as Step2LocationState | null;
+
+    const fromStep1 = state?.fromStep1;
+
+    if (!fromStep1) {
+      return;
+    }
+
+    fromStep1Ref.current = fromStep1;
+    const trimmedCategory = fromStep1.storeCategory?.trim();
+    const matchedCategory = trimmedCategory
+      ? CATEGORY_OPTIONS.find(
+          (option) =>
+            option.value === trimmedCategory || option.label === trimmedCategory,
+        )
+      : null;
+
+    setFormValues((prev) => ({
+      ...prev,
+      storeName: fromStep1.storeName?.trim() ?? prev.storeName,
+      address: fromStep1.address?.trim() ?? prev.address,
+      storeCategory: matchedCategory?.value ?? prev.storeCategory,
+    }));
+  }, [location.state]);
 
   return (
     <section className="relative mx-auto flex w-full max-w-[480px] flex-col gap-6 px-6 pb-32 ">
@@ -102,6 +269,7 @@ export default function StoreInformationStep2Page() {
             onChange={setImageFile}
             variant="filled"
             maxSize={5 * 1024 * 1024}
+            fileType="SHOP_PROFILE_IMAGE"
           />
         </div>
 
@@ -188,9 +356,9 @@ export default function StoreInformationStep2Page() {
               btnStyle="filled-red"
               size="lg"
               className="w-full"
-              disabled={!isFormValid}
+              disabled={!isFormValid || isSubmitting}
             >
-              등록 완료
+              {isSubmitting ? "등록 중..." : "등록 완료"}
             </Button>
           </div>
         </div>

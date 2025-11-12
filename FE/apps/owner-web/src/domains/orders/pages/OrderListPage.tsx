@@ -158,7 +158,7 @@ export default function OrderListPage() {
     "수령확인하기로 QR을 인식해 완료할 수 있어요";
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg-0">
+    <div className="flex flex-col bg-bg-0">
       <section className="px-4 pt-6">
         <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
           <div className="space-y-2">
@@ -177,7 +177,7 @@ export default function OrderListPage() {
         </div>
       </section>
 
-      <section className="mt-4 h-full pb-[92px]">
+      <section className="mt-4 pb-6">
         <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
           <div className="mx-auto inline-flex items-center gap-1 rounded-full border border-stroke-3 bg-bg-0 p-1 shadow-sm">
             {TRANSACTION_TABS.map((tab) => {

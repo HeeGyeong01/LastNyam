@@ -1,9 +1,10 @@
 // TODO: 사업자 등록증 OCR 연동 후 자동 입력 값과 연동
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MenuFormField } from "@/components/ui/menuFormField";
 import { Button } from "@shared/src/components/Button";
+import type { BusinessLicenseOcrData } from "../../apis/storeInformation.api";
 
 interface StoreInformationFormValues {
   businessType: string;
@@ -18,8 +19,53 @@ interface StoreInformationFormValues {
 const FORM_ID = "store-information-step1-form";
 const ACTION_BAR_ID = "store-information-step1-action-bar";
 
+const formatRegistrationNumberDigits = (digits: string) => {
+  if (!digits) return "";
+
+  const safeDigits = digits.slice(0, 10);
+  const part1 = safeDigits.slice(0, 3);
+  const part2 = safeDigits.slice(3, 5);
+  const part3 = safeDigits.slice(5, 10);
+
+  const segments = [];
+  if (part1) segments.push(part1);
+  if (part2) segments.push(part2);
+  if (part3) segments.push(part3);
+
+  return segments.join("-");
+};
+
+const formatKoreanDateDigits = (digits: string) => {
+  if (!digits) return "";
+
+  const safeDigits = digits.slice(0, 8);
+  const len = safeDigits.length;
+  const year = safeDigits.slice(0, 4);
+
+  if (len <= 4) {
+    return safeDigits;
+  }
+
+  if (len <= 6) {
+    const monthRaw = safeDigits.slice(4);
+    const monthFormatted = len === 6 ? `${monthRaw}월` : monthRaw;
+    return `${year}년 ${monthFormatted}`.trim();
+  }
+
+  const month = safeDigits.slice(4, 6);
+
+  if (len < 8) {
+    const day = safeDigits.slice(6);
+    return `${year}년 ${month}월 ${day}`.trim();
+  }
+
+  const day = safeDigits.slice(6, 8);
+  return `${year}년 ${month}월 ${day}일`;
+};
+
 export default function StoreInformationStep1InputPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formValues, setFormValues] = useState<StoreInformationFormValues>({
     businessType: "",
     registrationNumber: "",
@@ -40,11 +86,89 @@ export default function StoreInformationStep1InputPage() {
       }));
     };
 
+  useEffect(() => {
+    const state = location.state as { businessLicense?: BusinessLicenseOcrData } | null;
+    const businessLicense = state?.businessLicense;
+
+    if (!businessLicense) {
+      console.log("ℹ️ 사업자등록증 state 없음 - 직접 입력 상태");
+      return;
+    }
+
+    console.log("📥 전달받은 사업자등록증 state:", businessLicense);
+
+    const formatDigits = (value?: string | null) => value?.replace?.(/\D/g, "") ?? "";
+
+    setFormValues((prev) => {
+      const nextValues: StoreInformationFormValues = {
+        ...prev,
+        businessType: businessLicense.taxType?.trim() ?? prev.businessType,
+        registrationNumber: formatRegistrationNumberDigits(formatDigits(businessLicense.registerNumber)),
+        storeName: businessLicense.companyName?.trim() ?? prev.storeName,
+        ownerName: businessLicense.repName?.trim() ?? prev.ownerName,
+        birthDate: formatKoreanDateDigits(formatDigits(businessLicense.birth)),
+        openingDate: formatKoreanDateDigits(formatDigits(businessLicense.openDate)),
+        address: businessLicense.bisAddress?.trim() ?? prev.address,
+      };
+
+      console.log("🧾 사업자등록증 기반 자동 입력 값:", nextValues);
+
+      return nextValues;
+    });
+  }, [location.state]);
+
+  const handleRegistrationNumberChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const previousDigits = formValues.registrationNumber.replace(/\D/g, "");
+    let nextDigits = event.target.value.replace(/\D/g, "").slice(0, 10);
+
+    const nativeEvent = event.nativeEvent as InputEvent | undefined;
+    if (
+      nativeEvent?.inputType === "deleteContentBackward" &&
+      nextDigits === previousDigits
+    ) {
+      nextDigits = previousDigits.slice(0, -1);
+    }
+
+    const formatted = formatRegistrationNumberDigits(nextDigits);
+    setFormValues((prev) => ({
+      ...prev,
+      registrationNumber: formatted,
+    }));
+  };
+
+  const handleDateChange =
+    (field: "birthDate" | "openingDate") =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const previousDigits = formValues[field].replace(/\D/g, "");
+      let nextDigits = event.target.value.replace(/\D/g, "").slice(0, 8);
+
+      const nativeEvent = event.nativeEvent as InputEvent | undefined;
+      if (
+        nativeEvent?.inputType === "deleteContentBackward" &&
+        nextDigits === previousDigits
+      ) {
+        nextDigits = previousDigits.slice(0, -1);
+      }
+
+      const formatted = formatKoreanDateDigits(nextDigits);
+      setFormValues((prev) => ({
+        ...prev,
+        [field]: formatted,
+      }));
+    };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     // TODO: Step2 페이지로 넘기기 전에 서버 저장 또는 상태 관리 로직 연결
-    navigate("/owner/store-information/step2");
+    navigate("/owner/store-information/step2", {
+      state: {
+        fromStep1: {
+          storeName: formValues.storeName,
+          address: formValues.address,
+        },
+      },
+    });
   };
 
   const isFormValid = Object.values(formValues).every(
@@ -80,7 +204,7 @@ export default function StoreInformationStep1InputPage() {
           inputProps={{
             placeholder: "예) 123-45-67890",
             value: formValues.registrationNumber,
-            onChange: handleInputChange("registrationNumber"),
+            onChange: handleRegistrationNumberChange,
             autoComplete: "off",
             inputMode: "numeric",
             maxLength: 12,
@@ -121,8 +245,10 @@ export default function StoreInformationStep1InputPage() {
           inputProps={{
             placeholder: "예) 1900년 01월 01일",
             value: formValues.birthDate,
-            onChange: handleInputChange("birthDate"),
+            onChange: handleDateChange("birthDate"),
             autoComplete: "bday",
+            inputMode: "numeric",
+            maxLength: 15,
           }}
         />
 
@@ -134,8 +260,10 @@ export default function StoreInformationStep1InputPage() {
           inputProps={{
             placeholder: "예) 2020년 01월 01일",
             value: formValues.openingDate,
-            onChange: handleInputChange("openingDate"),
+            onChange: handleDateChange("openingDate"),
             autoComplete: "off",
+            inputMode: "numeric",
+            maxLength: 15,
           }}
         />
 

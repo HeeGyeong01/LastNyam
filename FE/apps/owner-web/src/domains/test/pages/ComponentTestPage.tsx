@@ -4,7 +4,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '..
 import { Input } from '../../../components/ui/ownerInput';
 import { DescriptionInput } from '../../../components/ui/descriptionInput';
 import { TimeInput } from '../../../components/ui/timeInput';
-import { ImageUpload } from '../../../components/ui/imageUpload';
+import { ImageUpload, type UploadedFileInfo } from '../../../components/ui/imageUpload';
 import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
 import { MenuFormField } from '../../../components/ui/menuFormField';
@@ -65,7 +65,7 @@ export default function ComponentTestPage() {
   const [selectedCategory, setSelectedCategory] = useState('signature');
   const [menuSelectState, setMenuSelectState] = useState<MenuSelectState>('unselected');
   const [discountInfo, setDiscountInfo] = useState<{ discountPrice?: number; discountRate?: number }>({});
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<UploadedFileInfo | null>(null);
   const [modalOpen1, setModalOpen1] = useState(false);
   const [modalOpen2, setModalOpen2] = useState(false);
   const [modalOpen3, setModalOpen3] = useState(false);
@@ -945,6 +945,7 @@ export default function ComponentTestPage() {
                   setImageFile(file);
                 }}
                 variant="filled"
+                fileType="MENU_IMAGE"
               />
             </div>
 
@@ -962,6 +963,7 @@ export default function ComponentTestPage() {
                 }}
                 variant="filled"
                 maxSize={10 * 1024 * 1024} // 10MB
+                fileType="MENU_IMAGE"
               />
             </div>
           </div>

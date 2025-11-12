@@ -2,7 +2,7 @@ import * as React from "react"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@shared/src/components/Button"
-import { ImageUpload } from "./imageUpload"
+import { ImageUpload, type UploadedFileInfo } from "./imageUpload"
 import { Input } from "./ownerInput"
 
 export interface AddMenuModalProps {
@@ -14,7 +14,7 @@ export interface AddMenuModalProps {
 }
 
 export interface MenuFormData {
-  image: File | null
+  image: UploadedFileInfo | null
   name: string
   price: string
   description: string
@@ -128,6 +128,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
                 onChange={(file) =>
                   setFormData((prev) => ({ ...prev, image: file }))
                 }
+                fileType="MENU_IMAGE"
                 className="w-full"
               />
             </div>

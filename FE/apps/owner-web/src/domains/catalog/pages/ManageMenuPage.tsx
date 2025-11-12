@@ -126,18 +126,12 @@ export default function ManageMenuPage() {
     // 새 메뉴 ID 생성 (현재 최대 ID + 1)
     const newId = Math.max(...menus.map((m) => m.id), 0) + 1
     
-    // 이미지 URL 생성 (File 객체를 URL로 변환)
-    let imageUrl: string | undefined
-    if (data.image) {
-      imageUrl = URL.createObjectURL(data.image)
-    }
-
     const newMenu: MenuItem = {
       id: newId,
       menuName: data.name,
       price: parseInt(data.price, 10) || 0,
       categoryName: typeof data.category === 'string' ? data.category : data.category[0] || '기타',
-      imageUrl,
+      imageUrl: data.image?.fileUrl,
     }
 
     setMenus((prev) => [...prev, newMenu])
