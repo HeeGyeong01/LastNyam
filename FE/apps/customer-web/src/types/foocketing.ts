@@ -8,7 +8,7 @@ export type FoocketingCategory =
   | 5;
 
 // 마감순, 거리순, 정가순
-export type FoocketingSortType = 'IMMINENT' | 'CLOSEST' | 'PRICE ' ;
+export type FoocketingSortType = 'IMMINENT' | 'CLOSEST' | 'PRICE' ;
 
 // 푸켓팅 메뉴 (리스트용)
 export interface FoocketingMenu {

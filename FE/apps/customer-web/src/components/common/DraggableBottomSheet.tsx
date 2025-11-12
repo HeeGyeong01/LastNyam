@@ -158,11 +158,11 @@ export default function DraggableBottomSheet({
       {/* 드래그 핸들 */}
       <div
         ref={bottomSheetRef}
-        className="w-full py-3 flex justify-center cursor-grab active:cursor-grabbing"
+        className="w-full pt-3 pb-2 flex justify-center cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
         style={{ touchAction: 'none' }}
       >
-        {/* <div className="w-12 h-1 bg-bg-3 rounded-full" /> */}
+        <div className="w-12 h-1 bg-bg-3 rounded-full" />
       </div>
 
       {/* 바텀시트 내용 */}

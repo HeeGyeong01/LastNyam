@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { clearLocationCache } from '@/lib/geolocation';
 import { useFoocketingList } from '@/hooks';
 import NaverMap from '@/components/map/NaverMap';
-import { PageHeader, DraggableBottomSheet } from '@/components/common';
+import { PageHeader, DraggableBottomSheet, BottomSheet } from '@/components/common';
 import { FoocketingList, FoocketingListHeader } from '@/components/foocketing';
 import { Tab } from '@shared/components/Tab';
 import type { FoocketingCategory, FoocketingItem, FoocketingSortType } from '@/types';
@@ -15,6 +15,9 @@ export default function Foocketing() {
 
   // 지도 중심 좌표 상태 (지도 이동 시 업데이트)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // 정렬 옵션 바텀시트 열림 상태
+  const [isSortBottomSheetOpen, setIsSortBottomSheetOpen] = useState(false);
 
   // 푸켓팅 데이터 가져오기
   // mapCenter가 있으면 지도 중심 좌표 사용, 없으면 API 함수에서 자동으로 가져옴
@@ -25,7 +28,6 @@ export default function Foocketing() {
     error,
     changeCategory,
   } = useFoocketingList({
-    initialCategory: 1, // 1: 베이커리
     sort: 'IMMINENT',
     lat: mapCenter?.lat,
     lng: mapCenter?.lng,
@@ -52,7 +54,7 @@ export default function Foocketing() {
   const sortLabels: Record<FoocketingSortType, string> = {
     IMMINENT: '마감순',
     CLOSEST: '거리순',
-    'PRICE ': '가격순',
+    PRICE : '가격순',
   };
   const [sort] = useState<FoocketingSortType>('IMMINENT');
   // TODO: 정렬 기능 구현 시 setSort 사용
@@ -112,6 +114,9 @@ export default function Foocketing() {
               <FoocketingListHeader
                 sort={sort}
                 sortLabels={sortLabels}
+                onSortClick={() => {
+                  setIsSortBottomSheetOpen(true);
+                }}
               />
               <FoocketingList
                 foocketings={foocketings}
@@ -120,6 +125,24 @@ export default function Foocketing() {
           )}
         </div>
       </DraggableBottomSheet>
+
+      {/* 정렬 옵션 바텀시트 */}
+      {isSortBottomSheetOpen && (
+        <BottomSheet
+          showBackdrop={true}
+          onBackdropClick={() => setIsSortBottomSheetOpen(false)}
+        >
+          <div className="p-4">
+            <p>정렬 옵션 바텀시트</p>
+            <button 
+              onClick={() => setIsSortBottomSheetOpen(false)}
+              className="mt-4 px-4 py-2 bg-gray-200 rounded"
+            >
+              닫기
+            </button>
+          </div>
+        </BottomSheet>
+      )}
     </div>
   );
 }

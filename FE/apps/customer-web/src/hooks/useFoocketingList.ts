@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import type { FoocketingCategory, FoocketingSortType } from '@/types';
 import { getFoocketingList } from '@/api';
 
@@ -12,14 +13,34 @@ interface UseFoocketingListOptions {
 
 export function useFoocketingList(options: UseFoocketingListOptions = {}) {
   const {
-    initialCategory = 1,
+    initialCategory,
     sort = 'IMMINENT',
     lat,
     lng,
   } = options;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // URL 쿼리 파라미터에서 카테고리 읽기, 없으면 initialCategory 또는 기본값 1
+  const categoryFromUrl = searchParams.get('category');
+  const defaultCategory = initialCategory ?? 1;
+  const initialCategoryValue = categoryFromUrl 
+    ? (Number(categoryFromUrl) as FoocketingCategory)
+    : defaultCategory;
+
   // 현재 선택된 푸켓팅 카테고리 (베이커리, 회/초밥, 김밥/분식, 샐러드/포케, 기타)
-  const [category, setCategory] = useState<FoocketingCategory>(initialCategory);
+  const [category, setCategory] = useState<FoocketingCategory>(initialCategoryValue);
+  
+  // URL 쿼리 파라미터 변경 시 category 동기화 (브라우저 뒤로가기/앞으로가기 대응)
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl) {
+      const urlCategory = Number(categoryFromUrl) as FoocketingCategory;
+      if (urlCategory !== category) {
+        setCategory(urlCategory);
+      }
+    }
+  }, [searchParams, category]);
   
   // 디바운싱된 좌표 (지도 이동 시 디바운싱 후 업데이트)
   const [debouncedLat, setDebouncedLat] = useState<number | undefined>(lat);
@@ -64,9 +85,16 @@ export function useFoocketingList(options: UseFoocketingListOptions = {}) {
 
   // 푸켓팅 카테고리 변경 핸들러
   // category가 변경되면 queryKey가 변경되어 자동으로 새로운 데이터를 가져옴
+  // URL 쿼리 파라미터도 함께 업데이트하여 뒤로가기 시 카테고리 유지
   const changeCategory = useCallback((newCategory: FoocketingCategory) => {
     setCategory(newCategory);
-  }, []);
+    // URL 쿼리 파라미터 업데이트
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('category', String(newCategory));
+      return newParams;
+    });
+  }, [setSearchParams]);
 
   return {
     category,        // 현재 선택된 푸켓팅 카테고리

@@ -1,58 +1,34 @@
-// import { useNavigate } from 'react-router-dom';
-// import { ShopCardHorizontal } from '@/components/cards';
-// import DiscountListHeader from './DiscountListHeader';
-// import type { DiscountItem, DiscountSortType } from '@/types';
+import { useNavigate } from 'react-router-dom';
+import type { DiscountItem } from '@/types';
+import { MenuCard } from '@/components/cards';
 
-// interface DiscountListProps {
-//   discounts: DiscountItem[];
-//   loading: boolean;
-//   error: Error | null;
-//   sort: DiscountSortType;
-//   sortLabels: Record<DiscountSortType, string>;
-//   onSortClick?: () => void;
-// }
+interface DiscountListProps {
+  discounts: DiscountItem[];
+}
 
-// export default function DiscountList({
-//   discounts,
-//   loading,
-//   error,
-//   sort,
-//   sortLabels,
-//   onSortClick,
-// }: DiscountListProps) {
-//   const navigate = useNavigate();
+export default function DiscountList({
+  discounts,
+}: DiscountListProps) {
+  const navigate = useNavigate();
 
-//   return (
-//     <div className="h-full overflow-y-auto px-4 pb-28">
-//       {loading && <p>로딩 중...</p>}
-//       {error && <p>에러: {error.message}</p>}
-      
-//       {discounts.length > 0 && (
-//         <div>
-//           <DiscountListHeader
-//             sort={sort}
-//             sortLabels={sortLabels}
-//             onSortClick={onSortClick}
-//           />
-
-//           {/* 마감세일(가게) 목록 */}
-//           <div className="flex flex-col">
-//             {discounts.map((item: DiscountItem) => (
-//               <ShopCardHorizontal
-//                 key={item.discountId}
-//                 storeName={item.shopName}
-//                 storeProfileImage={item.menuImage}
-//                 rating={item.rating}
-//                 reviewCount={item.reviewCount}
-//                 saleMenu={item.saleMenu}
-//                 distance={item.distance?.toString() || ''}
-//                 onClick={() => navigate(`/shop/${item.shopId}`)}
-//               />
-//             ))}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
+  return (
+    <div className="flex flex-col gap-5">
+      {discounts.map((item: DiscountItem) => (
+        <MenuCard className="border-b border-stroke-subtle"
+          key={item.discountId}
+          foodName={item.menuInfo.name}
+          foodDescription={item.menuInfo.description}
+          discountRate={item.discountRate}
+          discountedPrice={item.discountPrice}
+          originalPrice={item.menuInfo.price}
+          rating={item.shopInfo.rating}
+          reviewCount={item.shopInfo.ratingCount}
+          storeName={item.shopInfo.name}
+          remainingQuantity={item.discountAmount}
+          foodImage={item.menuInfo.photoUrl}
+          onClick={() => navigate(`/discount/${item.discountId}`)}
+        />
+      ))}
+    </div>
+  );
+}

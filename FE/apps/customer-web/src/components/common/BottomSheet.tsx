@@ -6,12 +6,16 @@ interface BottomSheetProps {
   children: React.ReactNode;
   className?: string;
   bottomPadding?: number; // BottomSheet 높이만큼 추가할 padding (기본값: 자동 계산)
+  showBackdrop?: boolean; // 뒷배경 표시 여부 (기본값: false)
+  onBackdropClick?: () => void; // 뒷배경 클릭 시 호출되는 함수
 }
 
 export default function BottomSheet({ 
   children, 
   className = '',
   bottomPadding,
+  showBackdrop = false,
+  onBackdropClick,
 }: BottomSheetProps) {
   const { registerBottomElement, unregisterBottomElement } = useLayout();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -49,15 +53,26 @@ export default function BottomSheet({
   }, [bottomPadding, elementId, registerBottomElement, unregisterBottomElement]);
 
   return (
-    <div
-      ref={sheetRef}
-      className={cn(
-        'fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto px-4 py-4 rounded-t-2xl shadow-[0_-4px_3px_0_rgba(0,0,0,0.04)] bg-bg-0 z-[999]',
-        className
+    <>
+      {/* 뒷배경 */}
+      {showBackdrop && (
+        <div
+          className="fixed inset-0 bg-bg-dimmed-2 z-[998]"
+          onClick={onBackdropClick}
+        />
       )}
-    >
-      {children}
-    </div>
+      
+      {/* 바텀시트 */}
+      <div
+        ref={sheetRef}
+        className={cn(
+          'fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto px-4 py-4 rounded-t-2xl shadow-[0_-4px_3px_0_rgba(0,0,0,0.04)] bg-bg-0 z-[999]',
+          className
+        )}
+      >
+        {children}
+      </div>
+    </>
   );
 }
 

@@ -3,6 +3,7 @@ import { ClockIcon } from '@heroicons/react/24/outline';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { FoocketingSortType } from '@/types';
 import { formatTimeToKorean } from '@/lib/time';
+import { Button } from '@shared/components/Button';
 
 interface FoocketingListHeaderProps {
   sort: FoocketingSortType;
@@ -41,13 +42,10 @@ export default function FoocketingListHeader({
       </div>
 
       {/* 정렬 옵션 */}
-      <button 
-        className="flex items-center gap-1 text-slate-500 text-sm font-semibold"
-        onClick={onSortClick}
-      >
+      <Button btnStyle="ghost" size="default" onClick={onSortClick}>
         <span>{sortLabels[sort]}</span>
         <ChevronDownIcon className="w-3.5 h-3.5" />
-      </button>
+      </Button>
     </div>
   );
 }
