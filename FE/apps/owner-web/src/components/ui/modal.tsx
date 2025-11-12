@@ -10,7 +10,7 @@ export interface ModalProps {
   open: boolean
   onClose: () => void
   title?: string
-  detail?: string
+  detail?: React.ReactNode
   icon?: LucideIcon | "check-circle" | "exclamation" | "loading" | null
   iconShow?: boolean
   iconWrapperClassName?: string

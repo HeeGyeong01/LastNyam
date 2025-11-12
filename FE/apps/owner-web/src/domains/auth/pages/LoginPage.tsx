@@ -128,12 +128,7 @@ export default function LoginPage() {
 
   const handleRegisterShop = () => {
     setShowShopModal(false);
-    navigate('/owner/store-information/step1-input');
-  };
-
-  const handleSkipRegisterShop = () => {
-    setShowShopModal(false);
-    navigate('/owner/orders/list', { replace: true });
+    navigate('/owner/store-information/step1-document');
   };
 
   return (
@@ -206,15 +201,20 @@ export default function LoginPage() {
       {/* 가게 등록 모달 */}
       <Modal
         open={showShopModal}
-        onClose={handleSkipRegisterShop}
+        onClose={() => {}}
         title="가게를 등록하시겠어요?"
-        detail="등록된 가게가 없습니다.\n가게를 등록하고 서비스를 이용하세요."
+        detail={
+          <>
+            등록된 가게가 없습니다.
+            <br />
+            가게를 등록하고 서비스를 이용하세요.
+          </>
+        }
         icon="exclamation"
-        variant="two-button"
+        variant="single-button"
+        xButton={false}
         primaryButtonText="가게 등록하기"
-        secondaryButtonText="나중에"
         onPrimaryClick={handleRegisterShop}
-        onSecondaryClick={handleSkipRegisterShop}
       />
     </>
   );
