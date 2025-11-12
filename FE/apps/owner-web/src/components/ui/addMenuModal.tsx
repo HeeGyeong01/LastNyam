@@ -3,7 +3,6 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@shared/src/components/Button"
 import { ImageUpload } from "./imageUpload"
-import { MenuFormField } from "./menuFormField"
 import { Input } from "./ownerInput"
 
 export interface AddMenuModalProps {
