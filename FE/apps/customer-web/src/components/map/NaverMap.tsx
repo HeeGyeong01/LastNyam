@@ -18,6 +18,12 @@ interface NaverMapProps {
     bottom?: number;
     left?: number;
   };
+  center?: {
+    lat: number;
+    lng: number;
+  };
+  zoom?: number;
+  zoomControl?: boolean;
 }
 
 // 네이버 지도 타입 정의
@@ -86,7 +92,7 @@ interface LatLngBounds {
   getNE(): LatLng;
 }
 
-export default function NaverMap({ className = '', style, markers = [], onCenterChange, padding }: NaverMapProps) {
+export default function NaverMap({ className = '', style, markers = [], onCenterChange, padding, center, zoom = 16, zoomControl = false }: NaverMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
   const markersRef = useRef<Marker[]>([]);
@@ -95,13 +101,19 @@ export default function NaverMap({ className = '', style, markers = [], onCenter
   const markersRefProp = useRef(markers); // markers prop의 최신 값을 저장
   const onCenterChangeRef = useRef(onCenterChange); // onCenterChange prop의 최신 값을 저장
   const paddingRef = useRef(padding); // padding prop의 최신 값을 저장
+  const centerRef = useRef(center); // center prop의 최신 값을 저장
+  const zoomRef = useRef(zoom); // zoom prop의 최신 값을 저장
+  const zoomControlRef = useRef(zoomControl); // zoomControl prop의 최신 값을 저장
 
-  // markers, onCenterChange, padding의 최신 값을 ref에 저장
+  // markers, onCenterChange, padding, center, zoom, zoomControl의 최신 값을 ref에 저장
   useEffect(() => {
     markersRefProp.current = markers;
     onCenterChangeRef.current = onCenterChange;
     paddingRef.current = padding;
-  }, [markers, onCenterChange, padding]);
+    centerRef.current = center;
+    zoomRef.current = zoom;
+    zoomControlRef.current = zoomControl;
+  }, [markers, onCenterChange, padding, center, zoom, zoomControl]);
 
   useEffect(() => {
     const CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
@@ -122,13 +134,13 @@ export default function NaverMap({ className = '', style, markers = [], onCenter
       }
 
       try {
-        // 현재 위치 가져오기
-        const location = getLocationSync();
+        // center prop이 있으면 사용, 없으면 현재 위치 가져오기
+        const location = centerRef.current || getLocationSync();
 
         const mapOptions: MapOptions = {
           center: new window.naver.maps.LatLng(location.lat, location.lng),
-          zoom: 16,
-          zoomControl: false,
+          zoom: zoomRef.current,
+          zoomControl: zoomControlRef.current,
           zoomControlOptions: {
             position: window.naver.maps.Position.TOP_RIGHT,
           },
