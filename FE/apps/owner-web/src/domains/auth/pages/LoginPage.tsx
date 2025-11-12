@@ -11,7 +11,7 @@ import { Modal } from '../../../components/ui/modal';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useOwnerStore();
+  const { login, setShops } = useOwnerStore();
   
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
@@ -40,38 +40,79 @@ export default function LoginPage() {
         password,
       });
 
-      console.log('Login response ←', response);
+      console.log('✅ Login response ←', response);
+      console.log('🔍 Response 타입:', typeof response);
+      console.log('🔍 Response keys:', Object.keys(response));
+      console.log('🔍 Response.data 존재?', 'data' in response);
+      console.log('🔍 Response.status:', response.status);
+      console.log('🔍 Response.code:', response.code);
 
       // 로그인 성공 시 토큰 저장
-      if (response.data?.accessToken && response.data?.ownerId) {
-        login(
-          username.trim(),
-          response.data.accessToken,
-          response.data.refreshToken,
-          response.data.ownerId
-        );
+      if (response.data?.accessToken) {
+        console.log('✅ AccessToken 확인됨:', response.data.accessToken);
+        const accessToken = response.data.accessToken;
         
-        // 가게 목록 조회
+        // 프로필 조회로 ownerId 얻기
         try {
-          const shopsResponse = await authApi.getShops(
-            response.data.ownerId,
-            response.data.accessToken
-          );
-
-          console.log('Shop list response ←', shopsResponse);
-
-          // 가게가 없으면 모달 표시
-          if (!shopsResponse.data?.shops || shopsResponse.data.shops.length === 0) {
-            setShowShopModal(true);
-          } else {
-            // 가게가 있으면 주문 목록 페이지로 이동
-            navigate('/owner/orders/list', { replace: true });
+          console.log('🔍 프로필 조회 시작...');
+          const profileResponse = await authApi.getProfile(accessToken);
+          console.log('✅ Profile response ←', profileResponse);
+          
+          const ownerId = profileResponse.data?.ownerId;
+          console.log('✅ OwnerId:', ownerId);
+          
+          if (!ownerId) {
+            console.error('❌ OwnerId가 없습니다.');
+            throw new Error('사용자 정보를 가져올 수 없습니다.');
           }
-        } catch (shopError) {
-          console.error('가게 목록 조회 오류:', shopError);
-          // 가게 목록 조회 실패해도 일단 모달 표시
-          setShowShopModal(true);
+
+          // store에 로그인 정보 저장
+          console.log('💾 Store에 로그인 정보 저장 중...');
+          login(
+            username.trim(),
+            accessToken,
+            response.data.refreshToken,
+            ownerId
+          );
+          console.log('✅ Store 저장 완료');
+          
+          // 가게 목록 조회
+          try {
+            console.log('🔍 가게 목록 조회 시작... ownerId:', ownerId);
+            const shopsResponse = await authApi.getShops(ownerId, accessToken);
+            console.log('✅ Shop list response ←', shopsResponse);
+            console.log('📊 Response status:', shopsResponse.status);
+            console.log('📊 Shops data:', shopsResponse.data?.shops);
+
+            // 응답이 FAIL이거나 가게가 없으면 모달 표시
+            if (shopsResponse.status === 'FAIL' || 
+                !shopsResponse.data?.shops || 
+                shopsResponse.data.shops.length === 0) {
+              console.log('⚠️ 가게가 없음 → 모달 표시');
+              setShowShopModal(true);
+            } else {
+              console.log('✅ 가게 목록 있음:', shopsResponse.data.shops.length, '개');
+              // 가게 정보를 store에 저장
+              console.log('💾 Store에 가게 정보 저장 중...');
+              setShops(shopsResponse.data.shops);
+              console.log('✅ 가게 정보 저장 완료');
+              
+              // 가게가 있으면 주문 목록 페이지로 이동
+              console.log('🚀 주문 목록 페이지로 이동 중...');
+              navigate('/owner/orders/list', { replace: true });
+              console.log('✅ navigate 호출 완료');
+            }
+          } catch (shopError) {
+            console.error('❌ 가게 목록 조회 오류:', shopError);
+            // 가게 목록 조회 실패 시 모달 표시
+            setShowShopModal(true);
+          }
+        } catch (profileError) {
+          console.error('❌ 프로필 조회 오류:', profileError);
+          throw new Error('사용자 정보를 가져오는데 실패했습니다.');
         }
+      } else {
+        console.error('❌ AccessToken이 없습니다. response.data:', response.data);
       }
     } catch (error) {
       console.error('로그인 오류:', error);

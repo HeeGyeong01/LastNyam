@@ -20,6 +20,11 @@ export default function SignUpPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSignUp();
+  };
+
   const handleSignUp = async () => {
     if (!isFormValid || isSubmitting) {
       return;
@@ -28,7 +33,11 @@ export default function SignUpPage() {
     try {
       setIsSubmitting(true);
       
-      console.log('SignUp request →', { email: email.trim() });
+      console.log('🔐 회원가입 요청 데이터:');
+      console.log('  - Email:', email.trim());
+      console.log('  - Password:', password);
+      console.log('  - Password 길이:', password.length);
+      console.log('  - Password 타입:', typeof password);
 
       // API 호출
       const response = await authApi.register({
@@ -67,13 +76,6 @@ export default function SignUpPage() {
   const handleStoreRegistration = () => {
     setModalOpen(false);
     navigate('/owner/store-information/step1-document/', { replace: true });
-    return true; // Modal이 자동으로 onClose를 호출하지 않도록 함
-  };
-
-  // 로그인 페이지로 이동 (X 버튼 클릭 시)
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    navigate('/owner/orders/list', { replace: true });
   };
 
   return (
@@ -86,7 +88,7 @@ export default function SignUpPage() {
       </div>
 
       {/* 입력 폼 */}
-      <div className="w-full max-w-sm space-y-3">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-3">
         <Input
           placeholder="아이디 (이메일 주소)"
           value={email}
@@ -126,18 +128,18 @@ export default function SignUpPage() {
 
         {/* 회원가입 버튼 */}
         <Button
+          type="submit"
           btnStyle="filled-red"
           size="lg"
           className="w-full"
-          onClick={handleSignUp}
           disabled={!isFormValid || isSubmitting}
         >
           회원가입
         </Button>
-      </div>
+      </form>
       <Modal
         open={modalOpen}
-        onClose={handleCloseModal}
+        onClose={() => {}} // 빈 함수로 모달 닫기 방지
         title="회원가입 완료"
         detail={`가게를 등록한 뒤 서비스 이용이 가능합니다.
                 가게를 바로 등록하시겠어요?`}
@@ -147,6 +149,7 @@ export default function SignUpPage() {
         icon="check-circle"
         iconShow={true}
         xButtonShow={false}
+        xButton={false} // X 버튼 자체를 표시하지 않음
       />
     </div>
   );

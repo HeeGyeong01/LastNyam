@@ -15,6 +15,7 @@ export interface LoginRequest {
 export interface AuthResponse {
   status: string;
   message: string;
+  code?: number;
   data?: {
     accessToken?: string;
     refreshToken?: string;
@@ -24,10 +25,16 @@ export interface AuthResponse {
 }
 
 export interface Shop {
-  id: number;
-  name: string;
-  address?: string;
-  phoneNumber?: string;
+  shopId: number;
+  shopName: string;
+  shopLat: number;
+  shopLng: number;
+  shopAddress: string;
+  shopDescription?: string;
+  shopBanner?: string;
+  shopCloses?: string;
+  shopPickupEndTime?: string;
+  categoryName?: string;
 }
 
 export interface ShopListResponse {
@@ -35,6 +42,14 @@ export interface ShopListResponse {
   message: string;
   data?: {
     shops?: Shop[];
+  };
+}
+
+export interface OwnerProfileResponse {
+  status: string;
+  message: string;
+  data?: {
+    ownerId?: number;
   };
 }
 
@@ -66,15 +81,51 @@ export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/auth/login`;
     
+    // form-urlencoded 형식으로 변환
+    const formData = new URLSearchParams();
+    formData.append('email', data.email);
+    formData.append('password', data.password);
+    
+    console.log('🌐 로그인 요청:', url, formData.toString());
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify(data),
+      credentials: 'include', // 쿠키를 받기 위해 필요 (refreshToken은 쿠키로 옴)
+      body: formData.toString(),
+    });
+
+    console.log('📡 HTTP Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries()),
     });
 
     const responseBody = await response.json().catch(() => null) as AuthResponse | null;
+    console.log('Response: ', response);
+    console.log('Response Header 객체: ', response.headers);
+    console.log('📦 Response Body:', responseBody);
+    
+    // 모든 헤더 출력
+    console.log('===== 모든 헤더 출력 시작 =====');
+    response.headers.forEach((value, key) => {
+      console.log(`Header[${key}] = ${value}`);
+    });
+    console.log('===== 모든 헤더 출력 끝 =====');
+    
+    // 쿠키 확인
+    console.log('🍪 현재 쿠키:', document.cookie);
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+    console.log('🍪 파싱된 쿠키:', cookies);
+    console.log('🍪 Authorization 쿠키:', cookies['Authorization']);
+    console.log('🍪 Authorization-refresh 쿠키:', cookies['Authorization-refresh']);
 
     if (!response.ok || responseBody?.status !== 'SUCCESS') {
       throw new Error(
@@ -82,6 +133,27 @@ export const authApi = {
       );
     }
 
+    // ✨ 백엔드에서 헤더로 토큰을 보냄
+    // - accessToken: Authorization 헤더
+    // - refreshToken: 쿠키 (자동 저장됨)
+    const accessToken = response.headers.get('authorization') || response.headers.get('Authorization');
+    console.log('🔑 Authorization 헤더에서 추출한 accessToken:', accessToken);
+    console.log('🔑 accessToken 길이:', accessToken?.length);
+    
+    // 응답 body의 data에 토큰 정보 추가
+    if (accessToken) {
+      if (!responseBody.data) {
+        responseBody.data = {};
+      }
+      responseBody.data.accessToken = accessToken;
+      console.log('✅ accessToken을 data에 추가함');
+      console.log('✅ responseBody.data:', responseBody.data);
+    } else {
+      console.warn('⚠️ Authorization 헤더에 accessToken이 없습니다!');
+      console.warn('⚠️ 브라우저가 Authorization 헤더를 차단했을 수 있습니다 (CORS)');
+    }
+
+    console.log('✅ 최종 반환값 (responseBody):', responseBody);
     return responseBody;
   },
 
@@ -121,6 +193,30 @@ export const authApi = {
     return responseBody;
   },
 
+  // 프로필 조회
+  getProfile: async (accessToken: string): Promise<OwnerProfileResponse> => {
+    const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/auth/profile`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+    });
+
+    const responseBody = await response.json().catch(() => null) as OwnerProfileResponse | null;
+
+    if (!response.ok || responseBody?.status !== 'SUCCESS') {
+      throw new Error(
+        responseBody?.message || '프로필 조회에 실패했습니다.'
+      );
+    }
+
+    return responseBody;
+  },
+
   // 가게 목록 조회
   getShops: async (ownerId: number, accessToken: string): Promise<ShopListResponse> => {
     const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/auth/${ownerId}/shop`;
@@ -131,17 +227,20 @@ export const authApi = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
       },
+      credentials: 'include',
     });
 
     const responseBody = await response.json().catch(() => null) as ShopListResponse | null;
 
-    if (!response.ok || responseBody?.status !== 'SUCCESS') {
+    // FAIL 응답도 정상적으로 반환 (404는 점주를 찾을 수 없는 경우)
+    if (!response.ok && response.status !== 404) {
       throw new Error(
         responseBody?.message || '가게 목록 조회에 실패했습니다.'
       );
     }
 
-    return responseBody;
+    // 404 또는 FAIL 상태도 responseBody를 반환하여 상위에서 처리
+    return responseBody || { status: 'FAIL', message: '가게 목록 조회에 실패했습니다.' };
   },
 };
 
