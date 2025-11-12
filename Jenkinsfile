@@ -601,8 +601,19 @@ pipeline {
                     file(credentialsId: 'customer-env', variable: 'CUSTOMER_ENV'),
                   ]){
                     sh """
-                      cp -r \${CUSTOMER_ENV} ./.env
+                      # 기존 .env 파일 권한 확인 및 제거
+                      if [ -f ./.env ]; then
+                        chmod 644 ./.env 2>/dev/null || true
+                        rm -f ./.env
+                      fi
+                      
+                      # 임시 파일로 복사 후 권한 설정
+                      cp -r \${CUSTOMER_ENV} ./temp.env
+                      chmod 644 ./temp.env
+                      mv ./temp.env ./.env
+                      
                       npm run build
+                      
                       echo "📦 빌드 결과물을 Nginx로 복사 중..."
                       rm -rf /var/jenkins_home/nginx-build/customer/*
                       cp -r ./dist/* /var/jenkins_home/nginx-build/customer/
