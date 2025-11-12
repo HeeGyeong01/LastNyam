@@ -1,26 +1,31 @@
+import { useEffect, useState } from 'react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { FoocketingSortType } from '@/types';
+import { formatTimeToKorean } from '@/lib/time';
 
 interface FoocketingListHeaderProps {
-  currentTime: Date;
   sort: FoocketingSortType;
   sortLabels: Record<FoocketingSortType, string>;
   onSortClick?: () => void;
 }
 
 export default function FoocketingListHeader({
-  currentTime,
   sort,
   sortLabels,
   onSortClick,
 }: FoocketingListHeaderProps) {
-  const formatCurrentTime = (date: Date): string => {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-    return `${hours}시  ${minutes}분  ${seconds}초`;
-  };
+  // 현재 시간 상태 관리
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // 현재 시간 업데이트 (1초마다)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="bg-white flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
@@ -31,7 +36,7 @@ export default function FoocketingListHeader({
           <span className="p2-b text-brand-subtle">현재시간 :</span>
         </div>
         <span className="p2-b text-primary">
-          {formatCurrentTime(currentTime)}
+          {formatTimeToKorean(currentTime)}
         </span>
       </div>
 

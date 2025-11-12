@@ -48,18 +48,6 @@ export default function Foocketing() {
     changeCategory(newCategory);
   };
 
-  // 현재 시간 상태
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // 현재 시간 업데이트 (1초마다)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   // 정렬 옵션
   const sortLabels: Record<FoocketingSortType, string> = {
     IMMINENT: '마감순',
@@ -122,7 +110,6 @@ export default function Foocketing() {
           {foocketings.length > 0 && (
             <>
               <FoocketingListHeader
-                currentTime={currentTime}
                 sort={sort}
                 sortLabels={sortLabels}
               />

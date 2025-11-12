@@ -8,7 +8,8 @@ import { PageHeader } from '@/components/common';
 import { ShopCardHorizontal } from '@/components/cards';
 import { BottomSheet } from '@/components/common';
 import NaverMap from '@/components/map/NaverMap';
-import { formatTimeToHHmm } from '@/lib/time';
+import { formatTimeToKorean, formatISOStringToKorean } from '@/lib/time';
+import { Button } from '@shared/components/Button';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
@@ -45,7 +46,7 @@ export default function FoocketingDetail() {
       const scrollContainer = document.querySelector('.h-screen.overflow-y-auto');
       if (scrollContainer) {
         const scrollTop = scrollContainer.scrollTop;
-        setIsScrolled(scrollTop > 100); // 100px 이상 스크롤 시 light로 변경
+        setIsScrolled(scrollTop > 100); // 100px 이상 스크롤 시 dark로 변경
       } else {
         // fallback: window scroll
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -69,18 +70,20 @@ export default function FoocketingDetail() {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (date: Date): string => {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-    return `${hours}시  ${minutes}분  ${seconds}초`;
-  };
-
   return (
     <>
-      {/* 이미지 - 화면 전체를 채우고 Header 위에 배치 */}
+      {/* Header - 화면 최상단에 고정, 이미지 위에 겹쳐서 표시 */}
+      <div className="fixed top-0 left-0 right-0 max-w-[500px] mx-auto z-50">
+        <PageHeader 
+          title="푸켓팅 상세" 
+          variant={isScrolled ? 'light' : 'dark'} 
+          className="sticky top-0"
+        />
+      </div>
+      
+      {/* 이미지 - 스크롤 시 같이 움직임 */}
       {detail && !loading && (
-        <div className="fixed max-w-[500px] mx-auto top-0 left-0 right-0 h-40 z-0">
+        <div className="relative w-full h-40">
           <img
             className="w-full h-full object-cover"
             src={detail.menu.photoUrl || 'https://placehold.co/400x200'}
@@ -91,9 +94,6 @@ export default function FoocketingDetail() {
         </div>
       )}
       
-      {/* Header - 이미지 위에 겹쳐서 표시 */}
-      <PageHeader title="푸켓팅 상세" variant={isScrolled ? 'light' : 'dark'} />
-      
       {/* {loading && <p>로딩 중...</p>} */}
       
       {(error || !detail) && !loading && (
@@ -101,8 +101,8 @@ export default function FoocketingDetail() {
       )}
       
       {detail && !loading && (
-        <div className="w-full inline-flex flex-col justify-center pt-28 items-start gap-6">
-          {/* 컨텐츠 영역 - 이미지 높이만큼 padding-top 추가 */}
+        <div className="w-full inline-flex flex-col justify-center items-start gap-6">
+          {/* 컨텐츠 영역 */}
           <div className="w-full p-4 flex flex-col justify-center items-start gap-6">
 
             {/* 메뉴 정보 섹션 */}
@@ -167,23 +167,26 @@ export default function FoocketingDetail() {
             🔥지금 <span className="text-brand p1-b">{detail?.currentViewing}</span>명이 같은 푸드를 노리고 있어요!🔥
           </div>
           <div className="flex gap-2">
-            <div className="w-full flex flex-col py-4 bg-bg-2 rounded-2xl items-center gap-2">
+            <div className="w-full flex flex-col py-4 bg-bg-2 rounded-2xl items-center gap-0.5">
               <div className="flex items-center gap-0.5">
                 <ClockIcon className="w-4 h-4 text-secondary" />
                 <span className="text-secondary p2-b">현재 시간</span>
               </div>
-              <div className="text-primary h5-b">{formatTime(currentTime)}</div>
+              <div className="text-primary h5-b">{formatTimeToKorean(currentTime)}</div>
             </div>
-            <div className="w-full flex flex-col py-4 bg-brand-bg-2 rounded-2xl items-center gap-2">
-              <div className="flex items-center gap-0.5">
-                <ClockIcon className="w-4 h-4 text-secondary" />
-                <span className="text-secondary p2-b">오픈 시간</span>
+            <div className="w-full flex flex-col py-4 bg-brand-bg-2 rounded-2xl items-center gap-0.5">
+              <div className="flex items-center gap-">
+                <ClockIcon className="w-4 h-4 text-brand-subtle" />
+                <span className="text-brand-subtle p2-b">오픈 시간</span>
               </div>
-              <div className="text-primary h5-b">
-                {detail?.openTime ? formatTimeToHHmm(detail.openTime) : '-'}
+              <div className="text-brand h5-b">
+                {detail?.openTime ? formatISOStringToKorean(detail.openTime) : '-'}
               </div>
             </div>
           </div>
+          <Button btnStyle="filled-red" size="lg">
+            푸켓팅 참여하기
+          </Button>
         </div>
       </BottomSheet>
     </>
