@@ -563,7 +563,7 @@ pipeline {
               try {
                 dir('FE/apps/owner-web') {
                   echo '🔨 FE Owner 빌드 중...'
-                  sh 'npm ci'
+                  sh 'npm ci --include=dev'
                   sh 'npm run build'
                   sh """
                     echo "📦 빌드 결과물을 Nginx로 복사 중..."
@@ -596,12 +596,11 @@ pipeline {
               try {
                 dir('FE/apps/customer-web') {
                   echo '🔨 FE Customer 빌드 중...'
-                  sh 'npm ci'
+                  sh 'npm ci --include=dev'
                   withCredentials([
                     file(credentialsId: 'customer-env', variable: 'CUSTOMER_ENV'),
                   ]){
                     sh """
-                      npm ci
                       cp -r \${CUSTOMER_ENV} ./.env
                       npm run build
                       echo "📦 빌드 결과물을 Nginx로 복사 중..."
