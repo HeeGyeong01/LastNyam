@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "../App";
 import OwnerSettingPage from "../domains/settings/pages/OwnerSettingPage";
 import ReceiptConfirmPage from "../domains/orders/pages/ReceiptConfirmPage";
@@ -18,6 +18,20 @@ import HeaderFooterLayout from "../layouts/HeaderFooterLayout";
 import FooterOnlyLayout from "../layouts/FooterOnlyLayout";
 import LargeHeaderOnlyLayout from "../layouts/LargeHeaderOnlyLayout";
 import QRScanLayout from "@/layouts/QRScanLayout";
+import PrivateRoute from "./guards/PrivateRoute";
+import PublicRoute from "./guards/PublicRoute";
+import { useOwnerStore } from "@/store/useOwnerStore";
+
+const OwnerRootRedirect = () => {
+  const isAuthenticated = useOwnerStore((state) => state.isAuthenticated);
+
+  return (
+    <Navigate
+      to={isAuthenticated ? "/owner/orders/list" : "/owner/login"}
+      replace
+    />
+  );
+};
 
 const router = createBrowserRouter([
   {
@@ -25,121 +39,140 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "login",
-        element: <LoginPage />,
+        index: true,
+        element: <OwnerRootRedirect />,
       },
       {
-        path: "signup",
-        element: <SignUpPage />,
-      },
-      {
-        path: "store-information",
+        element: <PublicRoute />,
         children: [
           {
-            element: (
-              <LargeHeaderOnlyLayout
-                headerProps={{
-                  pageName: "가게 등록하기",
-                  pageExplanation: "가게 정보를 입력하고 서비스를 이용하세요",
-                  currentStep: 1,
-                  totalSteps: 2,
-                }}
-              />
-            ),
-            children: [
-              {
-                path: "step1-input",
-                element: <StoreInformationStep1InputPage />,
-              },
-              {
-                path: "step1-document",
-                element: <StoreInformationStep1DocumentPage />,
-              },
-            ],
+            path: "login",
+            element: <LoginPage />,
           },
           {
-            element: (
-              <LargeHeaderOnlyLayout
-                headerProps={{
-                  pageName: "가게 등록하기",
-                  pageExplanation: "가게 정보를 입력하고 서비스를 이용하세요",
-                  currentStep: 2,
-                  totalSteps: 2,
-                }}
-              />
-            ),
+            path: "signup",
+            element: <SignUpPage />,
+          },
+          {
+            element: <HeaderFooterLayout />,
             children: [
               {
-                path: "step2",
-                element: <StoreInformationStep2Page />,
+                path: "test",
+                element: <ComponentTestPage />,
               },
             ],
           },
         ],
       },
       {
-        element: <FooterOnlyLayout />,
+        element: <PrivateRoute />,
         children: [
           {
-            path: "orders",
+            path: "store-information",
             children: [
               {
-                path: "list",
-                element: <OrderListPage />,
+                element: (
+                  <LargeHeaderOnlyLayout
+                    headerProps={{
+                      pageName: "가게 등록하기",
+                      pageExplanation: "가게 정보를 입력하고 서비스를 이용하세요",
+                      currentStep: 1,
+                      totalSteps: 2,
+                    }}
+                  />
+                ),
+                children: [
+                  {
+                    path: "step1-input",
+                    element: <StoreInformationStep1InputPage />,
+                  },
+                  {
+                    path: "step1-document",
+                    element: <StoreInformationStep1DocumentPage />,
+                  },
+                ],
               },
               {
-                path: "receipt-confirm",
-                element: <ReceiptConfirmPage />,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        element: <QRScanLayout />,
-        children: [
-          {
-            path: "orders/qr-scan",
-            element: <QRScanPage />,
-          },
-        ],
-      },
-      {
-        element: <HeaderFooterLayout />,
-        children: [
-          {
-            path: "catalog",
-            children: [
-              {
-                path: "menu",
-                element: <ManageMenuPage />,
-              },
-              {
-                path: "foocketing",
-                element: <ManageFoocketingPage />,
-              },
-              {
-                path: "closeout-sale",
-                element: <ManageCloseoutSalePage />,
-              },
-            ],
-          },
-          {
-            path: "insights",
-            children: [
-              {
-                path: "report",
-                element: <ReportPage />,
+                element: (
+                  <LargeHeaderOnlyLayout
+                    headerProps={{
+                      pageName: "가게 등록하기",
+                      pageExplanation: "가게 정보를 입력하고 서비스를 이용하세요",
+                      currentStep: 2,
+                      totalSteps: 2,
+                    }}
+                  />
+                ),
+                children: [
+                  {
+                    path: "step2",
+                    element: <StoreInformationStep2Page />,
+                  },
+                ],
               },
             ],
           },
           {
-            path: "settings",
-            element: <OwnerSettingPage />,
+            element: <FooterOnlyLayout />,
+            children: [
+              {
+                path: "orders",
+                children: [
+                  {
+                    path: "list",
+                    element: <OrderListPage />,
+                  },
+                  {
+                    path: "receipt-confirm",
+                    element: <ReceiptConfirmPage />,
+                  },
+                ],
+              },
+            ],
           },
           {
-            path: "test",
-            element: <ComponentTestPage />,
+            element: <QRScanLayout />,
+            children: [
+              {
+                path: "orders/qr-scan",
+                element: <QRScanPage />,
+              },
+            ],
+          },
+          {
+            element: <HeaderFooterLayout />,
+            children: [
+              {
+                path: "catalog",
+                children: [
+                  {
+                    path: "menu",
+                    element: <ManageMenuPage />,
+                  },
+                  {
+                    path: "foocketing",
+                    element: <ManageFoocketingPage />,
+                  },
+                  {
+                    path: "closeout-sale",
+                    element: <ManageCloseoutSalePage />,
+                  },
+                ],
+              },
+              {
+                path: "insights",
+                children: [
+                  {
+                    path: "report",
+                    element: <ReportPage />,
+                  },
+                ],
+              },
+              {
+                path: "settings",
+                element: <OwnerSettingPage />,
+              },
+            ],
           },
         ],
       },

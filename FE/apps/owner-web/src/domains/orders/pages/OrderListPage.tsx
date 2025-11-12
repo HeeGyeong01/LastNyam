@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@shared/src/components/Button";
 import { cn } from "@/lib/utils";
+import { useOwnerStore } from "@/store/useOwnerStore";
+
+const NYAMCAT_IMAGE_SRC = `${import.meta.env.BASE_URL}nyamcat.png`;
 
 import {
   OrderStatusBoard,
@@ -11,7 +14,9 @@ import {
 import {
   ORDER_STATUS_CONFIG,
   type OrderStatus,
+  type TransactionType,
 } from "../components/orderStatusCard";
+import { orderApi } from "../apis/order.api";
 
 const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus> = {
   PENDING_APPROVAL: "PREPARING_FOOD",
@@ -26,91 +31,31 @@ const TRANSACTION_TABS = [
 
 type TransactionFilter = (typeof TRANSACTION_TABS)[number]["key"];
 
-const MOCK_TRANSACTIONS: OrderStatusBoardTransaction[] = [
-  {
-    transactionId: "D-25001",
-    transactionKey: "discount-25001",
-    transactionStatus: "PENDING_APPROVAL",
-    transactionType: "DISCOUNT",
-    createdAt: "2025-01-21T09:05:00+09:00",
-    totalAmount: 12800,
-    itemDtos: [
-      {
-        menuName: "크림치즈 베이글",
-        amount: 2,
-        menuPrice: 3200,
-        subtotal: 6400,
-      },
-      {
-        menuName: "버터 프레첼",
-        amount: 1,
-        menuPrice: 6400,
-        subtotal: 6400,
-      },
-    ],
-  },
-  {
-    transactionId: "D-25002",
-    transactionKey: "discount-25002",
-    transactionStatus: "PREPARING_FOOD",
-    transactionType: "DISCOUNT",
-    createdAt: "2025-01-21T09:35:00+09:00",
-    totalAmount: 15400,
-    itemDtos: [
-      {
-        menuName: "시나몬롤 세트",
-        amount: 2,
-        menuPrice: 5500,
-        subtotal: 11000,
-      },
-      {
-        menuName: "마카롱 박스 (4개)",
-        amount: 1,
-        menuPrice: 4400,
-        subtotal: 4400,
-      },
-    ],
-  },
-  {
-    transactionId: "F-25011",
-    transactionKey: "foocketing-25011",
-    transactionStatus: "WAITING_PICKUP",
-    transactionType: "FOOCKETING",
-    createdAt: "2025-01-21T08:40:00+09:00",
-    itemDtos: [
-      {
-        menuName: "모닝 샌드위치",
-        menuPrice: 3800,
-        subtotal: 3800,
-      },
-    ],
-  },
-  {
-    transactionId: "F-25012",
-    transactionKey: "foocketing-25012",
-    transactionStatus: "PREPARING_FOOD",
-    transactionType: "FOOCKETING",
-    createdAt: "2025-01-21T09:10:00+09:00",
-    itemDtos: [
-      {
-        menuName: "에그 커스터드 타르트",
-        menuPrice: 4200,
-        subtotal: 4200,
-      },
-      {
-        menuName: "헤이즐넛 라떼",
-        menuPrice: 4500,
-        subtotal: 4500,
-      },
-    ],
-  },
+const isValidTransactionType = (value: string): value is TransactionType => {
+  return TRANSACTION_TABS.some((tab) => tab.key === value);
+};
+
+const VALID_STATUSES: OrderStatus[] = [
+  "PENDING_APPROVAL",
+  "PREPARING_FOOD",
+  "WAITING_PICKUP",
 ];
+
+const isValidStatus = (value: string): value is OrderStatus => {
+  return VALID_STATUSES.includes(value as OrderStatus);
+};
 
 export default function OrderListPage() {
   const navigate = useNavigate();
-  const [transactions, setTransactions] =
-    useState<OrderStatusBoardTransaction[]>(MOCK_TRANSACTIONS);
+  const ownerId = useOwnerStore((state) => state.ownerId);
+  const accessToken = useOwnerStore((state) => state.accessToken);
+  const shops = useOwnerStore((state) => state.shops);
+  const [transactions, setTransactions] = useState<OrderStatusBoardTransaction[]>([]);
   const [activeFilter, setActiveFilter] = useState<TransactionFilter>("DISCOUNT");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const selectedShopId = shops[0]?.shopId;
 
   const filteredTransactions = useMemo(
     () =>
@@ -131,6 +76,56 @@ export default function OrderListPage() {
       {} as Record<TransactionFilter, number>,
     );
   }, [transactions]);
+
+  const fetchTransactions = useCallback(async () => {
+    if (!ownerId || !accessToken || !selectedShopId) {
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await orderApi.getTransactions(ownerId, selectedShopId, accessToken);
+      const apiTransactions = response.data?.transactions ?? [];
+
+      const sanitisedTransactions = apiTransactions
+        .filter(
+          (transaction): transaction is typeof apiTransactions[number] =>
+            Boolean(transaction) &&
+            isValidStatus(transaction.transactionStatus) &&
+            isValidTransactionType(transaction.transactionType),
+        )
+        .map<OrderStatusBoardTransaction>((transaction) => ({
+          transactionId: transaction.transactionId,
+          transactionStatus: transaction.transactionStatus,
+          createdAt: transaction.createdAt,
+          transactionType: transaction.transactionType,
+          itemDtos: Array.isArray(transaction.itemDtos) ? transaction.itemDtos : [],
+          totalAmount: transaction.totalAmount,
+          transactionKey: `${transaction.transactionId}-${transaction.transactionType}`,
+        }));
+
+      setTransactions(sanitisedTransactions);
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("주문 목록을 불러오는 중 문제가 발생했습니다.");
+      }
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken, ownerId, selectedShopId]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  const handleManageMenu = () => {
+    navigate("/owner/catalog/menu");
+  };
 
   const handleAdvanceStatus = (target: OrderStatusBoardTransaction) => {
     setTransactions((previous) =>
@@ -157,6 +152,32 @@ export default function OrderListPage() {
     ORDER_STATUS_CONFIG.WAITING_PICKUP.description ??
     "수령확인하기로 QR을 인식해 완료할 수 있어요";
 
+  const shouldShowEmptyState =
+    !isLoading && !errorMessage && selectedShopId && transactions.length === 0;
+
+  if (shouldShowEmptyState) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-bg-0 px-6 pb-20">
+        <div className="relative mb-6 h-[106px] w-[108px] overflow-hidden rounded-full bg-[#FFF1C7]">
+          <img
+            src={NYAMCAT_IMAGE_SRC}
+            alt="고양이"
+            className="h-[106px] w-[108px] translate-x-2 translate-y-3"
+          />
+        </div>
+
+        <div className="mb-3 space-y-2 text-center">
+          <h2 className="p2-b text-primary">현재 마감세일·푸켓팅 주문이 없어요</h2>
+          <p className="p3 text-secondary">가게 메뉴를 관리할까요?</p>
+        </div>
+
+        <Button btnStyle="filled-gray" onClick={handleManageMenu}>
+          메뉴 관리
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col bg-bg-0">
       <section className="px-4 pt-6">
@@ -182,7 +203,7 @@ export default function OrderListPage() {
           <div className="mx-auto inline-flex items-center gap-1 rounded-full border border-stroke-3 bg-bg-0 p-1 shadow-sm">
             {TRANSACTION_TABS.map((tab) => {
               const isActive = tab.key === activeFilter;
-              const count = filteredCountByType[tab.key];
+              const count = filteredCountByType[tab.key] ?? 0;
               return (
                 <Button
                   key={tab.key}
@@ -211,11 +232,36 @@ export default function OrderListPage() {
             })}
           </div>
 
-          <OrderStatusBoard
-            transactions={filteredTransactions}
-            className="bg-bg-0 pb-6"
-            onAdvanceStatus={handleAdvanceStatus}
-          />
+          {!selectedShopId ? (
+            <div className="rounded-xl bg-bg-2/60 px-4 py-6 text-center text-p2 text-secondary">
+              등록된 가게가 없어서 주문을 불러올 수 없어요. 먼저 가게를 등록해 주세요.
+            </div>
+          ) : null}
+
+          {errorMessage ? (
+            <div className="rounded-xl border border-error bg-error/10 px-4 py-3 text-p2 text-error">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          {isLoading ? (
+            <div className="rounded-xl bg-bg-2/60 px-4 py-6 text-center text-p2 text-secondary">
+              주문을 불러오는 중이에요...
+            </div>
+          ) : transactions.length === 0 && !errorMessage && selectedShopId ? (
+            <div className="rounded-xl bg-bg-2/60 px-4 py-10 text-center">
+              <p className="h5-b text-primary">현재 처리할 주문이 없어요</p>
+              <p className="mt-2 text-p2 text-secondary">
+                새로운 주문이 접수되면 이곳에서 바로 확인할 수 있어요.
+              </p>
+            </div>
+          ) : (
+            <OrderStatusBoard
+              transactions={filteredTransactions}
+              className="bg-bg-0 pb-6"
+              onAdvanceStatus={handleAdvanceStatus}
+            />
+          )}
         </div>
       </section>
     </div>
