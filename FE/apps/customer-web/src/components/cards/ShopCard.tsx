@@ -30,9 +30,9 @@ export default function ShopCard({
       onClick={onClick}
     >
       {/* 이미지 영역 */}
-      <div className="relative self-stretch w-full bg-[#e6e6e6] rounded-lg overflow-hidden aspect-square">
+      <div className="relative self-stretch w-full rounded-lg overflow-hidden aspect-square">
         <img
-          className="absolute top-[calc(50%_-_72px)] left-[calc(50%_-_72px)] w-36 h-36 object-cover"
+          className="h-full w-full object-cover object-center"
           alt={storeName}
           src={storeProfileImage}
         />

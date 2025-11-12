@@ -30,9 +30,9 @@ export default function ShopCardHorizontal({
       onClick={onClick}
     >
       {/* 이미지 영역 */}
-      <div className="relative w-[88px] h-[88px] bg-[#e6e6e6] rounded-lg overflow-hidden flex-shrink-0">
+      <div className="relative w-[88px] h-[88px] rounded-lg overflow-hidden flex-shrink-0">
         <img
-          className="h-full top-0 absolute object-cover"
+          className="h-full w-full object-cover object-center"
           alt={storeName}
           src={storeProfileImage}
         />

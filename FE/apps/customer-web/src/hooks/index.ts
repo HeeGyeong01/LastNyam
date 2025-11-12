@@ -1,5 +1,4 @@
-export { useDiscountCategory } from './useDiscountCategory';
+export { useDiscountList } from './useDiscountList';
 export { useGeolocation } from './useGeolocation';
-export { useFoocketingCategory } from './useFoocketingCategory';
-export { useFoocketingCategoryMock } from './useFoocketingCategoryMock';
+export { useFoocketingList } from './useFoocketingList';
 
