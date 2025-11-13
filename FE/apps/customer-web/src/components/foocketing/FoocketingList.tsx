@@ -10,11 +10,13 @@ interface FoocketingListProps {
     rating: number;
     ratingCount: number;
   };
+  onCardClick?: (item: ShopDetailFoocketing) => void;
 }
 
 export default function FoocketingList({
   foocketings,
   shopInfo,
+  onCardClick,
 }: FoocketingListProps) {
   const navigate = useNavigate();
 
@@ -57,7 +59,7 @@ export default function FoocketingList({
               rating={shopInfo?.rating || 0}
               reviewCount={shopInfo?.ratingCount || 0}
               discountedPrice={item.price}
-              onClick={() => navigate(`/foocketing/${item.foocketingId}`)}
+              onClick={onCardClick ? () => onCardClick(item) : () => navigate(`/foocketing/${item.foocketingId}`)}
             />
           );
         }

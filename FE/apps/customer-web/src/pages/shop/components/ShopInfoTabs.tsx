@@ -43,9 +43,9 @@ export default function ShopInfoTabs({
   };
 
   return (
-    <div className="self-stretch flex flex-col mt-2">
+    <div className="self-stretch flex flex-col mt-2 px-4">
       {/* 탭 헤더 */}
-      <div className="flex border-b border-stroke-subtle">
+      <div className="flex border-b border-stroke-3">
         {tabs.map((tab) => (
           <button
             key={tab.id}

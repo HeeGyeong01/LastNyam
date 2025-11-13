@@ -1,16 +1,23 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { PageHeader } from '@/components/common';
+import { useEffect, useState, useRef } from 'react';
+import { BottomSheet, PageHeader } from '@/components/common';
 import { DiscountList } from '@/components/discount';
 import { FoocketingList } from '@/components/foocketing';
 import { Tab } from '@shared/components/Tab';
 import { useShopDetail } from '@/hooks';
+import type { ShopDetailDiscount, ShopDetailFoocketing } from '@/types';
 import ShopInfoTabs from './components/ShopInfoTabs';
 import ShopProfile from './components/ShopProfile';
+import MenuDetail from './components/MenuDetail';
 
 export default function ShopDetail() {
   const { id } = useParams();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ShopDetailDiscount | ShopDetailFoocketing | null>(null);
+  const [selectedItemType, setSelectedItemType] = useState<'discount' | 'foocketing' | null>(null);
+  const discountSectionRef = useRef<HTMLDivElement>(null);
+  const foocketingSectionRef = useRef<HTMLDivElement>(null);
 
   const {
     shopDetail: detail,
@@ -50,6 +57,46 @@ export default function ShopDetail() {
     return () => target.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 탭 클릭 시 해당 섹션으로 스크롤
+  const handleTabChange = (index: number) => {
+    const scrollContainer = document.querySelector('.h-screen.overflow-y-auto') as HTMLElement;
+    const targetElement = index === 0 ? discountSectionRef.current : foocketingSectionRef.current;
+    
+    if (targetElement && scrollContainer) {
+      // 스크롤 컨테이너 내에서의 상대 위치 계산
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const elementRect = targetElement.getBoundingClientRect();
+      const scrollTop = scrollContainer.scrollTop;
+      const targetScrollTop = scrollTop + elementRect.top - containerRect.top - 20; // 20px 여백
+      
+      scrollContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth',
+      });
+    } else if (targetElement) {
+      // fallback: window scroll
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // 카드 클릭 시 BottomSheet 열기
+  const handleDiscountCardClick = (item: ShopDetailDiscount) => {
+    setSelectedItem(item);
+    setSelectedItemType('discount');
+    setIsBottomSheetOpen(true);
+  };
+
+  const handleFoocketingCardClick = (item: ShopDetailFoocketing) => {
+    setSelectedItem(item);
+    setSelectedItemType('foocketing');
+    setIsBottomSheetOpen(true);
+  };
+
+  const handleCloseBottomSheet = () => {
+    setIsBottomSheetOpen(false);
+    setSelectedItem(null);
+    setSelectedItemType(null);
+  };
 
   return (
     <>
@@ -61,16 +108,6 @@ export default function ShopDetail() {
           className="sticky top-0"
         />
       </div>
-      
-      {/* 가게 프로필 */}
-      {/* {detail && !loading && (
-        <ShopProfile
-          shopBanner={detail.shopBanner}
-          shopName={detail.shopName}
-          rating={detail.rating}
-          ratingCount={detail.ratingCount}
-        />
-      )} */}
       
       {loading && <p>로딩 중...</p>}
       
@@ -98,25 +135,30 @@ export default function ShopDetail() {
               shopPickupEndTime={detail.shopPickupEndTime}
             />
           </div>
+          
           <div className="pt-3">
-            <Tab tabLabels={['마감세일', '푸켓팅']}/>
+            <Tab 
+              tabLabels={['마감세일', '푸켓팅']}
+              onTabChange={handleTabChange}
+            />
           </div>
           
           {/* 마감세일 목록 */}
           {detail.discounts && detail.discounts.length > 0 && (
-            <div className="flex flex-col pt-3 px-4 items-start gap-3">
+            <div ref={discountSectionRef} className="flex flex-col pt-3 px-4 items-start gap-3">
               <div className="text-primary h5-b">
                 마감세일 중인 메뉴
               </div>
               <DiscountList
                 discounts={detail.discounts}
+                onCardClick={handleDiscountCardClick}
               />
             </div>
           )}
 
           {/* 푸켓팅 목록 */}
           {detail.foocketings && detail.foocketings.length > 0 && (
-            <div className="self-stretch pt-3 bg-white flex flex-col justify-start items-start gap-3">
+            <div ref={foocketingSectionRef} className="self-stretch pt-3 bg-white flex flex-col justify-start items-start gap-3">
               <div className="text-center justify-start text-black text-lg font-bold font-['Pretendard'] leading-7">
                 푸켓팅 중인 메뉴
               </div>
@@ -128,10 +170,21 @@ export default function ShopDetail() {
                   rating: detail.rating,
                   ratingCount: detail.ratingCount,
                 }}
+                onCardClick={handleFoocketingCardClick}
               />
             </div>
           )}
         </div>
+      )}
+
+      {/* BottomSheet */}
+      {isBottomSheetOpen && selectedItem && selectedItemType === 'discount' && 'discountRate' in selectedItem && (
+        <BottomSheet
+          showBackdrop={true}
+          onBackdropClick={handleCloseBottomSheet}
+        >
+          <MenuDetail detail={selectedItem} />
+        </BottomSheet>
       )}
     </>
   );

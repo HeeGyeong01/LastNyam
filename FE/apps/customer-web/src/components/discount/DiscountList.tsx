@@ -9,10 +9,12 @@ interface DiscountListProps {
     ratingCount: number;
     name: string;
   };
+  onCardClick?: (item: ShopDetailDiscount) => void;
 }
 
 export default function DiscountList({
   discounts,
+  onCardClick,
 }: DiscountListProps) {
   const navigate = useNavigate();
 
@@ -59,7 +61,7 @@ export default function DiscountList({
               originalPrice={item.originalPrice}
               remainingQuantity={item.stock}
               foodImage={item.menuImage}
-              // onClick={() => navigate(`/discount/${item.discountId}`)}
+              onClick={onCardClick ? () => onCardClick(item) : undefined}
             />
           );
         }
