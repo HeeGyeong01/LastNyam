@@ -1,4 +1,4 @@
-package com.lastnyam.customer.foocketing.dto;
+package com.lastnyam.customer.global.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MenuInfo {
     private String name;
+    private String description;
     private Integer price;
     private String photoUrl;
 }

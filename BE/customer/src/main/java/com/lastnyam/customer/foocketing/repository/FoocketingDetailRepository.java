@@ -3,7 +3,7 @@ package com.lastnyam.customer.foocketing.repository;
 
 import com.lastnyam.customer.foocketing.dto.DetailedMenuInfo;
 import com.lastnyam.customer.foocketing.dto.FoocketingDetail;
-import com.lastnyam.customer.foocketing.dto.ShopInfo;
+import com.lastnyam.customer.global.dto.ShopInfo;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -47,6 +47,7 @@ public class FoocketingDetailRepository {
         String menuDescription = rs.getString("menu_description");
 
         String shopName = rs.getString("shop_name");
+        String shopBanner = rs.getString("shop_banner");
         double shopLat = rs.getDouble("shop_lat");
         double shopLng = rs.getDouble("shop_lng");
 
@@ -54,6 +55,7 @@ public class FoocketingDetailRepository {
         double distanceM = rs.getDouble("distance");
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
+        int shopId = rs.getInt("shop_id");
         int shopRatingSum = rs.getInt("shop_rating_sum");
         int shopRatingCount = rs.getInt("shop_rating_count");
 
@@ -67,7 +69,9 @@ public class FoocketingDetailRepository {
                 .build();
 
         ShopInfo shopInfo = ShopInfo.builder()
+                .shopId(shopId)
                 .name(shopName)
+                .bannerUrl(shopBanner)
                 .lat(shopLat)
                 .lng(shopLng)
                 .distance(distanceKm)
@@ -94,7 +98,7 @@ public class FoocketingDetailRepository {
             sql.append("""
                     SELECT f.foocketing_id, f.foocketing_amount,
                             f.foocketing_time,m.menu_name,m.menu_price,m.menu_image,m.menu_description,
-                            s.shop_name, s.shop_lat, s.shop_lng,
+                            s.shop_id, s.shop_name, s.shop_lat, s.shop_lng, s.shop_banner,
                             ST_Distance(
                                ST_Point(?, ?)::geography,
                                ST_Point(s.shop_lng, s.shop_lat)::geography

@@ -1,5 +1,5 @@
 package com.lastnyam.customer.foocketing.enums;
 
-public enum SortType {
+public enum FoocketingSortType {
     IMMINENT, CLOSEST, PRICE
 }

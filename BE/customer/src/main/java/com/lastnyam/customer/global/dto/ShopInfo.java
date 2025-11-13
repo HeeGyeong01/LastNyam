@@ -1,4 +1,4 @@
-package com.lastnyam.customer.foocketing.dto;
+package com.lastnyam.customer.global.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShopInfo {
+    private Integer shopId;
+    private String bannerUrl;
     private String name;
     private Double lat;
     private Double lng;

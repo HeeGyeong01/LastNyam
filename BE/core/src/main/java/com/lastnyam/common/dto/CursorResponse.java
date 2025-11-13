@@ -1,4 +1,4 @@
-package com.lastnyam.customer.foocketing.dto;
+package com.lastnyam.common.dto;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

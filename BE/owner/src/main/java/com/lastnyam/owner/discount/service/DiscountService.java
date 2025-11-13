@@ -12,14 +12,13 @@ import com.lastnyam.owner.discount.exception.DiscountException;
 import com.lastnyam.owner.discount.repository.DiscountRepository;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import com.lastnyam.owner.shop.repository.ShopRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +41,7 @@ public class DiscountService {
         Menu menu = menuRepository.findById(request.getMenuId())
                 .orElseThrow(() -> new DiscountException(DiscountErrorCode.MENU_NOT_FOUND));
         if (!menu.getShop().getShopId().equals(shopId)) {
-                throw new DiscountException(DiscountErrorCode.MENU_NOT_IN_SHOP);
+            throw new DiscountException(DiscountErrorCode.MENU_NOT_IN_SHOP);
         }
 
         // 가게 마감 / 픽업 마감 시간 계산
@@ -99,7 +98,7 @@ public class DiscountService {
                             .build();
                 })
                 .collect(Collectors.toList());
-        
+
         return DiscountListResponse.builder()
                 .discounts(discountList)
                 .build();

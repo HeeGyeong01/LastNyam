@@ -1,5 +1,7 @@
 package com.lastnyam.customer.foocketing.dto;
 
+import com.lastnyam.customer.global.dto.MenuInfo;
+import com.lastnyam.customer.global.dto.ShopInfo;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,9 +18,5 @@ public class FoocketingBriefInfo {
     private LocalDateTime openTime;
     private MenuInfo menu;
     private ShopInfo shop;
-
-
-
-
 
 }

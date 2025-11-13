@@ -1,20 +1,20 @@
 package com.lastnyam.customer.shop.service;
 
+import com.lastnyam.customer.discount.repository.DiscountRepository;
+import com.lastnyam.customer.foocketing.repository.FoocketingRepository;
+import com.lastnyam.customer.shop.dto.ShopDetailResponseDto;
+import com.lastnyam.customer.shop.dto.ShopDiscountItemDto;
+import com.lastnyam.customer.shop.dto.ShopFavoriteResponseDto;
 import com.lastnyam.customer.shop.dto.ShopFoocketingItemDto;
 import com.lastnyam.customer.shop.exception.ShopErrorCode;
 import com.lastnyam.customer.shop.exception.ShopException;
-import com.lastnyam.customer.shop.dto.ShopDiscountItemDto;
-import com.lastnyam.customer.shop.dto.ShopDetailResponseDto;
-import com.lastnyam.customer.shop.dto.ShopFavoriteResponseDto;
-import com.lastnyam.customer.shop.repository.DiscountQueryRepository;
-import com.lastnyam.customer.shop.repository.FoocketingRepository;
 import com.lastnyam.customer.shop.repository.FavoriteRepository;
 import com.lastnyam.customer.shop.repository.ShopRatingRepository;
 import com.lastnyam.customer.shop.repository.ShopRepository;
 import com.lastnyam.customer.user.repository.UserRepository;
 import com.lastnyam.database.entity.Discount;
-import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.Favorite;
+import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.Shop;
 import com.lastnyam.database.entity.ShopRating;
 import com.lastnyam.database.entity.User;
@@ -33,7 +33,7 @@ public class ShopService {
     private final ShopRepository shopRepository;
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
-    private final DiscountQueryRepository discountQueryRepository;
+    private final DiscountRepository discountRepository;
     private final FoocketingRepository foocketingRepository;
     private final ShopRatingRepository shopRatingRepository;
 
@@ -45,14 +45,15 @@ public class ShopService {
         // 별점 조회
         ShopRating rating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
         int ratingCount = rating != null ? rating.getShopRatingCount() : 0;
-        double ratingAvg = ratingCount > 0 ? (double) Objects.requireNonNull(rating).getShopRatingSum() / ratingCount : 0.0;
+        double ratingAvg =
+                ratingCount > 0 ? (double) Objects.requireNonNull(rating).getShopRatingSum() / ratingCount : 0.0;
 
         // 마감세일 (미래만)
         LocalDateTime now = LocalDateTime.now();
-        List<Discount> discounts = discountQueryRepository
+        List<Discount> discounts = discountRepository
                 .findByMenu_Shop_ShopIdAndDiscountCloseTimeAfter(shopId, now);
-		List<ShopDiscountItemDto> discountDtos = discounts.stream()
-				.map(d -> ShopDiscountItemDto.builder()
+        List<ShopDiscountItemDto> discountDtos = discounts.stream()
+                .map(d -> ShopDiscountItemDto.builder()
                         .discountId(d.getDiscountId())
                         .menuName(d.getMenu().getMenuName())
                         .originalPrice(d.getMenu().getMenuPrice())
@@ -64,16 +65,25 @@ public class ShopService {
                         .build())
                 .collect(Collectors.toList());
 
-        // 푸켓팅 (오픈 예정만)
+        // 푸켓팅 (오픈 중 + 예정)
+
+        int minute = now.getMinute();
+        int floored = (minute / 30) * 30;
+
+        LocalDateTime flooredTime = now.withMinute(floored)
+                .withSecond(0)
+                .withNano(0).minusMinutes(1L);
+
         List<Foocketing> foocketings = foocketingRepository
-                .findByMenu_Shop_ShopIdAndFoocketingTimeAfter(shopId, now);
+                .findByMenu_Shop_ShopIdAndFoocketingTimeAfter(shopId, flooredTime);
         List<ShopFoocketingItemDto> foocketingDtos = foocketings.stream()
                 .map(f -> ShopFoocketingItemDto.builder()
                         .foocketingId(f.getFoocketingId())
                         .openTime(f.getFoocketingTime())
                         .menuName(f.getMenu().getMenuName())
                         .originalPrice(f.getMenu().getMenuPrice())
-                        .price(f.getMenu().getMenuPrice()) // 별도 가격 필드가 없어 메뉴가로 반환
+                        .menuImage(f.getMenu().getMenuImage())
+                        .price(0) // 별도 가격 필드가 없어 메뉴가로 반환
                         .build())
                 .collect(Collectors.toList());
 
@@ -98,7 +108,7 @@ public class ShopService {
                 .rating(ratingAvg)
                 .ratingCount(ratingCount)
                 .distanceMeters(distanceMeters)
-				.discounts(discountDtos)
+                .discounts(discountDtos)
                 .foocketings(foocketingDtos)
                 .build();
     }

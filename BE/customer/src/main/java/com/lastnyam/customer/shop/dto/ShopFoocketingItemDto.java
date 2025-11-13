@@ -15,6 +15,7 @@ public class ShopFoocketingItemDto {
     private Integer foocketingId;
     private LocalDateTime openTime;
     private String menuName;
+    private String menuImage;
     private Integer originalPrice;
     private Integer price;
 }

@@ -1,12 +1,12 @@
 package com.lastnyam.customer.foocketing.repository;
 
-import com.lastnyam.customer.foocketing.dto.CursorResponse;
+import com.lastnyam.common.dto.CursorResponse;
 import com.lastnyam.customer.foocketing.dto.FoocketingBriefInfo;
-import com.lastnyam.customer.foocketing.dto.MenuInfo;
-import com.lastnyam.customer.foocketing.dto.ShopInfo;
 import com.lastnyam.customer.foocketing.dto.TimestampCursorInfo;
-import com.lastnyam.customer.foocketing.enums.SortType;
-import com.lastnyam.customer.foocketing.exception.FoocketingQueryException;
+import com.lastnyam.customer.foocketing.enums.FoocketingSortType;
+import com.lastnyam.customer.foocketing.exception.FoocketingCursorException;
+import com.lastnyam.customer.global.dto.MenuInfo;
+import com.lastnyam.customer.global.dto.ShopInfo;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,7 +28,7 @@ public class FoocketingQueryRepository {
     private static final Integer SEARCH_COUNT = 20;
     private final JdbcTemplate jdbcTemplate;
 
-    public CursorResponse<FoocketingBriefInfo> findFoocketingsNear(SortType sort, Double lat, Double lng,
+    public CursorResponse<FoocketingBriefInfo> findFoocketingsNear(FoocketingSortType sort, Double lat, Double lng,
                                                                    Integer categoryId,
                                                                    String cursor) {
         QueryBuilder queryBuilder = new QueryBuilder();
@@ -47,7 +47,7 @@ public class FoocketingQueryRepository {
         return processResult(result, NEARBY_COUNT);
     }
 
-    public CursorResponse<FoocketingBriefInfo> searchFoocketingsByKeyword(SortType sort, String keyword,
+    public CursorResponse<FoocketingBriefInfo> searchFoocketingsByKeyword(FoocketingSortType sort, String keyword,
                                                                           Double lat, Double lng, String cursor) {
         QueryBuilder queryBuilder = new QueryBuilder();
 
@@ -107,6 +107,7 @@ public class FoocketingQueryRepository {
         double distanceM = rs.getDouble("distance");
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
+        int shopId = rs.getInt("shop_id");
         int shopRatingSum = rs.getInt("shop_rating_sum");
         int shopRatingCount = rs.getInt("shop_rating_count");
 
@@ -119,6 +120,7 @@ public class FoocketingQueryRepository {
                 .build();
 
         ShopInfo shopInfo = ShopInfo.builder()
+                .shopId(shopId)
                 .name(shopName)
                 .lat(shopLat)
                 .lng(shopLng)
@@ -146,7 +148,7 @@ public class FoocketingQueryRepository {
         String[] parts = decoded.split("_");
 
         if (parts.length < 2) {
-            throw new FoocketingQueryException();
+            throw new FoocketingCursorException();
         }
 
         LocalDateTime timestamp = LocalDateTime.parse(parts[0]);
@@ -166,7 +168,7 @@ public class FoocketingQueryRepository {
         public void buildBaseQuery(Double lat, Double lon) {
             sql.append("""
                     SELECT f.foocketing_id,f.foocketing_time,m.menu_name,m.menu_price,m.menu_image,
-                            s.shop_name, s.shop_lat, s.shop_lng, 
+                            s.shop_id, s.shop_name, s.shop_lat, s.shop_lng, 
                             ST_Distance(
                                ST_Point(?, ?)::geography,
                                ST_Point(s.shop_lng, s.shop_lat)::geography                       
@@ -212,7 +214,7 @@ public class FoocketingQueryRepository {
             params.add(categoryId);
         }
 
-        public void addSortCondition(SortType type) {
+        public void addSortCondition(FoocketingSortType type) {
 
             sql.append(" ORDER BY f.foocketing_close_time ASC");
             switch (type) {

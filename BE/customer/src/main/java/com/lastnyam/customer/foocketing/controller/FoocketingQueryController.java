@@ -1,9 +1,9 @@
 package com.lastnyam.customer.foocketing.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
-import com.lastnyam.customer.foocketing.dto.CursorResponse;
+import com.lastnyam.common.dto.CursorResponse;
 import com.lastnyam.customer.foocketing.dto.FoocketingBriefInfo;
-import com.lastnyam.customer.foocketing.enums.SortType;
+import com.lastnyam.customer.foocketing.enums.FoocketingSortType;
 import com.lastnyam.customer.foocketing.service.FoocketingQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ public class FoocketingQueryController {
     private final FoocketingQueryService queryService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getFoocketingList(@RequestParam("sort") SortType sort,
+    public ResponseEntity<ApiResponse<?>> getFoocketingList(@RequestParam("sort") FoocketingSortType sort,
                                                             @RequestParam("lat") Double lat,
                                                             @RequestParam("lng") Double lng,
                                                             @RequestParam("category") Integer categoryId,
@@ -32,7 +32,7 @@ public class FoocketingQueryController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<?>> searchFoocketing(@RequestParam("sort") SortType sort,
+    public ResponseEntity<ApiResponse<?>> searchFoocketing(@RequestParam("sort") FoocketingSortType sort,
                                                            @RequestParam("lat") Double lat,
                                                            @RequestParam("lng") Double lng,
                                                            @RequestParam("keyword") String keyword,
