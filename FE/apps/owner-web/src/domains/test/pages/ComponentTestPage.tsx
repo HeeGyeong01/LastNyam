@@ -54,7 +54,7 @@ const ownerRoutes = [
 ];
 
 export default function ComponentTestPage() {
-  const { ownerId } = useOwnerStore();
+  const { ownerId, shops } = useOwnerStore();
   const [loading, setLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -438,13 +438,22 @@ export default function ComponentTestPage() {
       return;
     }
 
+    if (!shops || shops.length === 0) {
+      alert('등록된 가게가 없습니다. 가게를 먼저 등록해주세요.');
+      console.error('shops 정보가 없습니다.');
+      return;
+    }
+
     setReportLoading(true);
     try {
-      const url = `${OWNER_API_BASE_URL}/api/owner/${ownerId}/report`;
+      const shopId = shops[0].shopId; // 첫 번째 가게 ID 사용
+      // GET 요청에서는 쿼리 파라미터로 전달
+      const url = `${OWNER_API_BASE_URL}/api/owner/${ownerId}/report?shopId=${shopId}`;
       console.log('===== 주간 리포트 API 호출 시작 =====');
       console.log('요청 URL:', url);
       console.log('요청 메서드: GET');
       console.log('ownerId:', ownerId);
+      console.log('shopId:', shopId);
       
       const response = await fetchWithAuth(url, {
         method: 'GET',
@@ -489,14 +498,18 @@ export default function ComponentTestPage() {
           <div className="space-y-2">
             <h3 className="text-lg font-medium">주간 리포트 조회 API</h3>
             <p className="text-sm text-gray-600">
-              엔드포인트: <code className="bg-gray-100 px-2 py-1 rounded">GET /api/owner/{'{ownerId}'}/report</code>
+              엔드포인트: <code className="bg-gray-100 px-2 py-1 rounded">GET /api/owner/{'{ownerId}'}/report?shopId={'{shopId}'}</code>
             </p>
-            <p className="text-sm text-gray-600">
-              현재 ownerId: <span className="font-semibold">{ownerId ?? '로그인 필요'}</span>
-            </p>
+            <div className="text-sm text-gray-600 space-y-1">
+              <p>현재 ownerId: <span className="font-semibold">{ownerId ?? '로그인 필요'}</span></p>
+              <p>현재 shopId: <span className="font-semibold">{shops && shops.length > 0 ? shops[0].shopId : '가게 등록 필요'}</span></p>
+              {shops && shops.length > 0 && (
+                <p className="text-xs text-gray-500">가게명: {shops[0].shopName}</p>
+              )}
+            </div>
             <button
               onClick={handleFetchWeeklyReport}
-              disabled={reportLoading || !ownerId}
+              disabled={reportLoading || !ownerId || !shops || shops.length === 0}
               className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {reportLoading && <Spinner className="size-4" />}
