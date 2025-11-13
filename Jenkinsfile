@@ -278,13 +278,17 @@ pipeline {
                 dir('BE') {
                   echo '🔨 Customer 서비스 빌드 중...'
                   sh './gradlew :customer:clean :customer:bootJar --parallel --build-cache'
-                  sh """
-                    docker pull ${REGISTRY}/customer:latest || true
-                    docker build \
-                      --cache-from ${REGISTRY}/customer:latest \
-                      -t ${REGISTRY}/customer:${TAG} \
-                      -f customer/Dockerfile .
-                  """
+                  withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                      sh """
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin 
+                        docker build \
+                          -t ${REGISTRY}/customer:${PUB_TAG} \
+                          -f customer/Dockerfile .
+
+                        echo "🚀 Docker Hub로 이미지 푸시 중..."
+                        docker push ${REGISTRY}/customer:${PUB_TAG}
+                      """ 
+                  }
                   env.BUILD_CUSTOMER_SUCCESS = 'true'
                 }
               } catch (Exception e) {
@@ -304,13 +308,17 @@ pipeline {
                 dir('BE') {
                   echo '🔨 Owner 서비스 빌드 중...'
                   sh './gradlew :owner:clean :owner:bootJar --parallel --build-cache'
-                  sh """
-                    docker pull ${REGISTRY}/owner:latest || true
-                    docker build \
-                      --cache-from ${REGISTRY}/owner:latest \
-                      -t ${REGISTRY}/owner:${TAG} \
-                      -f owner/Dockerfile .
-                  """
+                  withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                      sh """
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin 
+                        docker build \
+                          -t ${REGISTRY}/owner:${PUB_TAG} \
+                          -f owner/Dockerfile .
+
+                        echo "🚀 Docker Hub로 이미지 푸시 중..."
+                        docker push ${REGISTRY}/owner:${PUB_TAG}
+                      """ 
+                  }
                   env.BUILD_OWNER_SUCCESS = 'true'
                 }
               } catch (Exception e) {
@@ -330,13 +338,18 @@ pipeline {
                 dir('BE') {
                   echo '🔨 Foocketing-Subscriber 빌드 중...'
                   sh './gradlew :foocketing-subscriber:clean :foocketing-subscriber:bootJar --parallel --build-cache'
-                  sh """
-                    docker pull ${REGISTRY}/foocketing-subscriber:latest || true
-                    docker build \
-                      --cache-from ${REGISTRY}/foocketing-subscriber:latest \
-                      -t ${REGISTRY}/foocketing-subscriber:${TAG} \
-                      -f foocketing-subscriber/Dockerfile .
-                  """
+                  withCredentials([usernamePassword(credentialsId: 'docker-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                      sh """
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin 
+                        docker build \
+                          -t ${REGISTRY}/subscriber:${PUB_TAG} \
+                          -f subscriber/Dockerfile .
+
+                        echo "🚀 Docker Hub로 이미지 푸시 중..."
+                        docker push ${REGISTRY}/subscriber:${PUB_TAG}
+                      """
+                      
+                  }
                   env.BUILD_FS_SUCCESS = 'true'
                 }
               } catch (Exception e) {
@@ -390,25 +403,56 @@ pipeline {
           steps {
             script {
               try {
-                echo '🚀 Customer 서비스 배포 중...'
-                sh """
-                  set -e
-                  cd /var/scripts
-                  docker compose -f customer.yml up -d
-                  
-                  echo "⏳ 서비스 시작 대기 중..."
-                  for i in {1..60}; do
-                    if docker compose ps -f customer.yml customer | grep -q "Up"; then
-                      echo "✅ Customer 서비스 배포 완료"
-                      exit 0
+                echo "🚀 Customer GitOps 배포 시작 (Image Tag: ${PUB_TAG})"
+                
+                // Manifest 레포지토리에 push 권한이 있는 SSH 키 자격 증명을 사용합니다.
+                // Jenkins Credentials에 ID 'k8s-manifest-repo-ssh-key' 로 미리 등록해야 합니다.
+                withCredentials([usernamePassword(credentialsId: 'de12f27e-dd2d-4317-8046-a9ad86c3d720', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
+                  sh """
+                    #!/bin/sh
+                    set -e # 스크립트 중간에 오류 발생 시 즉시 중단
+
+                    echo "==== 1. Git 사용자 정보 설정 ===="
+                    git config --global user.name "Jenkins CI"
+                    git config --global user.email "lastnyam@gmail.com"
+                    
+                    echo "==== 2. Manifest 레포지토리 클론 ===="
+                    # 작업 공간 충돌을 피하기 위해 임시 디렉터리에 클론
+                    rm -rf /tmp/manifest-repo 
+                    git clone https://oauth2:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
+                    cd /tmp/manifest-repo
+
+                    echo "==== 3. K8s 브랜치로 이동 ===="
+                    git checkout K8s
+
+                    echo "==== 4. deployment.yaml 이미지 태그 수정 ===="
+                    # sed 명령어를 사용하여 image 태그 부분을 새로운 TAG로 교체합니다.
+                    # 파일 경로: app/customer/deployment.yml
+                    MANIFEST_FILE="app/customer/deployment.yml"
+                    
+                    if [ ! -f "\$MANIFEST_FILE" ]; then
+                      echo "❌ Manifest 파일(\$MANIFEST_FILE)을 찾을 수 없습니다!"
+                      exit 1
                     fi
-                    sleep 1
-                  done
-                  echo "❌ 배포 타임아웃"
-                  exit 1
-                """
-                env.DEPLOY_CUSTOMER_SUCCESS = 'true'
-              } catch (Exception e) {
+                    
+                    echo "기존 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    sed -i "s|image: ${REGISTRY}/customer:.*|image: ${REGISTRY}/customer:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                    echo "수정된 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    
+                    echo "==== 5. 변경사항 커밋 및 푸시 ===="
+                    # git diff로 실제 변경사항이 있을 때만 커밋 및 푸시
+                    if git diff --quiet; then
+                      echo "⏭️ Manifest 파일에 변경사항이 없습니다. 푸시를 건너뜁니다."
+                    else
+                      git add "\$MANIFEST_FILE"
+                      git commit -m "CI: Set image for customer to ${PUB_TAG}"
+                      git push origin K8s
+                      echo "✅ Manifest 레포지토리에 새로운 이미지 태그를 푸시했습니다."
+                    fi
+                  """
+                  } 
+                  env.DEPLOY_CUSTOMER_SUCCESS = 'true'
+                } catch (Exception e) {
                 echo "❌ Customer 배포 실패: ${e.message}"
                 env.DEPLOY_CUSTOMER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
@@ -422,25 +466,56 @@ pipeline {
           steps {
             script {
               try {
-                echo '🚀 Owner 서비스 배포 중...'
-                sh """
-                  set -e
-                  cd /var/scripts
-                  docker compose -f owner.yml up -d
-                  
-                  echo "⏳ 서비스 시작 대기 중..."
-                  for i in {1..60}; do
-                    if docker compose -f owner.yml ps owner | grep -q "Up"; then
-                      echo "✅ Owner 서비스 배포 완료"
-                      exit 0
+                echo "🚀 Owner GitOps 배포 시작 (Image Tag: ${PUB_TAG})"
+                
+                // Manifest 레포지토리에 push 권한이 있는 SSH 키 자격 증명을 사용합니다.
+                // Jenkins Credentials에 ID 'k8s-manifest-repo-ssh-key' 로 미리 등록해야 합니다.
+                withCredentials([usernamePassword(credentialsId: 'de12f27e-dd2d-4317-8046-a9ad86c3d720', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
+                  sh """
+                    #!/bin/sh
+                    set -e # 스크립트 중간에 오류 발생 시 즉시 중단
+
+                    echo "==== 1. Git 사용자 정보 설정 ===="
+                    git config --global user.name "Jenkins CI"
+                    git config --global user.email "lastnyam@gmail.com"
+                    
+                    echo "==== 2. Manifest 레포지토리 클론 ===="
+                    # 작업 공간 충돌을 피하기 위해 임시 디렉터리에 클론
+                    rm -rf /tmp/manifest-repo 
+                    git clone https://oauth2:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
+                    cd /tmp/manifest-repo
+
+                    echo "==== 3. K8s 브랜치로 이동 ===="
+                    git checkout K8s
+
+                    echo "==== 4. deployment.yaml 이미지 태그 수정 ===="
+                    # sed 명령어를 사용하여 image 태그 부분을 새로운 TAG로 교체합니다.
+                    # 파일 경로: app/owner/deployment.yml
+                    MANIFEST_FILE="app/owner/deployment.yml"
+                    
+                    if [ ! -f "\$MANIFEST_FILE" ]; then
+                      echo "❌ Manifest 파일(\$MANIFEST_FILE)을 찾을 수 없습니다!"
+                      exit 1
                     fi
-                    sleep 1
-                  done
-                  echo "❌ 배포 타임아웃"
-                  exit 1
-                """
-                env.DEPLOY_OWNER_SUCCESS = 'true'
-              } catch (Exception e) {
+                    
+                    echo "기존 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    sed -i "s|image: ${REGISTRY}/owner:.*|image: ${REGISTRY}/owner:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                    echo "수정된 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    
+                    echo "==== 5. 변경사항 커밋 및 푸시 ===="
+                    # git diff로 실제 변경사항이 있을 때만 커밋 및 푸시
+                    if git diff --quiet; then
+                      echo "⏭️ Manifest 파일에 변경사항이 없습니다. 푸시를 건너뜁니다."
+                    else
+                      git add "\$MANIFEST_FILE"
+                      git commit -m "CI: Set image for owner to ${PUB_TAG}"
+                      git push origin K8s
+                      echo "✅ Manifest 레포지토리에 새로운 이미지 태그를 푸시했습니다."
+                    fi
+                  """
+                }
+                env.DEPLOY_OWNER_SUCCESS = 'true' 
+                } catch (Exception e) {
                 echo "❌ Owner 배포 실패: ${e.message}"
                 env.DEPLOY_OWNER_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
@@ -454,25 +529,56 @@ pipeline {
           steps {
             script {
               try {
-                echo '🚀 Foocketing-Subscriber 배포 중...'
-                sh """
-                  set -e
-                  cd /var/scripts
-                  docker compose -f foocketing-subscriber.yml up -d
-                  
-                  echo "⏳ 서비스 시작 대기 중..."
-                  for i in {1..60}; do
-                    if docker compose -f foocketing-subscriber.yml ps subscriber | grep -q "Up"; then
-                      echo "✅ Foocketing-Subscriber 배포 완료"
-                      exit 0
+                echo "🚀 Foocketing-Subscriber GitOps 배포 시작 (Image Tag: ${PUB_TAG})"
+                
+                // Manifest 레포지토리에 push 권한이 있는 SSH 키 자격 증명을 사용합니다.
+                // Jenkins Credentials에 ID 'k8s-manifest-repo-ssh-key' 로 미리 등록해야 합니다.
+                withCredentials([usernamePassword(credentialsId: 'de12f27e-dd2d-4317-8046-a9ad86c3d720', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
+                  sh """
+                    #!/bin/sh
+                    set -e # 스크립트 중간에 오류 발생 시 즉시 중단
+
+                    echo "==== 1. Git 사용자 정보 설정 ===="
+                    git config --global user.name "Jenkins CI"
+                    git config --global user.email "lastnyam@gmail.com"
+                    
+                    echo "==== 2. Manifest 레포지토리 클론 ===="
+                    # 작업 공간 충돌을 피하기 위해 임시 디렉터리에 클론
+                    rm -rf /tmp/manifest-repo 
+                    git clone https://oauth2:${GIT_TOKEN}@lab.ssafy.com/s13-final/S13P31A101.git /tmp/manifest-repo
+                    cd /tmp/manifest-repo
+
+                    echo "==== 3. K8s 브랜치로 이동 ===="
+                    git checkout K8s
+
+                    echo "==== 4. deployment.yaml 이미지 태그 수정 ===="
+                    # sed 명령어를 사용하여 image 태그 부분을 새로운 TAG로 교체합니다.
+                    # 파일 경로: app/subscriber/deployment.yml
+                    MANIFEST_FILE="app/subscriber/deployment.yml"
+                    
+                    if [ ! -f "\$MANIFEST_FILE" ]; then
+                      echo "❌ Manifest 파일(\$MANIFEST_FILE)을 찾을 수 없습니다!"
+                      exit 1
                     fi
-                    sleep 1
-                  done
-                  echo "❌ 배포 타임아웃"
-                  exit 1
-                """
+                    
+                    echo "기존 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    sed -i "s|image: ${REGISTRY}/subscriber:.*|image: ${REGISTRY}/subscriber:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                    echo "수정된 태그: `grep 'image:' \$MANIFEST_FILE`"
+                    
+                    echo "==== 5. 변경사항 커밋 및 푸시 ===="
+                    # git diff로 실제 변경사항이 있을 때만 커밋 및 푸시
+                    if git diff --quiet; then
+                      echo "⏭️ Manifest 파일에 변경사항이 없습니다. 푸시를 건너뜁니다."
+                    else
+                      git add "\$MANIFEST_FILE"
+                      git commit -m "CI: Set image for subscriber to ${PUB_TAG}"
+                      git push origin K8s
+                      echo "✅ Manifest 레포지토리에 새로운 이미지 태그를 푸시했습니다."
+                    fi
+                  """
+                } // end withCredentials
                 env.DEPLOY_FS_SUCCESS = 'true'
-              } catch (Exception e) {
+              }  catch (Exception e) {
                 echo "❌ Foocketing-Subscriber 배포 실패: ${e.message}"
                 env.DEPLOY_FS_SUCCESS = 'false'
                 currentBuild.result = 'UNSTABLE'
@@ -486,7 +592,7 @@ pipeline {
           steps {
             script {
               try {
-                echo "🚀 Foocketing-Publisher GitOps 배포 시작 (Image Tag: ${TAG})"
+                echo "🚀 Foocketing-Publisher GitOps 배포 시작 (Image Tag: ${PUB_TAG})"
                 
                 // Manifest 레포지토리에 push 권한이 있는 SSH 키 자격 증명을 사용합니다.
                 // Jenkins Credentials에 ID 'k8s-manifest-repo-ssh-key' 로 미리 등록해야 합니다.
@@ -563,18 +669,17 @@ pipeline {
               try {
                 dir('FE/apps/owner-web') {
                   echo '🔨 FE Owner 빌드 중...'
-                  sh 'npm ci --include=dev'
+                  sh 'npm install'
                   sh 'npm run build'
-                  sh """
-                    echo "📦 빌드 결과물을 Nginx로 복사 중..."
-                    rm -rf /var/jenkins_home/nginx-build/owner/*
-                    cp -r ./dist/* /var/jenkins_home/nginx-build/owner/
-                    
-                    echo "🔄 Nginx 재시작 중..."
-                    docker exec nginx nginx -s reload
-                    
-                    echo "✅ FE Owner 배포 완료"
-                  """
+                  withCredentials([sshUserPrivateKey(credentialsId: 'master-server-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    sh """
+                      echo "📦 FE Owner 빌드 결과물을 원격 서버로 전송 중..."
+                      rsync -avz --delete \
+                        -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \
+                        ./dist/ \
+                        ubuntu@15.164.255.58:/scripts/nginx/html/owner/
+                    """
+                  }
                 }
                 env.BUILD_FE_OWNER_SUCCESS = 'true'
               } catch (Exception e) {
@@ -596,32 +701,15 @@ pipeline {
               try {
                 dir('FE/apps/customer-web') {
                   echo '🔨 FE Customer 빌드 중...'
-                  sh 'npm ci --include=dev'
-                  withCredentials([
-                    file(credentialsId: 'customer-env', variable: 'CUSTOMER_ENV'),
-                  ]){
+                  sh 'npm install'
+                  sh 'npm run build'
+                  withCredentials([sshUserPrivateKey(credentialsId: 'master-server-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                     sh """
-                      # 기존 .env 파일 권한 확인 및 제거
-                      if [ -f ./.env ]; then
-                        chmod 644 ./.env 2>/dev/null || true
-                        rm -f ./.env
-                      fi
-                      
-                      # 임시 파일로 복사 후 권한 설정
-                      cp -r \${CUSTOMER_ENV} ./temp.env
-                      chmod 644 ./temp.env
-                      mv ./temp.env ./.env
-                      
-                      npm run build
-                      
-                      echo "📦 빌드 결과물을 Nginx로 복사 중..."
-                      rm -rf /var/jenkins_home/nginx-build/customer/*
-                      cp -r ./dist/* /var/jenkins_home/nginx-build/customer/
-                      
-                      echo "🔄 Nginx 재시작 중..."
-                      docker exec nginx nginx -s reload
-                      
-                      echo "✅ FE Customer 배포 완료"
+                      echo "📦 FE customer 빌드 결과물을 원격 서버로 전송 중..."
+                      rsync -avz --delete \
+                        -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \
+                        ./dist/ \
+                        ubuntu@15.164.255.58:/scripts/nginx/html/customer/
                     """
                   }
                 }
