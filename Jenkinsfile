@@ -677,7 +677,7 @@ pipeline {
                       rsync -avz --delete \
                         -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \
                         ./dist/ \
-                        ubuntu@ec2-3-34-186-79.ap-northeast-2.compute.amazonaws.com:/scripts/nginx/html/owner/
+                        ubuntu@ec2-3-34-186-79.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/scripts/nginx/html/owner/
                     """
                   }
                 }
@@ -709,7 +709,7 @@ pipeline {
                       rsync -avz --delete \
                         -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \
                         ./dist/ \
-                        ubuntu@ec2-3-34-186-79.ap-northeast-2.compute.amazonaws.com:/scripts/nginx/html/customer/
+                        ubuntu@ec2-3-34-186-79.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/scripts/nginx/html/customer/
                     """
                   }
                 }
