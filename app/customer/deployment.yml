@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: customer
-  namespace: lastnyam
+  namespace: default
 spec:
   replicas: 1
   selector:

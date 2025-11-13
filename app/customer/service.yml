@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: customer-svc
-  namespace: lastnyam
+  namespace: default
 spec:
   type: NodePort
   selector:
