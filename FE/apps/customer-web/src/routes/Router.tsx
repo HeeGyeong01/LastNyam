@@ -1,5 +1,6 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 import { MainLayout, DetailLayout } from '../components/layout';
+import { BottomNavBar } from '../components/common';
 import Home from '../pages/home';
 import { Login, KakaoCallback, AdditionalInfo, SignupComplete } from '../pages/auth';
 import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from '../pages/foocketing';
@@ -11,6 +12,18 @@ import { Search, SearchResult } from '../pages/search';
 import OrderList from '../pages/order';
 import MyPage from '../pages/mypage';
 import QR from '../pages/qr';
+
+// Cart 전용 레이아웃 (BottomNavBar는 있지만 padding 없음)
+function CartLayout() {
+  return (
+    <>
+      <div className="h-screen max-w-[500px] mx-auto overflow-y-auto">
+        <Outlet />
+      </div>
+      <BottomNavBar />
+    </>
+  );
+}
 
 export const router = createBrowserRouter([
   // Auth routes (네비게이션 바 없음)
@@ -56,10 +69,6 @@ export const router = createBrowserRouter([
         element: <Discount />,
       },
       {
-        path: '/cart',
-        element: <Cart />,
-      },
-      {
         path: '/payment-success',
         element: <PaymentSuccess />,
       },
@@ -101,6 +110,17 @@ export const router = createBrowserRouter([
       {
         path: '/shop/:id',
         element: <ShopDetail />,
+      },
+    ],
+  },
+  
+  // Cart route (네비게이션 바는 있지만 padding 없음)
+  {
+    element: <CartLayout />,
+    children: [
+      {
+        path: '/cart',
+        element: <Cart />,
       },
     ],
   },
