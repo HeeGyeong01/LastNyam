@@ -530,7 +530,7 @@ export default function ComponentTestPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 space-y-8">
       <h1 className="text-3xl font-bold mb-8">컴포넌트 테스트 페이지</h1>
 
       {/* API 테스트 섹션 */}
