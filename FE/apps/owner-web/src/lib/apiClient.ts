@@ -69,7 +69,7 @@ export async function fetchWithAuth(
   const { skipAuth = false, skipRetry = false, headers = {}, ...restOptions } = options;
 
   // Authorization 헤더 추가
-  const requestHeaders: HeadersInit = { ...headers };
+  const requestHeaders: Record<string, string> = { ...(headers as Record<string, string>) };
   
   if (!skipAuth) {
     const accessToken = useOwnerStore.getState().accessToken;
@@ -98,7 +98,7 @@ export async function fetchWithAuth(
     return new Promise((resolve) => {
       subscribeTokenRefresh((token: string) => {
         // 토큰 재발급 완료 후 재시도
-        const retryHeaders = { ...requestHeaders };
+        const retryHeaders: Record<string, string> = { ...requestHeaders };
         retryHeaders['Authorization'] = `Bearer ${token}`;
         
         fetch(url, {
@@ -134,7 +134,7 @@ export async function fetchWithAuth(
   onRefreshed(newToken);
 
   // 새 토큰으로 재시도
-  const retryHeaders = { ...requestHeaders };
+  const retryHeaders: Record<string, string> = { ...requestHeaders };
   retryHeaders['Authorization'] = `Bearer ${newToken}`;
   
   response = await fetch(url, {
