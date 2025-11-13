@@ -23,6 +23,21 @@ export interface GetFoocketingsResponse {
   };
 }
 
+export interface CreateFoocketingRequest {
+  foocketingTime: string; // "HH:mm:ss" 형식
+  foocketingAmount: number;
+  menuId: number;
+}
+
+export interface CreateFoocketingResponse {
+  status: 'SUCCESS' | 'FAIL' | 'ERROR';
+  message: string;
+  code?: number;
+  data?: {
+    foocketingId?: number;
+  };
+}
+
 export const foocketingApi = {
   // 푸켓팅 목록 조회
   getFoocketings: async (
@@ -48,6 +63,38 @@ export const foocketingApi = {
     if (!response.ok || responseBody?.status !== 'SUCCESS') {
       throw new Error(
         responseBody?.message || '푸켓팅 목록 조회에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      );
+    }
+
+    return responseBody;
+  },
+
+  // 푸켓팅 추가
+  createFoocketing: async (
+    ownerId: number,
+    shopId: number,
+    data: CreateFoocketingRequest,
+    accessToken: string
+  ): Promise<CreateFoocketingResponse> => {
+    const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/${ownerId}/shop/${shopId}/foocketing`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+
+    const responseBody = (await response
+      .json()
+      .catch(() => null)) as CreateFoocketingResponse | null;
+
+    if (!response.ok || responseBody?.status !== 'SUCCESS') {
+      throw new Error(
+        responseBody?.message || '푸켓팅 등록에 실패했습니다. 잠시 후 다시 시도해주세요.'
       );
     }
 

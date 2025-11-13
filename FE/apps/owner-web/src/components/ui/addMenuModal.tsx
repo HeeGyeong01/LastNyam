@@ -107,7 +107,23 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
       if (open) {
         setIsVisible(true)
       } else {
-        const timer = setTimeout(() => setIsVisible(false), 200)
+        // 모달이 닫힐 때 폼 데이터 초기화
+        const timer = setTimeout(() => {
+          setIsVisible(false)
+          setFormData({
+            image: null,
+            name: "",
+            price: "",
+            description: "",
+            category: "",
+            selectedMenu: null,
+            quantity: "",
+            discountPrice: "",
+            discountRate: "",
+            foocketingTime: "",
+          })
+          setSelectedMenuForList(null)
+        }, 200)
         return () => clearTimeout(timer)
       }
     }, [open])
@@ -637,6 +653,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
                       value={formData.foocketingTime}
                       onChange={(value) => setFormData((prev) => ({ ...prev, foocketingTime: value }))}
                       variant="filled"
+                      interval30={true}
                       className="flex-1"
                     />
                   </div>

@@ -4,6 +4,7 @@ import { Button } from "@shared/src/components/Button"
 import { Plus } from "lucide-react"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+import { AddMenuModal, type MenuData, type MenuFormData } from "@/components/ui/addMenuModal"
 import { useOwnerStore } from "@/store/useOwnerStore"
 import { foocketingApi } from "@/domains/catalog/apis/foocketing.api"
 
@@ -21,8 +22,9 @@ export default function ManageFoocketingPage() {
   const [menus, setMenus] = React.useState<FoocketingMenuItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [foocketingModalOpen, setFoocketingModalOpen] = React.useState(false)
   
-  const { ownerId, accessToken, shops, getMenuById } = useOwnerStore()
+  const { ownerId, accessToken, shops, getMenuById, menus: storeMenus } = useOwnerStore()
   const shopId = shops[0]?.shopId
 
   // 푸켓팅 목록 조회
@@ -85,8 +87,7 @@ export default function ManageFoocketingPage() {
   }, [ownerId, shopId, accessToken, getMenuById])
 
   const handleAddMenu = React.useCallback(() => {
-    // TODO: 연결된 모달/페이지로 이동
-    window.alert("새 푸켓팅 메뉴를 추가하는 동작이 연결될 예정입니다.")
+    setFoocketingModalOpen(true)
   }, [])
 
   const handleEditMenu = React.useCallback((menu: FoocketingMenuItem) => {
@@ -102,6 +103,83 @@ export default function ManageFoocketingPage() {
     // TODO: 저장 API 연동
     window.alert("푸켓팅 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
   }, [])
+
+  const handleSaveFoocketing = React.useCallback(async (menuId: number, data: MenuFormData) => {
+    if (!ownerId || !shopId || !accessToken) {
+      window.alert("인증 정보가 없습니다.")
+      return
+    }
+
+    try {
+      // 푸켓팅 시간 형식 변환: "HH:mm" -> "HH:mm:ss"
+      const foocketingTime = data.foocketingTime 
+        ? `${data.foocketingTime}:00` 
+        : "00:00:00"
+      
+      // 푸켓팅 등록 API 호출
+      await foocketingApi.createFoocketing(
+        ownerId,
+        shopId,
+        {
+          foocketingTime,
+          foocketingAmount: parseInt(data.quantity || "0", 10),
+          menuId,
+        },
+        accessToken
+      )
+
+      // 등록 성공 후 목록 새로고침
+      const response = await foocketingApi.getFoocketings(
+        ownerId,
+        shopId,
+        accessToken
+      )
+      
+      if (response.data?.foocketings) {
+        const foocketingMenus: FoocketingMenuItem[] = response.data.foocketings.map(
+          (foocketing) => {
+            const menuInfo = getMenuById(foocketing.menuId)
+            const foocketingTimeDisplay = foocketing.foocketingTime
+              ? new Date(foocketing.foocketingTime).toLocaleTimeString('ko-KR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                })
+              : "00:00"
+
+            return {
+              id: foocketing.foocketingId,
+              menuName: foocketing.menuName,
+              price: foocketing.menuPrice,
+              categoryName: menuInfo?.categoryName || "미분류",
+              imageUrl: foocketing.menuImage,
+              foocketingQuantity: foocketing.foocketingAmount,
+              foocketingTime: foocketingTimeDisplay,
+            }
+          }
+        )
+        setMenus(foocketingMenus)
+      }
+
+      setFoocketingModalOpen(false)
+      window.alert("푸켓팅 메뉴가 등록되었습니다.")
+    } catch (err) {
+      console.error("푸켓팅 등록 실패:", err)
+      window.alert(err instanceof Error ? err.message : "푸켓팅 등록에 실패했습니다.")
+    }
+  }, [ownerId, shopId, accessToken, getMenuById])
+
+  // store의 메뉴를 MenuData 형태로 변환
+  const availableMenus: MenuData[] = React.useMemo(() => {
+    return storeMenus.map((menu) => ({
+      menuId: menu.menuId,
+      name: menu.menuName,
+      price: menu.menuPrice,
+      image: menu.menuImage,
+      description: menu.menuDescription,
+      category: menu.categoryName,
+    }))
+  }, [storeMenus])
 
   return (
     <div className="flex h-full w-full justify-center bg-bg-2">
@@ -174,6 +252,14 @@ export default function ManageFoocketingPage() {
           </Button>
         </div>
       </div>
+
+      <AddMenuModal
+        open={foocketingModalOpen}
+        onClose={() => setFoocketingModalOpen(false)}
+        variant="create-foocketing"
+        onSave={handleSaveFoocketing}
+        availableMenus={availableMenus}
+      />
     </div>
   )
 }
