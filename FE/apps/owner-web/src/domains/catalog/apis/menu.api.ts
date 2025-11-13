@@ -60,6 +60,21 @@ export interface GetDiscountsResponse {
   };
 }
 
+export interface CreateDiscountRequest {
+  menuId: number;
+  discountPrice: number;
+  discountMenuAmount: number;
+}
+
+export interface CreateDiscountResponse {
+  status: 'SUCCESS' | 'FAIL' | 'ERROR';
+  message: string;
+  code?: number;
+  data?: {
+    discountId?: number;
+  };
+}
+
 export const menuApi = {
   // 메뉴 목록 조회
   getMenus: async (
@@ -147,6 +162,38 @@ export const menuApi = {
     if (!response.ok || responseBody?.status !== 'SUCCESS') {
       throw new Error(
         responseBody?.message || '마감세일 목록 조회에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      );
+    }
+
+    return responseBody;
+  },
+
+  // 마감세일 생성
+  createDiscount: async (
+    ownerId: number,
+    shopId: number,
+    data: CreateDiscountRequest,
+    accessToken: string
+  ): Promise<CreateDiscountResponse> => {
+    const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/${ownerId}/shop/${shopId}/discount`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+
+    const responseBody = (await response
+      .json()
+      .catch(() => null)) as CreateDiscountResponse | null;
+
+    if (!response.ok || responseBody?.status !== 'SUCCESS') {
+      throw new Error(
+        responseBody?.message || '마감세일 등록에 실패했습니다. 잠시 후 다시 시도해주세요.'
       );
     }
 

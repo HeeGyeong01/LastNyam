@@ -195,7 +195,7 @@ export default function ManageMenuPage() {
     <div className="flex h-full w-full justify-center bg-bg-2">
       <div className="flex h-full w-full max-w-[412px] flex-col">
         <div className="flex-1 overflow-y-auto px-4 pt-6">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 pb-4">
             <section className="rounded-2xl bg-bg-0 p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">

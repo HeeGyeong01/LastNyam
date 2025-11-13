@@ -4,8 +4,8 @@ import { Button } from "@shared/src/components/Button"
 import { Plus } from "lucide-react"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
-// TODO: 푸켓팅 API 연결 시 사용
-// import { useOwnerStore } from "@/store/useOwnerStore"
+import { useOwnerStore } from "@/store/useOwnerStore"
+import { foocketingApi } from "@/domains/catalog/apis/foocketing.api"
 
 interface FoocketingMenuItem {
   id: number
@@ -17,40 +17,72 @@ interface FoocketingMenuItem {
   foocketingTime: string
 }
 
-const SAMPLE_FOOCKETING_MENUS: FoocketingMenuItem[] = [
-  {
-    id: 1,
-    menuName: "에그타르트",
-    price: 4800,
-    categoryName: "디저트",
-    imageUrl: "https://picsum.photos/seed/egg/112/112",
-    foocketingQuantity: 12,
-    foocketingTime: "00:00",
-  },
-  {
-    id: 2,
-    menuName: "메뉴이름",
-    price: 8500,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu1/112/112",
-    foocketingQuantity: 8,
-    foocketingTime: "00:00",
-  },
-  {
-    id: 3,
-    menuName: "메뉴이름",
-    price: 5200,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu2/112/112",
-    foocketingQuantity: 15,
-    foocketingTime: "00:00",
-  },
-]
-
 export default function ManageFoocketingPage() {
-  const [menus, setMenus] = React.useState(SAMPLE_FOOCKETING_MENUS)
-  // TODO: 푸켓팅 API 연결 시 getMenuById를 사용하여 카테고리 정보 채우기
-  // const { getMenuById } = useOwnerStore()
+  const [menus, setMenus] = React.useState<FoocketingMenuItem[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+  
+  const { ownerId, accessToken, shops, getMenuById } = useOwnerStore()
+  const shopId = shops[0]?.shopId
+
+  // 푸켓팅 목록 조회
+  React.useEffect(() => {
+    const fetchFoocketings = async () => {
+      if (!ownerId || !shopId || !accessToken) {
+        setError("인증 정보가 없습니다.")
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const response = await foocketingApi.getFoocketings(
+          ownerId,
+          shopId,
+          accessToken
+        )
+
+        if (response.data?.foocketings) {
+          const foocketingMenus: FoocketingMenuItem[] = response.data.foocketings.map(
+            (foocketing) => {
+              // store에서 menuId로 카테고리 정보 가져오기
+              const menuInfo = getMenuById(foocketing.menuId)
+              
+              // foocketingTime을 시간만 표시 (HH:mm 형식)
+              const foocketingTimeDisplay = foocketing.foocketingTime
+                ? new Date(foocketing.foocketingTime).toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })
+                : "00:00"
+
+              return {
+                id: foocketing.foocketingId,
+                menuName: foocketing.menuName,
+                price: foocketing.menuPrice,
+                categoryName: menuInfo?.categoryName || "미분류",
+                imageUrl: foocketing.menuImage,
+                foocketingQuantity: foocketing.foocketingAmount,
+                foocketingTime: foocketingTimeDisplay,
+              }
+            }
+          )
+          
+          setMenus(foocketingMenus)
+        }
+      } catch (err) {
+        console.error("푸켓팅 목록 조회 실패:", err)
+        setError(err instanceof Error ? err.message : "푸켓팅 목록을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFoocketings()
+  }, [ownerId, shopId, accessToken, getMenuById])
 
   const handleAddMenu = React.useCallback(() => {
     // TODO: 연결된 모달/페이지로 이동
@@ -75,7 +107,7 @@ export default function ManageFoocketingPage() {
     <div className="flex h-full w-full justify-center bg-bg-2">
       <div className="flex h-full w-full max-w-[412px] flex-col">
         <div className="flex-1 overflow-y-auto px-4 pt-6">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 pb-4">
             <section className="rounded-2xl bg-bg-0 p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
@@ -96,23 +128,37 @@ export default function ManageFoocketingPage() {
             </section>
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
-              <div className="flex flex-col">
-                {menus.map((menu) => (
-                  <MenuListItem
-                    key={menu.id}
-                    variant="foocketing"
-                    menuName={menu.menuName}
-                    price={menu.price}
-                    categoryName={menu.categoryName}
-                    imageUrl={menu.imageUrl}
-                    foocketingQuantity={menu.foocketingQuantity}
-                    foocketingTime={menu.foocketingTime}
-                    reorderable={false}
-                    onEdit={() => handleEditMenu(menu)}
-                    onDelete={() => handleDeleteMenu(menu.id)}
-                  />
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">푸켓팅 목록을 불러오는 중...</p>
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-error">{error}</p>
+                </div>
+              ) : menus.length === 0 ? (
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">등록된 푸켓팅 메뉴가 없습니다.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {menus.map((menu) => (
+                    <MenuListItem
+                      key={menu.id}
+                      variant="foocketing"
+                      menuName={menu.menuName}
+                      price={menu.price}
+                      categoryName={menu.categoryName}
+                      imageUrl={menu.imageUrl}
+                      foocketingQuantity={menu.foocketingQuantity}
+                      foocketingTime={menu.foocketingTime}
+                      reorderable={false}
+                      onEdit={() => handleEditMenu(menu)}
+                      onDelete={() => handleDeleteMenu(menu.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         </div>

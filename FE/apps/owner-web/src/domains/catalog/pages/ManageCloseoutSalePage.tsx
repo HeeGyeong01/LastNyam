@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+import { AddMenuModal, type MenuData, type MenuFormData } from "@/components/ui/addMenuModal"
 import { menuApi } from "@/domains/catalog/apis/menu.api"
 import { useOwnerStore } from "@/store/useOwnerStore"
 
@@ -73,7 +74,8 @@ function SortableCloseoutMenuItem({ menu }: { menu: CloseoutMenuItem }) {
 export default function ManageCloseoutSalePage() {
   const [discountMenus, setDiscountMenus] = React.useState<CloseoutMenuItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const { ownerId, accessToken, shops, getMenuById } = useOwnerStore()
+  const [closeoutSaleModalOpen, setCloseoutSaleModalOpen] = React.useState(false)
+  const { ownerId, accessToken, shops, getMenuById, menus } = useOwnerStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -141,10 +143,68 @@ export default function ManageCloseoutSalePage() {
     }
   }, [])
 
+  // Store의 메뉴를 availableMenus 형식으로 변환
+  const availableMenus: MenuData[] = React.useMemo(() => {
+    return menus.map((menu) => ({
+      menuId: menu.menuId,
+      name: menu.menuName,
+      price: menu.menuPrice,
+      image: menu.menuImage,
+      description: menu.menuDescription,
+      category: menu.categoryName,
+    }))
+  }, [menus])
+
   const handleAddMenu = React.useCallback(() => {
-    // TODO: 연결된 모달/페이지로 이동
-    window.alert("새 마감세일 메뉴를 추가하는 동작이 연결될 예정입니다.")
+    setCloseoutSaleModalOpen(true)
   }, [])
+
+  const handleSaveCloseout = React.useCallback(async (_menuId: number, data: MenuFormData) => {
+    if (!ownerId || !accessToken || shops.length === 0 || !data.selectedMenu) {
+      window.alert("필수 정보가 누락되었습니다.")
+      return
+    }
+
+    try {
+      const shopId = shops[0].shopId
+      await menuApi.createDiscount(
+        ownerId,
+        shopId,
+        {
+          menuId: data.selectedMenu.menuId!,
+          discountPrice: parseInt(data.discountPrice || "0", 10),
+          discountMenuAmount: parseInt(data.quantity || "0", 10),
+        },
+        accessToken
+      )
+
+      // 마감세일 목록 새로고침
+      const response = await menuApi.getDiscounts(ownerId, shopId, accessToken)
+      if (response.data?.discounts) {
+        const mappedMenus: CloseoutMenuItem[] = response.data.discounts.map((discount) => {
+          const menuInfo = getMenuById(discount.menuId)
+          return {
+            id: discount.discountId,
+            menuName: discount.menuName,
+            price: discount.discountPrice,
+            categoryName: menuInfo?.categoryName || "기타",
+            imageUrl: discount.menuImage,
+            saleQuantity: discount.discountMenuAmount,
+            discountRate: discount.discountRate,
+            discountPrice: discount.discountPrice,
+            originalPrice: discount.menuPrice,
+          }
+        })
+        setDiscountMenus(mappedMenus)
+      }
+
+      setCloseoutSaleModalOpen(false)
+      window.alert("마감세일 메뉴가 등록되었습니다.")
+    } catch (error) {
+      console.error("마감세일 등록 실패:", error)
+      window.alert(error instanceof Error ? error.message : "마감세일 등록에 실패했습니다.")
+    }
+  }, [ownerId, accessToken, shops, getMenuById])
 
   const handleSaveMenus = React.useCallback(() => {
     // TODO: 저장 API 연동
@@ -155,7 +215,7 @@ export default function ManageCloseoutSalePage() {
     <div className="flex h-full w-full justify-center bg-bg-2">
       <div className="flex h-full w-full max-w-[412px] flex-col">
         <div className="flex-1 overflow-y-auto px-4 pt-6">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 pb-4">
             <section className="rounded-2xl bg-bg-0 p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
@@ -217,6 +277,16 @@ export default function ManageCloseoutSalePage() {
           </Button>
         </div>
       </div>
+
+      {/* 마감세일 등록 모달 */}
+      <AddMenuModal
+        open={closeoutSaleModalOpen}
+        onClose={() => setCloseoutSaleModalOpen(false)}
+        variant="create-closeout"
+        onSave={handleSaveCloseout}
+        availableMenus={availableMenus}
+        shopId={shops.length > 0 ? shops[0].shopId : undefined}
+      />
     </div>
   )
 }
