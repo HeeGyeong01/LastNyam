@@ -14,7 +14,6 @@ export default function QRScanPage() {
 
   const handleScan = (result: any) => {
     if (result && result[0] && scanning) {
-      console.log("QR 코드 스캔 결과:", result[0].rawValue);
       setScanning(false);
       setScannedData(result[0].rawValue);
       setShowSuccessModal(true);

@@ -25,6 +25,7 @@ export interface ModalProps {
   onPrimaryClick?: () => void
   onSecondaryClick?: () => void
   className?: string
+  primaryButtonDisabled?: boolean
 }
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
@@ -47,6 +48,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     onPrimaryClick,
     onSecondaryClick,
     className,
+    primaryButtonDisabled = false,
   }, ref) => {
     const [isVisible, setIsVisible] = React.useState(false)
 
@@ -67,6 +69,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     }
 
     const handlePrimaryClick = () => {
+      if (primaryButtonDisabled) return
       onPrimaryClick?.() || onClose()
     }
 
@@ -208,6 +211,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                   "gap-2 hover:bg-brand-strong",
                   variant === "single-button" ? "w-full" : "flex-1"
                 )}
+                disabled={primaryButtonDisabled}
               >
                 {primaryButtonText}
               </Button>

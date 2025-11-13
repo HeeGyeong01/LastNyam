@@ -9,7 +9,7 @@ import { useOwnerStore } from '../../../store/useOwnerStore';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
-  const { login } = useOwnerStore();
+  const { login, setShops, setShouldPreventPublicRedirect } = useOwnerStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,14 +47,50 @@ export default function SignUpPage() {
 
       console.log('SignUp response ←', response);
 
-      // 회원가입 성공 시 토큰이 있으면 로그인 상태로 설정
-      if (response.data?.accessToken) {
-        login(
-          email.trim(),
-          response.data.accessToken,
-          response.data.refreshToken
-        );
+      // 회원가입 성공 후 로그인 처리
+      let accessToken = response.data?.accessToken ?? null;
+      let refreshToken = response.data?.refreshToken ?? null;
+
+      // 회원가입 응답에 토큰이 없으면 자동 로그인
+      if (!accessToken) {
+        console.log('⚠️ 회원가입 응답에 토큰이 없습니다. 자동 로그인을 시도합니다.');
+        const loginResponse = await authApi.login({
+          email: email.trim(),
+          password,
+        });
+
+        accessToken = loginResponse.data?.accessToken ?? null;
+        refreshToken = loginResponse.data?.refreshToken ?? null;
+        console.log('✅ 자동 로그인 완료. AccessToken:', accessToken ? '있음' : '없음');
       }
+
+      if (!accessToken) {
+        throw new Error('토큰을 가져오지 못했습니다. 로그인 후 다시 시도해주세요.');
+      }
+
+      // 프로필 조회로 ownerId 얻기
+      const profileResponse = await authApi.getProfile(accessToken);
+      const ownerId = profileResponse.data?.ownerId;
+
+      if (!ownerId) {
+        console.error('❌ OwnerId가 없습니다.');
+        throw new Error('사용자 정보를 가져올 수 없습니다.');
+      }
+
+      console.log('✅ OwnerId:', ownerId);
+
+      // 리다이렉트 방지 설정 (모달을 띄우기 위해)
+      setShouldPreventPublicRedirect(true);
+      
+      login(
+        email.trim(),
+        accessToken,
+        refreshToken ?? undefined,
+        ownerId
+      );
+
+      // 가게 목록 초기화 (아직 가게가 없으므로)
+      setShops([]);
 
       setModalOpen(true);
     } catch (error) {
@@ -75,7 +111,12 @@ export default function SignUpPage() {
   // 가게 등록 페이지로 이동
   const handleStoreRegistration = () => {
     setModalOpen(false);
+    // navigate를 먼저 호출하고, 이동 후에 플래그 해제
     navigate('/owner/store-information/step1-document', { replace: true });
+    // 페이지 이동 후 플래그 해제 (약간의 지연)
+    setTimeout(() => {
+      setShouldPreventPublicRedirect(false);
+    }, 100);
   };
 
   return (

@@ -5,6 +5,8 @@ import Header from '../components/ui/owner/Header';
 import Footer from '../components/ui/owner/Footer';
 
 export default function OwnerLayout() {
+  const handlePlaceholderClick = () => {};
+
   return (
     <div className="flex min-h-screen">
       <nav style={{ 
@@ -25,27 +27,27 @@ export default function OwnerLayout() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <IconButton
               icon={Home}
-              onClick={() => console.log('Home clicked')}
+              onClick={handlePlaceholderClick}
               aria-label="홈"
             />
             <IconButton
               icon={Search}
-              onClick={() => console.log('Search clicked')}
+              onClick={handlePlaceholderClick}
               aria-label="검색"
             />
             <IconButton
               icon={Bell}
-              onClick={() => console.log('Bell clicked')}
+              onClick={handlePlaceholderClick}
               aria-label="알림"
             />
             <IconButton
               icon={Heart}
-              onClick={() => console.log('Heart clicked')}
+              onClick={handlePlaceholderClick}
               aria-label="좋아요"
             />
             <IconButton
               icon={Settings}
-              onClick={() => console.log('Settings clicked')}
+              onClick={handlePlaceholderClick}
               aria-label="설정"
             />
           </div>

@@ -21,6 +21,8 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   shops: Shop[];
+  postAuthRedirectPath: string | null;
+  shouldPreventPublicRedirect: boolean;
 }
 
 interface AuthActions {
@@ -28,6 +30,8 @@ interface AuthActions {
   logout: () => void;
   updateTokens: (accessToken: string, refreshToken?: string) => void;
   setShops: (shops: Shop[]) => void;
+  setPostAuthRedirect: (path: string | null) => void;
+  setShouldPreventPublicRedirect: (value: boolean) => void;
 }
 
 interface OwnerStore extends AuthState, AuthActions {}
@@ -42,6 +46,8 @@ export const useOwnerStore = create<OwnerStore>()(
       accessToken: null,
       refreshToken: null,
       shops: [],
+      postAuthRedirectPath: null,
+      shouldPreventPublicRedirect: false,
 
       // Actions
       login: (email, accessToken, refreshToken, ownerId) =>
@@ -51,6 +57,7 @@ export const useOwnerStore = create<OwnerStore>()(
           ownerId: ownerId || null,
           accessToken,
           refreshToken: refreshToken || null,
+          // shouldPreventPublicRedirect는 건드리지 않음 (기존 값 유지)
         }),
 
       logout: () =>
@@ -61,6 +68,8 @@ export const useOwnerStore = create<OwnerStore>()(
           accessToken: null,
           refreshToken: null,
           shops: [],
+          postAuthRedirectPath: null,
+          shouldPreventPublicRedirect: false,
         }),
 
       updateTokens: (accessToken, refreshToken) =>
@@ -72,6 +81,16 @@ export const useOwnerStore = create<OwnerStore>()(
       setShops: (shops) =>
         set({
           shops,
+        }),
+
+      setPostAuthRedirect: (path) =>
+        set({
+          postAuthRedirectPath: path,
+        }),
+
+      setShouldPreventPublicRedirect: (value) =>
+        set({
+          shouldPreventPublicRedirect: value,
         }),
     }),
     {

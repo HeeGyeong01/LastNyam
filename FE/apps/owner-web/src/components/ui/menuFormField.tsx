@@ -88,16 +88,33 @@ export function MenuFormField(props: MenuFormFieldProps) {
   } = props
 
   const isDescriptionVariant = props.variant === "explanation"
+  const fieldRef = React.useRef<HTMLDivElement>(null)
+
+  const scrollIntoViewIfNeeded = () => {
+    if (fieldRef.current) {
+      setTimeout(() => {
+        fieldRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
+      }, 100)
+    }
+  }
 
   const renderField = () => {
     switch (props.variant) {
       case "explanation": {
         const { textareaProps } = props
+        const originalOnFocus = textareaProps?.onFocus
         return (
           <DescriptionInput
             {...textareaProps}
             label={undefined}
             className={cn("w-full", textareaProps?.className)}
+            onFocus={(e) => {
+              scrollIntoViewIfNeeded()
+              originalOnFocus?.(e)
+            }}
           />
         )
       }
@@ -172,8 +189,14 @@ export function MenuFormField(props: MenuFormFieldProps) {
       case "time": {
         const { timeInputProps } = props
         return (
-          <div className="flex w-full items-center justify-end">
-            <TimeInput {...timeInputProps} className={cn("w-auto", timeInputProps?.className)} />
+          <div 
+            className="flex w-full items-center justify-end"
+            onClick={scrollIntoViewIfNeeded}
+          >
+            <TimeInput 
+              {...timeInputProps} 
+              className={cn("w-auto", timeInputProps?.className)} 
+            />
           </div>
         )
       }
@@ -457,6 +480,7 @@ export function MenuFormField(props: MenuFormFieldProps) {
                   priceBlur?.(event)
                 }}
                 onFocus={(event) => {
+                  scrollIntoViewIfNeeded()
                   if (isPriceLocked) {
                     setLockedBy("price")
                   }
@@ -483,6 +507,7 @@ export function MenuFormField(props: MenuFormFieldProps) {
                   rateBlur?.(event)
                 }}
                 onFocus={(event) => {
+                  scrollIntoViewIfNeeded()
                   if (isRateLocked) {
                     setLockedBy("rate")
                   }
@@ -511,14 +536,23 @@ export function MenuFormField(props: MenuFormFieldProps) {
       case "default":
       default: {
         const { inputProps } = props as DefaultVariantProps
-        return <Input {...inputProps} />
+        const originalOnFocus = inputProps?.onFocus
+        return (
+          <Input 
+            {...inputProps}
+            onFocus={(e) => {
+              scrollIntoViewIfNeeded()
+              originalOnFocus?.(e)
+            }}
+          />
+        )
       }
     }
   }
 
   if (isDescriptionVariant) {
     return (
-      <div className={cn("w-full", className)}>
+      <div ref={fieldRef} className={cn("w-full", className)}>
         <div className={cn("flex flex-col gap-2", fieldWrapperClassName)}>
           <div className={cn("flex items-center gap-1", titleClassName)}>
             <span className="text-p1-b text-primary">{title}</span>
@@ -534,7 +568,7 @@ export function MenuFormField(props: MenuFormFieldProps) {
   }
 
   return (
-    <div className={cn("w-full", className)}>
+    <div ref={fieldRef} className={cn("w-full", className)}>
       <div className="flex items-start gap-4">
         <div className={cn("flex items-start gap-1 min-w-[72px] pt-2", titleClassName)}>
           <span className="text-p1-b text-primary">{title}</span>

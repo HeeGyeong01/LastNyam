@@ -52,12 +52,6 @@ export async function uploadBusinessLicense(
     // ignore JSON parse errors handled below
   }
 
-  console.log("📦 사업자등록증 업로드 응답:", {
-    ok: response.ok,
-    status: response.status,
-    body,
-  });
-
   if (!response.ok || body?.status !== "SUCCESS" || !body.data) {
     throw new Error(
       body?.message ??

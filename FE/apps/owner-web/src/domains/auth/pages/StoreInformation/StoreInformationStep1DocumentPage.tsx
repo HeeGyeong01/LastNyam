@@ -108,18 +108,7 @@ export default function StoreInformationStep1DocumentPage() {
     setErrorMessage(null);
 
     try {
-      console.log("🔐 업로드에 사용되는 accessToken 길이:", token?.length);
-
-      console.log("📤 사업자등록증 업로드 시작:", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
-
       const businessLicense = await storeInformationApi.uploadBusinessLicense(file, token);
-
-      console.log("✅ 사업자등록증 OCR 응답:", businessLicense);
-
       navigate("/owner/store-information/step1-input", {
         replace: true,
         state: {

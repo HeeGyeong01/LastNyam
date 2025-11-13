@@ -9,7 +9,7 @@ import { Spinner } from '../../../components/ui/spinner';
 import { Modal } from '../../../components/ui/modal';
 import { MenuFormField } from '../../../components/ui/menuFormField';
 import { MenuListItem, type MenuSelectState } from '../../../components/ui/menuListItem';
-import { AddMenuModal } from '../../../components/ui/addMenuModal';
+import { AddMenuModal, type MenuFormData } from '../../../components/ui/addMenuModal';
 import { type OrderStatus, type TransactionType } from '../../orders/components/orderStatusCard';
 import { OrderStatusBoard, type OrderStatusBoardTransaction } from '../../orders/components/orderStatusBoard';
 import { Info, ExternalLink } from 'lucide-react';
@@ -75,6 +75,8 @@ export default function ComponentTestPage() {
   const [loadingModalOpen, setLoadingModalOpen] = useState(false);
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
   const [addMenuModalOpen, setAddMenuModalOpen] = useState(false);
+  const [lastSavedMenu, setLastSavedMenu] = useState<MenuFormData | null>(null);
+  const [lastModalAction, setLastModalAction] = useState<string | null>(null);
 
   const menuBasePrice = 12000;
 
@@ -754,7 +756,6 @@ export default function ComponentTestPage() {
             <TimeInput
               value={timeValue}
               onChange={(value) => {
-                console.log('시간 입력 (기본):', value);
                 setTimeValue(value);
               }}
             />
@@ -770,7 +771,6 @@ export default function ComponentTestPage() {
             <TimeInput
               value={timeValue30}
               onChange={(value) => {
-                console.log('시간 입력 (30분 단위):', value);
                 setTimeValue30(value);
               }}
               interval30={true}
@@ -908,7 +908,8 @@ export default function ComponentTestPage() {
               open={addMenuModalOpen}
               onClose={() => setAddMenuModalOpen(false)}
               onSave={(data) => {
-                console.log('저장된 메뉴 데이터:', data);
+                setLastSavedMenu(data);
+                setAddMenuModalOpen(false);
               }}
               categories={[
                 { value: 'signature', label: '대표 메뉴' },
@@ -923,8 +924,16 @@ export default function ComponentTestPage() {
               <p>1. "메뉴 추가 모달 열기" 버튼을 클릭합니다.</p>
               <p>2. 이미지를 업로드하고 메뉴 정보를 입력합니다.</p>
               <p>3. 카테고리를 선택합니다.</p>
-              <p>4. "저장하기" 버튼을 클릭하면 콘솔에 데이터가 출력됩니다.</p>
+              <p>4. "저장하기" 버튼을 클릭하면 아래에 전달된 데이터가 표시됩니다.</p>
             </div>
+            {lastSavedMenu ? (
+              <div className="rounded-md border border-stroke-3 bg-bg-0 p-4 text-sm text-left text-secondary">
+                <h4 className="mb-2 font-semibold text-primary">최근 저장된 메뉴 데이터</h4>
+                <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-secondary">
+{JSON.stringify(lastSavedMenu, null, 2)}
+                </pre>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -941,12 +950,16 @@ export default function ComponentTestPage() {
               <ImageUpload
                 value={imageFile}
                 onChange={(file) => {
-                  console.log('이미지 업로드:', file);
                   setImageFile(file);
                 }}
                 variant="filled"
                 fileType="MENU_IMAGE"
               />
+            <p className="text-sm text-gray-600">
+              {imageFile?.originalFileName
+                ? `선택된 이미지: ${imageFile.originalFileName}`
+                : '선택된 이미지가 없습니다.'}
+            </p>
             </div>
 
           </div>
@@ -958,13 +971,17 @@ export default function ComponentTestPage() {
               <ImageUpload
                 value={imageFile}
                 onChange={(file) => {
-                  console.log('선택된 이미지:', file);
                   setImageFile(file);
                 }}
                 variant="filled"
                 maxSize={10 * 1024 * 1024} // 10MB
                 fileType="MENU_IMAGE"
               />
+              <p className="text-sm text-gray-600">
+                {imageFile?.originalFileName
+                  ? `선택된 이미지: ${imageFile.originalFileName}`
+                  : '선택된 이미지가 없습니다.'}
+              </p>
             </div>
           </div>
         </div>
@@ -1150,15 +1167,20 @@ export default function ComponentTestPage() {
               iconShow={true}
               xButtonShow={true}
               onPrimaryClick={() => {
-                console.log('확인 버튼 클릭');
+                setLastModalAction('확인 버튼을 클릭했습니다.');
                 setModalOpen2(false);
               }}
               onSecondaryClick={() => {
-                console.log('취소 버튼 클릭');
+                setLastModalAction('취소 버튼을 클릭했습니다.');
                 setModalOpen2(false);
               }}
             />
           </div>
+          {lastModalAction ? (
+            <p className="text-sm text-secondary">
+              최근 동작: <span className="font-semibold text-primary">{lastModalAction}</span>
+            </p>
+          ) : null}
 
           <div className="space-y-4">
             <h3 className="text-lg font-medium">아이콘 없는 모달</h3>

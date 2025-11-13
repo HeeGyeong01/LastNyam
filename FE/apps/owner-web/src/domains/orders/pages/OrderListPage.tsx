@@ -152,10 +152,29 @@ export default function OrderListPage() {
     ORDER_STATUS_CONFIG.WAITING_PICKUP.description ??
     "수령확인하기로 QR을 인식해 완료할 수 있어요";
 
-  const shouldShowEmptyState =
-    !isLoading && !errorMessage && selectedShopId && transactions.length === 0;
+  // Empty state 조건 확장
+  const hasNoShop = !selectedShopId;
+  const hasNoOrders = !isLoading && !errorMessage && selectedShopId && transactions.length === 0;
+  const shouldShowEmptyState = hasNoShop || isLoading || hasNoOrders;
 
   if (shouldShowEmptyState) {
+    let title = "현재 마감세일·푸켓팅 주문이 없어요";
+    let description = "가게 메뉴를 관리할까요?";
+    let buttonText = "메뉴 관리";
+    let buttonAction = handleManageMenu;
+
+    if (hasNoShop) {
+      title = "등록된 가게 정보가 없어요";
+      description = "가게 정보를 등록할까요?";
+      buttonText = "가게 정보 등록";
+      buttonAction = () => navigate("/owner/store-information/step1-document");
+    } else if (isLoading) {
+      title = "주문을 불러오고 있어요";
+      description = "잠시만 기다려주세요";
+      buttonText = "메뉴 관리";
+      buttonAction = handleManageMenu;
+    }
+
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-bg-0 px-6 pb-20">
         <div className="relative mb-6 h-[106px] w-[108px] overflow-hidden rounded-full bg-[#FFF1C7]">
@@ -167,12 +186,12 @@ export default function OrderListPage() {
         </div>
 
         <div className="mb-3 space-y-2 text-center">
-          <h2 className="p2-b text-primary">현재 마감세일·푸켓팅 주문이 없어요</h2>
-          <p className="p3 text-secondary">가게 메뉴를 관리할까요?</p>
+          <h2 className="p2-b text-primary">{title}</h2>
+          <p className="p3 text-secondary">{description}</p>
         </div>
 
-        <Button btnStyle="filled-gray" onClick={handleManageMenu}>
-          메뉴 관리
+        <Button btnStyle="filled-gray" onClick={buttonAction}>
+          {buttonText}
         </Button>
       </div>
     );
@@ -232,28 +251,9 @@ export default function OrderListPage() {
             })}
           </div>
 
-          {!selectedShopId ? (
-            <div className="rounded-xl bg-bg-2/60 px-4 py-6 text-center text-p2 text-secondary">
-              등록된 가게가 없어서 주문을 불러올 수 없어요. 먼저 가게를 등록해 주세요.
-            </div>
-          ) : null}
-
           {errorMessage ? (
             <div className="rounded-xl border border-error bg-error/10 px-4 py-3 text-p2 text-error">
               {errorMessage}
-            </div>
-          ) : null}
-
-          {isLoading ? (
-            <div className="rounded-xl bg-bg-2/60 px-4 py-6 text-center text-p2 text-secondary">
-              주문을 불러오는 중이에요...
-            </div>
-          ) : transactions.length === 0 && !errorMessage && selectedShopId ? (
-            <div className="rounded-xl bg-bg-2/60 px-4 py-10 text-center">
-              <p className="h5-b text-primary">현재 처리할 주문이 없어요</p>
-              <p className="mt-2 text-p2 text-secondary">
-                새로운 주문이 접수되면 이곳에서 바로 확인할 수 있어요.
-              </p>
             </div>
           ) : (
             <OrderStatusBoard

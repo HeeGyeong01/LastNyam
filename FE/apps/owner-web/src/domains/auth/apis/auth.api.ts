@@ -80,14 +80,12 @@ export const authApi = {
   // 로그인
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/auth/login`;
-    
+
     // form-urlencoded 형식으로 변환
     const formData = new URLSearchParams();
     formData.append('email', data.email);
     formData.append('password', data.password);
-    
-    console.log('🌐 로그인 요청:', url, formData.toString());
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -97,35 +95,7 @@ export const authApi = {
       body: formData.toString(),
     });
 
-    console.log('📡 HTTP Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries()),
-    });
-
     const responseBody = await response.json().catch(() => null) as AuthResponse | null;
-    console.log('Response: ', response);
-    console.log('Response Header 객체: ', response.headers);
-    console.log('📦 Response Body:', responseBody);
-    
-    // 모든 헤더 출력
-    console.log('===== 모든 헤더 출력 시작 =====');
-    response.headers.forEach((value, key) => {
-      console.log(`Header[${key}] = ${value}`);
-    });
-    console.log('===== 모든 헤더 출력 끝 =====');
-    
-    // 쿠키 확인
-    console.log('🍪 현재 쿠키:', document.cookie);
-    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-    console.log('🍪 파싱된 쿠키:', cookies);
-    console.log('🍪 Authorization 쿠키:', cookies['Authorization']);
-    console.log('🍪 Authorization-refresh 쿠키:', cookies['Authorization-refresh']);
 
     if (!response.ok || responseBody?.status !== 'SUCCESS') {
       throw new Error(
@@ -137,23 +107,18 @@ export const authApi = {
     // - accessToken: Authorization 헤더
     // - refreshToken: 쿠키 (자동 저장됨)
     const accessToken = response.headers.get('authorization') || response.headers.get('Authorization');
-    console.log('🔑 Authorization 헤더에서 추출한 accessToken:', accessToken);
-    console.log('🔑 accessToken 길이:', accessToken?.length);
-    
+
     // 응답 body의 data에 토큰 정보 추가
     if (accessToken) {
       if (!responseBody.data) {
         responseBody.data = {};
       }
       responseBody.data.accessToken = accessToken;
-      console.log('✅ accessToken을 data에 추가함');
-      console.log('✅ responseBody.data:', responseBody.data);
     } else {
       console.warn('⚠️ Authorization 헤더에 accessToken이 없습니다!');
       console.warn('⚠️ 브라우저가 Authorization 헤더를 차단했을 수 있습니다 (CORS)');
     }
 
-    console.log('✅ 최종 반환값 (responseBody):', responseBody);
     return responseBody;
   },
 

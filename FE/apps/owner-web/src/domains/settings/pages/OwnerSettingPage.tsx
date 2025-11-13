@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, Settings, Presentation, Calculator, ChevronRight, Store, TestTube } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@shared/src/components/Button";
+import { authApi } from "../../auth/apis/auth.api";
+import { useOwnerStore } from "@/store/useOwnerStore";
 
 interface MenuItem {
   icon: LucideIcon;
@@ -11,6 +14,26 @@ interface MenuItem {
 
 export default function OwnerSettingPage() {
   const navigate = useNavigate();
+  const accessToken = useOwnerStore((state) => state.accessToken);
+  const clearAuth = useOwnerStore((state) => state.logout);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      if (accessToken) {
+        await authApi.logout(accessToken);
+      }
+    } catch (error) {
+      console.error("로그아웃 중 오류가 발생했습니다:", error);
+    } finally {
+      clearAuth();
+      setIsLoggingOut(false);
+      navigate("/owner/login", { replace: true });
+    }
+  };
 
   // 가게 이미지 URL (없으면 null 또는 undefined)
   const storeImageUrl: string | null = null; // 나중에 API에서 받아온 이미지 URL로 교체
@@ -62,8 +85,13 @@ export default function OwnerSettingPage() {
             </div>
             <ChevronRight className="w-6 h-6 flex-shrink-0" />
           </div>
-          <Button btnStyle="outlined-red" btnShape="rounded">
-            label
+          <Button
+            btnStyle="outlined-red"
+            btnShape="rounded"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
           </Button>
         </div>
       </div>

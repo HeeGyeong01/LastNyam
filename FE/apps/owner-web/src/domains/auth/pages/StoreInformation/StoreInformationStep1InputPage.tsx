@@ -91,11 +91,8 @@ export default function StoreInformationStep1InputPage() {
     const businessLicense = state?.businessLicense;
 
     if (!businessLicense) {
-      console.log("ℹ️ 사업자등록증 state 없음 - 직접 입력 상태");
       return;
     }
-
-    console.log("📥 전달받은 사업자등록증 state:", businessLicense);
 
     const formatDigits = (value?: string | null) => value?.replace?.(/\D/g, "") ?? "";
 
@@ -110,8 +107,6 @@ export default function StoreInformationStep1InputPage() {
         openingDate: formatKoreanDateDigits(formatDigits(businessLicense.openDate)),
         address: businessLicense.bisAddress?.trim() ?? prev.address,
       };
-
-      console.log("🧾 사업자등록증 기반 자동 입력 값:", nextValues);
 
       return nextValues;
     });
