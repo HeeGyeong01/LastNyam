@@ -75,10 +75,45 @@ export default function ComponentTestPage() {
   const [loadingModalOpen, setLoadingModalOpen] = useState(false);
   const [loadingModalOpen2, setLoadingModalOpen2] = useState(false);
   const [addMenuModalOpen, setAddMenuModalOpen] = useState(false);
+  const [editMenuModalOpen, setEditMenuModalOpen] = useState(false);
+  const [closeoutSaleModalOpen, setCloseoutSaleModalOpen] = useState(false);
+  const [editCloseoutModalOpen, setEditCloseoutModalOpen] = useState(false);
+  const [foocketingModalOpen, setFoocketingModalOpen] = useState(false);
+  const [editFoocketingModalOpen, setEditFoocketingModalOpen] = useState(false);
+  const [menuSelectModalOpen, setMenuSelectModalOpen] = useState(false);
   const [lastSavedMenu, setLastSavedMenu] = useState<MenuFormData | null>(null);
   const [lastModalAction, setLastModalAction] = useState<string | null>(null);
 
   const menuBasePrice = 12000;
+
+  // 테스트용 메뉴 목록
+  const availableMenus = [
+    {
+      menuId: 1,
+      name: "김치찌개",
+      price: 8000,
+      category: "식사류",
+      image: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80",
+    },
+    {
+      menuId: 2,
+      name: "된장찌개",
+      price: 7500,
+      category: "식사류",
+    },
+    {
+      menuId: 3,
+      name: "제육볶음",
+      price: 9000,
+      category: "식사류",
+    },
+    {
+      menuId: 4,
+      name: "떡볶이",
+      price: 5000,
+      category: "면/분식",
+    },
+  ];
 
   const [menuCards, setMenuCards] = useState(() => [
     {
@@ -893,8 +928,10 @@ export default function ComponentTestPage() {
       {/* AddMenuModal 섹션 */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">AddMenuModal 컴포넌트</h2>
+        
+        {/* 메뉴 등록하기 */}
         <div className="border rounded-lg p-6 space-y-6">
-          <h3 className="text-lg font-medium">메뉴 추가 모달</h3>
+          <h3 className="text-lg font-medium">1. 새로운 메뉴 등록하기 (create-menu)</h3>
 
           <div className="space-y-4">
             <button
@@ -907,6 +944,7 @@ export default function ComponentTestPage() {
             <AddMenuModal
               open={addMenuModalOpen}
               onClose={() => setAddMenuModalOpen(false)}
+              variant="create-menu"
               onSave={(_menuId, data) => {
                 setLastSavedMenu(data);
                 setAddMenuModalOpen(false);
@@ -918,24 +956,221 @@ export default function ComponentTestPage() {
                 { value: 'dessert', label: '디저트' },
               ]}
             />
+          </div>
+        </div>
+
+        {/* 메뉴 수정하기 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">2. 메뉴 수정하기 (edit-menu)</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setEditMenuModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              메뉴 수정 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={editMenuModalOpen}
+              onClose={() => setEditMenuModalOpen(false)}
+              variant="edit-menu"
+              onSave={(_menuId, data) => {
+                setLastSavedMenu(data);
+                setEditMenuModalOpen(false);
+              }}
+              initialData={{
+                image: null,
+                name: "김치찌개",
+                price: "8000",
+                description: "얼큰하고 맛있는 김치찌개",
+                category: "signature",
+              }}
+              categories={[
+                { value: 'signature', label: '대표 메뉴' },
+                { value: 'rice', label: '식사류' },
+                { value: 'noodle', label: '면/분식' },
+                { value: 'dessert', label: '디저트' },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* 마감세일 등록하기 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">3. 새로운 마감세일 등록하기 (create-closeout)</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setCloseoutSaleModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              마감세일 등록 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={closeoutSaleModalOpen}
+              onClose={() => setCloseoutSaleModalOpen(false)}
+              variant="create-closeout"
+              onSave={(_menuId, data) => {
+                setLastSavedMenu(data);
+                setCloseoutSaleModalOpen(false);
+              }}
+              availableMenus={availableMenus}
+            />
 
             <div className="rounded-md border border-dashed border-subtle bg-bg-1 p-4 text-sm text-secondary">
               <p className="text-primary font-semibold mb-2">사용 예시:</p>
-              <p>1. "메뉴 추가 모달 열기" 버튼을 클릭합니다.</p>
-              <p>2. 이미지를 업로드하고 메뉴 정보를 입력합니다.</p>
-              <p>3. 카테고리를 선택합니다.</p>
-              <p>4. "저장하기" 버튼을 클릭하면 아래에 전달된 데이터가 표시됩니다.</p>
+              <p>1. "메뉴선택하기" 버튼을 클릭해서 메뉴를 선택합니다.</p>
+              <p>2. 수량, 할인가, 할인율을 입력합니다. (할인가 또는 할인율 중 하나를 입력하면 다른 값이 자동 계산됩니다)</p>
+              <p>3. "저장하기" 버튼을 클릭합니다.</p>
             </div>
-            {lastSavedMenu ? (
-              <div className="rounded-md border border-stroke-3 bg-bg-0 p-4 text-sm text-left text-secondary">
-                <h4 className="mb-2 font-semibold text-primary">최근 저장된 메뉴 데이터</h4>
-                <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-secondary">
-{JSON.stringify(lastSavedMenu, null, 2)}
-                </pre>
-              </div>
-            ) : null}
           </div>
         </div>
+
+        {/* 마감세일 수정하기 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">4. 마감세일 수정하기 (edit-closeout)</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setEditCloseoutModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              마감세일 수정 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={editCloseoutModalOpen}
+              onClose={() => setEditCloseoutModalOpen(false)}
+              variant="edit-closeout"
+              onSave={(_menuId, data) => {
+                setLastSavedMenu(data);
+                setEditCloseoutModalOpen(false);
+              }}
+              initialData={{
+                selectedMenu: availableMenus[0],
+                quantity: "10",
+                discountPrice: "6000",
+                discountRate: "25",
+              }}
+              availableMenus={availableMenus}
+            />
+          </div>
+        </div>
+
+        {/* 푸켓팅 등록하기 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">5. 새로운 푸켓팅 등록하기 (create-foocketing)</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setFoocketingModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              푸켓팅 등록 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={foocketingModalOpen}
+              onClose={() => setFoocketingModalOpen(false)}
+              variant="create-foocketing"
+              onSave={(_menuId, data) => {
+                setLastSavedMenu(data);
+                setFoocketingModalOpen(false);
+              }}
+              availableMenus={availableMenus}
+            />
+
+            <div className="rounded-md border border-dashed border-subtle bg-bg-1 p-4 text-sm text-secondary">
+              <p className="text-primary font-semibold mb-2">사용 예시:</p>
+              <p>1. "메뉴선택하기" 버튼을 클릭해서 메뉴를 선택합니다.</p>
+              <p>2. 수량과 푸켓팅 시간을 입력합니다.</p>
+              <p>3. "저장하기" 버튼을 클릭합니다.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 푸켓팅 수정하기 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">6. 푸켓팅 수정하기 (edit-foocketing)</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setEditFoocketingModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              푸켓팅 수정 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={editFoocketingModalOpen}
+              onClose={() => setEditFoocketingModalOpen(false)}
+              variant="edit-foocketing"
+              onSave={(_menuId, data) => {
+                setLastSavedMenu(data);
+                setEditFoocketingModalOpen(false);
+              }}
+              initialData={{
+                selectedMenu: availableMenus[1],
+                quantity: "15",
+                foocketingTime: "18:00",
+              }}
+              availableMenus={availableMenus}
+            />
+          </div>
+        </div>
+
+        {/* 메뉴 선택하기 */}
+        <div className="border rounded-lg p-6 space-y-6">
+          <h3 className="text-lg font-medium">7. 메뉴 선택하기 (select-menu)</h3>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => setMenuSelectModalOpen(true)}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors"
+            >
+              메뉴 선택 모달 열기
+            </button>
+
+            <AddMenuModal
+              open={menuSelectModalOpen}
+              onClose={() => setMenuSelectModalOpen(false)}
+              variant="select-menu"
+              availableMenus={availableMenus}
+              onMenuSelect={(menu) => {
+                setLastSavedMenu({
+                  image: null,
+                  name: menu.name,
+                  price: menu.price.toString(),
+                  description: "",
+                  category: "",
+                  selectedMenu: menu,
+                });
+                setMenuSelectModalOpen(false);
+              }}
+            />
+
+            <div className="rounded-md border border-dashed border-subtle bg-bg-1 p-4 text-sm text-secondary">
+              <p className="text-primary font-semibold mb-2">사용 예시:</p>
+              <p>1. 메뉴 목록이 표시됩니다.</p>
+              <p>2. 원하는 메뉴를 체크박스로 선택합니다.</p>
+              <p>3. "선택하기" 버튼을 클릭합니다.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 결과 표시 */}
+        {lastSavedMenu ? (
+          <div className="border rounded-lg p-6 space-y-6">
+            <div className="rounded-md border border-stroke-3 bg-bg-0 p-4 text-sm text-left text-secondary">
+              <h4 className="mb-2 font-semibold text-primary">최근 저장된 데이터</h4>
+              <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-secondary">
+{JSON.stringify(lastSavedMenu, null, 2)}
+              </pre>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {/* ImageUpload 섹션 */}
