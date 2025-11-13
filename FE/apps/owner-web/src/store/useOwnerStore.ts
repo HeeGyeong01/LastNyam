@@ -32,6 +32,7 @@ interface AuthState {
   shops: Shop[];
   postAuthRedirectPath: string | null;
   shouldPreventPublicRedirect: boolean;
+  lastTokenValidation: number | null;
 }
 
 interface MenuState {
@@ -47,6 +48,7 @@ interface AuthActions {
   setShops: (shops: Shop[]) => void;
   setPostAuthRedirect: (path: string | null) => void;
   setShouldPreventPublicRedirect: (value: boolean) => void;
+  setLastTokenValidation: (timestamp: number) => void;
 }
 
 interface MenuActions {
@@ -73,6 +75,7 @@ export const useOwnerStore = create<OwnerStore>()(
       shops: [],
       postAuthRedirectPath: null,
       shouldPreventPublicRedirect: false,
+      lastTokenValidation: null,
 
       // Initial state - Menu
       menus: [],
@@ -100,6 +103,7 @@ export const useOwnerStore = create<OwnerStore>()(
           shops: [],
           postAuthRedirectPath: null,
           shouldPreventPublicRedirect: false,
+          lastTokenValidation: null,
           menus: [],
           isMenusLoading: false,
           lastMenusFetchedAt: null,
@@ -124,6 +128,11 @@ export const useOwnerStore = create<OwnerStore>()(
       setShouldPreventPublicRedirect: (value) =>
         set({
           shouldPreventPublicRedirect: value,
+        }),
+
+      setLastTokenValidation: (timestamp) =>
+        set({
+          lastTokenValidation: timestamp,
         }),
 
       // Menu Actions
