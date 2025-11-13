@@ -5,10 +5,12 @@ import com.lastnyam.customer.exception.ResourceNotFoundException;
 import com.lastnyam.customer.security.dto.UserInfoResponse;
 import com.lastnyam.customer.user.dto.CursorResponse;
 import com.lastnyam.customer.user.dto.FavoriteShopInfo;
+import com.lastnyam.customer.user.dto.TransactionQrResponse;
 import com.lastnyam.customer.user.dto.UploadUrlRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingResponseDto;
 import com.lastnyam.customer.user.repository.UserRepository;
+import com.lastnyam.customer.user.service.TransactionService;
 import com.lastnyam.customer.user.service.UserService;
 import com.lastnyam.database.entity.User;
 import com.lastnyam.s3.dto.PresignedUrlRequest;
@@ -36,6 +38,7 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private final TransactionService transactionService;
 
     // 추가 정보 입력 -사용자 선호 카테고리 설정 (1~5개 선택)
     @PostMapping("/{userId}/profile/onboarding")
@@ -106,6 +109,38 @@ public class UserController {
             @RequestParam("lng") Double lng,
             @RequestParam(value = "cursor", required = false) String cursor) {
         CursorResponse<FavoriteShopInfo> result = userService.getFavoriteShops(userId, lat, lng, cursor);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+    }
+
+    /**
+     * 마감할인 거래 QR 조회
+     * 사용자가 구매한 마감할인 거래의 QR 코드를 조회합니다.
+     *
+     * @param userId        사용자 ID
+     * @param transactionId 거래 ID
+     * @return QR 이미지 URL 및 거래 정보
+     */
+    @GetMapping("/{userId}/transaction/discount/{transactionId}")
+    public ResponseEntity<ApiResponse<TransactionQrResponse>> getDiscountTransactionQr(
+            @PathVariable("userId") Integer userId,
+            @PathVariable("transactionId") Integer transactionId) {
+        TransactionQrResponse result = transactionService.getDiscountTransactionQr(userId, transactionId);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+    }
+
+    /**
+     * 푸케팅 거래 QR 조회
+     * 사용자가 당첨된 푸케팅 거래의 QR 코드를 조회합니다.
+     *
+     * @param userId        사용자 ID
+     * @param transactionId 거래 ID
+     * @return QR 이미지 URL 및 거래 정보
+     */
+    @GetMapping("/{userId}/transaction/foocketing/{transactionId}")
+    public ResponseEntity<ApiResponse<TransactionQrResponse>> getFoocketingTransactionQr(
+            @PathVariable("userId") Integer userId,
+            @PathVariable("transactionId") Integer transactionId) {
+        TransactionQrResponse result = transactionService.getFoocketingTransactionQr(userId, transactionId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 
