@@ -21,6 +21,8 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+import { menuApi } from "@/domains/catalog/apis/menu.api"
+import { useOwnerStore } from "@/store/useOwnerStore"
 
 interface CloseoutMenuItem {
   id: number
@@ -33,42 +35,6 @@ interface CloseoutMenuItem {
   discountPrice: number
   originalPrice: number
 }
-
-const SAMPLE_CLOSEOUT_MENUS: CloseoutMenuItem[] = [
-  {
-    id: 1,
-    menuName: "에그타르트",
-    price: 4800,
-    categoryName: "디저트",
-    imageUrl: "https://picsum.photos/seed/egg/112/112",
-    saleQuantity: 12,
-    discountRate: 30,
-    discountPrice: 3360,
-    originalPrice: 4800,
-  },
-  {
-    id: 2,
-    menuName: "메뉴이름",
-    price: 8500,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu1/112/112",
-    saleQuantity: 8,
-    discountRate: 40,
-    discountPrice: 5100,
-    originalPrice: 8500,
-  },
-  {
-    id: 3,
-    menuName: "메뉴이름",
-    price: 5200,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu2/112/112",
-    saleQuantity: 15,
-    discountRate: 25,
-    discountPrice: 3900,
-    originalPrice: 5200,
-  },
-]
 
 function SortableCloseoutMenuItem({ menu }: { menu: CloseoutMenuItem }) {
   const {
@@ -105,7 +71,9 @@ function SortableCloseoutMenuItem({ menu }: { menu: CloseoutMenuItem }) {
 }
 
 export default function ManageCloseoutSalePage() {
-  const [menus, setMenus] = React.useState(SAMPLE_CLOSEOUT_MENUS)
+  const [discountMenus, setDiscountMenus] = React.useState<CloseoutMenuItem[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const { ownerId, accessToken, shops, getMenuById } = useOwnerStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -118,11 +86,53 @@ export default function ManageCloseoutSalePage() {
     }),
   )
 
+  // 마감세일 목록 조회
+  React.useEffect(() => {
+    const fetchDiscounts = async () => {
+      if (!ownerId || !accessToken || shops.length === 0) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        const shopId = shops[0].shopId
+        const response = await menuApi.getDiscounts(ownerId, shopId, accessToken)
+
+        if (response.data?.discounts) {
+          // Store의 메뉴 정보를 활용하여 카테고리 정보 채우기
+          const mappedMenus: CloseoutMenuItem[] = response.data.discounts.map((discount) => {
+            const menuInfo = getMenuById(discount.menuId)
+            return {
+              id: discount.discountId,
+              menuName: discount.menuName,
+              price: discount.discountPrice,
+              categoryName: menuInfo?.categoryName || "기타",
+              imageUrl: discount.menuImage,
+              saleQuantity: discount.discountMenuAmount,
+              discountRate: discount.discountRate,
+              discountPrice: discount.discountPrice,
+              originalPrice: discount.menuPrice,
+            }
+          })
+          setDiscountMenus(mappedMenus)
+        }
+      } catch (error) {
+        console.error("마감세일 목록 조회 실패:", error)
+        window.alert(error instanceof Error ? error.message : "마감세일 목록을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDiscounts()
+  }, [ownerId, accessToken, shops, getMenuById])
+
   const handleDragEnd = React.useCallback((event: DragEndEvent) => {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      setMenus((items) => {
+      setDiscountMenus((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id)
         const newIndex = items.findIndex((item) => item.id === over.id)
 
@@ -166,22 +176,32 @@ export default function ManageCloseoutSalePage() {
             </section>
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={menus.map((m) => m.id)}
-                  strategy={verticalListSortingStrategy}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <p className="p1 text-secondary">로딩 중...</p>
+                </div>
+              ) : discountMenus.length === 0 ? (
+                <div className="flex items-center justify-center py-20">
+                  <p className="p1 text-secondary">등록된 마감세일 메뉴가 없습니다</p>
+                </div>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <div className="flex flex-col">
-                    {menus.map((menu) => (
-                      <SortableCloseoutMenuItem key={menu.id} menu={menu} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+                  <SortableContext
+                    items={discountMenus.map((m) => m.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="flex flex-col">
+                      {discountMenus.map((menu) => (
+                        <SortableCloseoutMenuItem key={menu.id} menu={menu} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
             </section>
           </div>
         </div>

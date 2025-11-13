@@ -22,7 +22,7 @@ import { CSS } from "@dnd-kit/utilities"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
 import { AddMenuModal, type MenuFormData } from "@/components/ui/addMenuModal"
-import { useOwnerStore } from "@/store/useOwnerStore"
+import { useOwnerStore, type Menu } from "@/store/useOwnerStore"
 import { menuApi } from "../apis/menu.api"
 
 interface MenuItem {
@@ -32,30 +32,6 @@ interface MenuItem {
   categoryName: string
   imageUrl?: string
 }
-
-const SAMPLE_MENUS: MenuItem[] = [
-  {
-    id: 1,
-    menuName: "에그타르트",
-    price: 4800,
-    categoryName: "디저트",
-    imageUrl: "https://picsum.photos/seed/egg/112/112",
-  },
-  {
-    id: 2,
-    menuName: "크리스피 치킨 샌드위치",
-    price: 8500,
-    categoryName: "시그니처",
-    imageUrl: "https://picsum.photos/seed/chicken/112/112",
-  },
-  {
-    id: 3,
-    menuName: "상큼 과일 에이드",
-    price: 5200,
-    categoryName: "음료",
-    imageUrl: "https://picsum.photos/seed/drink/112/112",
-  },
-]
 
 function SortableMenuItem({ menu }: { menu: MenuItem }) {
   const {
@@ -93,13 +69,32 @@ function SortableMenuItem({ menu }: { menu: MenuItem }) {
 }
 
 export default function ManageMenuPage() {
-  const [menus, setMenus] = React.useState<MenuItem[]>([])
   const [isAddMenuModalOpen, setIsAddMenuModalOpen] = React.useState(false)
-  const [isLoading, setIsLoading] = React.useState(true)
-  const { shops, ownerId, accessToken } = useOwnerStore()
+  const { 
+    shops, 
+    ownerId, 
+    accessToken, 
+    menus: storeMenus,
+    isMenusLoading,
+    setMenus,
+    setMenusLoading,
+    addMenu,
+  } = useOwnerStore()
   
   // 첫 번째 shop의 ID를 사용 (실제로는 선택된 shop을 사용해야 함)
   const currentShopId = shops[0]?.shopId
+
+  // MenuItem 형식으로 변환
+  const menus: MenuItem[] = React.useMemo(() => 
+    storeMenus.map((menu) => ({
+      id: menu.menuId,
+      menuName: menu.menuName,
+      price: menu.menuPrice,
+      categoryName: menu.categoryName,
+      imageUrl: menu.menuImage,
+    })),
+    [storeMenus]
+  )
 
   // 메뉴 목록 조회
   React.useEffect(() => {
@@ -111,12 +106,12 @@ export default function ManageMenuPage() {
       
       if (!ownerId || !currentShopId || !accessToken) {
         console.log('❌ 필수 정보 없음 - 조회 중단')
-        setIsLoading(false)
+        setMenusLoading(false)
         return
       }
 
       try {
-        setIsLoading(true)
+        setMenusLoading(true)
         const response = await menuApi.getMenus(ownerId, currentShopId, accessToken)
         console.log('📦 API 응답:', response)
         
@@ -124,32 +119,23 @@ export default function ManageMenuPage() {
           console.log('📝 받은 메뉴 개수:', response.data.menus.length)
           console.log('📝 원본 메뉴 데이터:', response.data.menus)
           
-          const fetchedMenus: MenuItem[] = response.data.menus.map((menu) => ({
-            id: menu.menuId,
-            menuName: menu.menuName,
-            price: menu.menuPrice,
-            categoryName: menu.categoryName,
-            imageUrl: menu.menuImage,
-          }))
-          
-          console.log('✅ 변환된 메뉴 데이터:', fetchedMenus)
-          setMenus(fetchedMenus)
+          // Store에 메뉴 저장
+          setMenus(response.data.menus)
+          console.log('✅ Store에 메뉴 저장 완료')
         } else {
           console.log('⚠️ 응답에 메뉴 데이터 없음')
         }
       } catch (error) {
         console.error('❌ 메뉴 목록 조회 실패:', error)
-        // 에러 발생 시 샘플 데이터 사용
-        setMenus(SAMPLE_MENUS)
-        console.log('🔄 샘플 데이터로 폴백')
+        window.alert(error instanceof Error ? error.message : '메뉴 목록을 불러오는데 실패했습니다.')
       } finally {
-        setIsLoading(false)
+        setMenusLoading(false)
         console.log('✨ 메뉴 조회 완료')
       }
     }
 
     fetchMenus()
-  }, [ownerId, currentShopId, accessToken])
+  }, [ownerId, currentShopId, accessToken, setMenus, setMenusLoading])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -166,14 +152,15 @@ export default function ManageMenuPage() {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      setMenus((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id)
-        const newIndex = items.findIndex((item) => item.id === over.id)
+      const oldIndex = storeMenus.findIndex((item) => item.menuId === active.id)
+      const newIndex = storeMenus.findIndex((item) => item.menuId === over.id)
 
-        return arrayMove(items, oldIndex, newIndex)
-      })
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedMenus = arrayMove(storeMenus, oldIndex, newIndex)
+        setMenus(reorderedMenus)
+      }
     }
-  }, [])
+  }, [storeMenus, setMenus])
 
   const handleAddMenu = React.useCallback(() => {
     setIsAddMenuModalOpen(true)
@@ -184,22 +171,20 @@ export default function ManageMenuPage() {
     console.log('menuId:', menuId)
     console.log('폼 데이터:', data)
     
-    // API에서 받은 menuId를 사용하여 새 메뉴 생성
-    const newMenu: MenuItem = {
-      id: menuId,
+    // API에서 받은 menuId를 사용하여 새 메뉴 생성 (Store 형식)
+    const newMenu: Menu = {
+      menuId,
       menuName: data.name,
-      price: parseInt(data.price, 10) || 0,
+      menuPrice: parseInt(data.price, 10) || 0,
       categoryName: typeof data.category === 'string' ? data.category : data.category[0] || '기타',
-      imageUrl: data.image?.fileUrl,
+      menuImage: data.image?.fileUrl || '',
+      menuDescription: data.description || '',
     }
 
     console.log('생성된 메뉴:', newMenu)
-    setMenus((prev) => {
-      const updatedMenus = [...prev, newMenu]
-      console.log('업데이트된 전체 메뉴:', updatedMenus)
-      return updatedMenus
-    })
-  }, [])
+    addMenu(newMenu)
+    console.log('✅ Store에 메뉴 추가 완료')
+  }, [addMenu])
 
   const handleSaveMenus = React.useCallback(() => {
     // TODO: 저장 API 연동
@@ -231,7 +216,7 @@ export default function ManageMenuPage() {
             </section>
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
-              {isLoading ? (
+              {isMenusLoading ? (
                 <div className="flex items-center justify-center py-20">
                   <p className="p2 text-secondary">메뉴 목록을 불러오는 중...</p>
                 </div>

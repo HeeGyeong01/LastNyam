@@ -4,6 +4,8 @@ import { Button } from "@shared/src/components/Button"
 import { Plus } from "lucide-react"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+// TODO: 푸켓팅 API 연결 시 사용
+// import { useOwnerStore } from "@/store/useOwnerStore"
 
 interface FoocketingMenuItem {
   id: number
@@ -47,6 +49,8 @@ const SAMPLE_FOOCKETING_MENUS: FoocketingMenuItem[] = [
 
 export default function ManageFoocketingPage() {
   const [menus, setMenus] = React.useState(SAMPLE_FOOCKETING_MENUS)
+  // TODO: 푸켓팅 API 연결 시 getMenuById를 사용하여 카테고리 정보 채우기
+  // const { getMenuById } = useOwnerStore()
 
   const handleAddMenu = React.useCallback(() => {
     // TODO: 연결된 모달/페이지로 이동

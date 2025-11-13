@@ -37,6 +37,29 @@ export interface CreateMenuResponse {
   };
 }
 
+export interface Discount {
+  discountId: number;
+  discountDate: string;
+  discountRate: number;
+  discountPrice: number;
+  discountMenuAmount: number;
+  discountCloseTime: string;
+  discountPickupEndTime: string;
+  menuId: number;
+  menuName: string;
+  menuPrice: number;
+  menuImage: string;
+}
+
+export interface GetDiscountsResponse {
+  status: 'SUCCESS' | 'FAIL' | 'ERROR';
+  message: string;
+  code?: number;
+  data?: {
+    discounts?: Discount[];
+  };
+}
+
 export const menuApi = {
   // 메뉴 목록 조회
   getMenus: async (
@@ -94,6 +117,36 @@ export const menuApi = {
     if (!response.ok || responseBody?.status !== 'SUCCESS') {
       throw new Error(
         responseBody?.message || '메뉴 등록에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      );
+    }
+
+    return responseBody;
+  },
+
+  // 마감세일 목록 조회
+  getDiscounts: async (
+    ownerId: number,
+    shopId: number,
+    accessToken: string
+  ): Promise<GetDiscountsResponse> => {
+    const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/${ownerId}/shop/${shopId}/discount`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      credentials: 'include',
+    });
+
+    const responseBody = (await response
+      .json()
+      .catch(() => null)) as GetDiscountsResponse | null;
+
+    if (!response.ok || responseBody?.status !== 'SUCCESS') {
+      throw new Error(
+        responseBody?.message || '마감세일 목록 조회에 실패했습니다. 잠시 후 다시 시도해주세요.'
       );
     }
 
