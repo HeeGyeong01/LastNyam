@@ -29,4 +29,9 @@ spec:
           name: http
         - containerPort: 9091
           name: metrics
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
      
