@@ -65,17 +65,10 @@ public class ShopService {
                         .build())
                 .collect(Collectors.toList());
 
-        // 푸켓팅 (오픈 중 + 예정)
-
-        int minute = now.getMinute();
-        int floored = (minute / 30) * 30;
-
-        LocalDateTime flooredTime = now.withMinute(floored)
-                .withSecond(0)
-                .withNano(0).minusMinutes(1L);
-
+        // 푸켓팅 (마감 시간이 현재 이후인 항목)
+        // 즉, 아직 마감시간이 되지 않은 항목을 조회함
         List<Foocketing> foocketings = foocketingRepository
-                .findByMenu_Shop_ShopIdAndFoocketingTimeAfter(shopId, flooredTime);
+                .findByMenu_Shop_ShopIdAndFoocketingCloseTimeAfter(shopId, now);
         List<ShopFoocketingItemDto> foocketingDtos = foocketings.stream()
                 .map(f -> ShopFoocketingItemDto.builder()
                         .foocketingId(f.getFoocketingId())

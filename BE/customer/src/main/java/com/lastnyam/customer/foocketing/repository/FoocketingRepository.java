@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FoocketingRepository extends JpaRepository<Foocketing, Integer> {
     List<Foocketing> findByMenu_Shop_ShopIdAndFoocketingTimeAfter(Integer shopId, LocalDateTime now);
+    List<Foocketing> findByMenu_Shop_ShopIdAndFoocketingCloseTimeAfter(Integer shopId, LocalDateTime now);
 }
