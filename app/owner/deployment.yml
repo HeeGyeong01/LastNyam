@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owner
+  namespace: lastnyam
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owner
+  template:
+    metadata:
+      labels:
+        app: owner
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/watcher/prometheus'
+        prometheus.io/port: '9091'
+    spec:
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: owner
+        image: 941kjw/owner:init
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9091
+          name: metrics
+     
