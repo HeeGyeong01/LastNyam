@@ -6,7 +6,7 @@ import BottomNavItem from './BottomNavItem';
 
 const navItems = [
   { icon: HomeIcon, label: '홈', path: '/' },
-  { icon: HeartIcon, label: '찜', path: '/likes' },
+  { icon: HeartIcon, label: '찜', path: '/favorite' },
   { icon: MagnifyingGlassIcon, label: '검색', path: '/search', strokeWidth: 3 },
   { icon: OrderListIcon, label: '주문내역', path: '/order-list' },
   { icon: FaceSmileIcon, label: '마이페이지', path: '/mypage' },

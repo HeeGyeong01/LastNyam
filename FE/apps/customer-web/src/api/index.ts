@@ -27,3 +27,6 @@ export {
   orderCart,
 } from './cart';
 
+// Favorite APIs
+export { getFavoriteShops } from './favorite';
+
