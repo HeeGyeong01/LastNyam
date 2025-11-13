@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { BottomSheet, PageHeader } from '@/components/common';
 import { DiscountList } from '@/components/discount';
@@ -12,6 +12,7 @@ import MenuDetail from './components/MenuDetail';
 
 export default function ShopDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ShopDetailDiscount | ShopDetailFoocketing | null>(null);
@@ -57,10 +58,34 @@ export default function ShopDetail() {
     return () => target.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 탭 라벨 동적 생성
+  const tabLabels = [];
+  const hasDiscounts = detail && detail.discounts && detail.discounts.length > 0;
+  const hasFoocketings = detail && detail.foocketings && detail.foocketings.length > 0;
+  
+  if (hasDiscounts) {
+    tabLabels.push('마감세일');
+  }
+  if (hasFoocketings) {
+    tabLabels.push('푸켓팅');
+  }
+
   // 탭 클릭 시 해당 섹션으로 스크롤
   const handleTabChange = (index: number) => {
     const scrollContainer = document.querySelector('.h-screen.overflow-y-auto') as HTMLElement;
-    const targetElement = index === 0 ? discountSectionRef.current : foocketingSectionRef.current;
+    
+    // 탭 인덱스에 따라 타겟 섹션 결정
+    let targetElement: HTMLDivElement | null = null;
+    if (hasDiscounts && hasFoocketings) {
+      // 둘 다 있으면: 0 = discount, 1 = foocketing
+      targetElement = index === 0 ? discountSectionRef.current : foocketingSectionRef.current;
+    } else if (hasDiscounts) {
+      // discount만 있으면: 0 = discount
+      targetElement = discountSectionRef.current;
+    } else if (hasFoocketings) {
+      // foocketing만 있으면: 0 = foocketing
+      targetElement = foocketingSectionRef.current;
+    }
     
     if (targetElement && scrollContainer) {
       // 스크롤 컨테이너 내에서의 상대 위치 계산
@@ -87,9 +112,7 @@ export default function ShopDetail() {
   };
 
   const handleFoocketingCardClick = (item: ShopDetailFoocketing) => {
-    setSelectedItem(item);
-    setSelectedItemType('foocketing');
-    setIsBottomSheetOpen(true);
+    navigate(`/foocketing/${item.foocketingId}`);
   };
 
   const handleCloseBottomSheet = () => {
@@ -136,15 +159,18 @@ export default function ShopDetail() {
             />
           </div>
           
-          <div className="pt-3">
-            <Tab 
-              tabLabels={['마감세일', '푸켓팅']}
-              onTabChange={handleTabChange}
-            />
-          </div>
+          {tabLabels.length > 0 && (
+            <div className="pt-3">
+              <Tab 
+                tabLabels={tabLabels}
+                onTabChange={handleTabChange}
+              />
+            </div>
+          )}
           
           {/* 마감세일 목록 */}
           {detail.discounts && detail.discounts.length > 0 && (
+          <div>
             <div ref={discountSectionRef} className="flex flex-col pt-3 px-4 items-start gap-3">
               <div className="text-primary h5-b">
                 마감세일 중인 메뉴
@@ -154,12 +180,15 @@ export default function ShopDetail() {
                 onCardClick={handleDiscountCardClick}
               />
             </div>
-          )}
+            {/* 구분선 */}
+            <div className="h-4 bg-bg-2" />
+          </div>
+            )}
 
           {/* 푸켓팅 목록 */}
           {detail.foocketings && detail.foocketings.length > 0 && (
-            <div ref={foocketingSectionRef} className="self-stretch pt-3 bg-white flex flex-col justify-start items-start gap-3">
-              <div className="text-center justify-start text-black text-lg font-bold font-['Pretendard'] leading-7">
+            <div ref={foocketingSectionRef} className="flex flex-col pt-3 px-4 items-start gap-3">
+              <div className="text-primary h5-b">
                 푸켓팅 중인 메뉴
               </div>
               <FoocketingList
