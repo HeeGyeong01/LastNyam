@@ -14,6 +14,15 @@ interface Shop {
   categoryName?: string;
 }
 
+export interface Menu {
+  menuId: number;
+  menuName: string;
+  menuDescription: string;
+  menuImage: string;
+  menuPrice: number;
+  categoryName: string;
+}
+
 interface AuthState {
   isAuthenticated: boolean;
   email: string | null;
@@ -23,6 +32,13 @@ interface AuthState {
   shops: Shop[];
   postAuthRedirectPath: string | null;
   shouldPreventPublicRedirect: boolean;
+  lastTokenValidation: number | null;
+}
+
+interface MenuState {
+  menus: Menu[];
+  isMenusLoading: boolean;
+  lastMenusFetchedAt: number | null;
 }
 
 interface AuthActions {
@@ -32,14 +48,25 @@ interface AuthActions {
   setShops: (shops: Shop[]) => void;
   setPostAuthRedirect: (path: string | null) => void;
   setShouldPreventPublicRedirect: (value: boolean) => void;
+  setLastTokenValidation: (timestamp: number) => void;
 }
 
-interface OwnerStore extends AuthState, AuthActions {}
+interface MenuActions {
+  setMenus: (menus: Menu[]) => void;
+  setMenusLoading: (isLoading: boolean) => void;
+  addMenu: (menu: Menu) => void;
+  updateMenu: (menuId: number, updates: Partial<Menu>) => void;
+  deleteMenu: (menuId: number) => void;
+  clearMenus: () => void;
+  getMenuById: (menuId: number) => Menu | undefined;
+}
+
+interface OwnerStore extends AuthState, MenuState, AuthActions, MenuActions {}
 
 export const useOwnerStore = create<OwnerStore>()(
   persist(
-    (set) => ({
-      // Initial state
+    (set, get) => ({
+      // Initial state - Auth
       isAuthenticated: false,
       email: null,
       ownerId: null,
@@ -48,8 +75,14 @@ export const useOwnerStore = create<OwnerStore>()(
       shops: [],
       postAuthRedirectPath: null,
       shouldPreventPublicRedirect: false,
+      lastTokenValidation: null,
 
-      // Actions
+      // Initial state - Menu
+      menus: [],
+      isMenusLoading: false,
+      lastMenusFetchedAt: null,
+
+      // Auth Actions
       login: (email, accessToken, refreshToken, ownerId) =>
         set({
           isAuthenticated: true,
@@ -70,6 +103,10 @@ export const useOwnerStore = create<OwnerStore>()(
           shops: [],
           postAuthRedirectPath: null,
           shouldPreventPublicRedirect: false,
+          lastTokenValidation: null,
+          menus: [],
+          isMenusLoading: false,
+          lastMenusFetchedAt: null,
         }),
 
       updateTokens: (accessToken, refreshToken) =>
@@ -92,6 +129,52 @@ export const useOwnerStore = create<OwnerStore>()(
         set({
           shouldPreventPublicRedirect: value,
         }),
+
+      setLastTokenValidation: (timestamp) =>
+        set({
+          lastTokenValidation: timestamp,
+        }),
+
+      // Menu Actions
+      setMenus: (menus) =>
+        set({
+          menus,
+          lastMenusFetchedAt: Date.now(),
+        }),
+
+      setMenusLoading: (isLoading) =>
+        set({
+          isMenusLoading: isLoading,
+        }),
+
+      addMenu: (menu) =>
+        set((state) => ({
+          menus: [...state.menus, menu],
+        })),
+
+      updateMenu: (menuId, updates) =>
+        set((state) => ({
+          menus: state.menus.map((menu) =>
+            menu.menuId === menuId ? { ...menu, ...updates } : menu
+          ),
+        })),
+
+      deleteMenu: (menuId) =>
+        set((state) => ({
+          menus: state.menus.filter((menu) => menu.menuId !== menuId),
+        })),
+
+      clearMenus: () =>
+        set({
+          menus: [],
+          isMenusLoading: false,
+          lastMenusFetchedAt: null,
+        }),
+
+      getMenuById: (menuId) => {
+        const state = get();
+        return state.menus.find((menu) => menu.menuId === menuId);
+      },
     }),
     {
       name: 'owner-auth-storage', // localStorage key

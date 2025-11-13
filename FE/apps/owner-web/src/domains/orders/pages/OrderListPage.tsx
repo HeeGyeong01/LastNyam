@@ -127,25 +127,50 @@ export default function OrderListPage() {
     navigate("/owner/catalog/menu");
   };
 
-  const handleAdvanceStatus = (target: OrderStatusBoardTransaction) => {
-    setTransactions((previous) =>
-      previous.map((transaction) => {
-        const isSameTransaction =
-          transaction.transactionId === target.transactionId &&
-          transaction.transactionType === target.transactionType;
+  const handleAdvanceStatus = async (target: OrderStatusBoardTransaction) => {
+    if (!ownerId || !accessToken) {
+      setErrorMessage("인증 정보가 없습니다.");
+      return;
+    }
 
-        if (!isSameTransaction) {
-          return transaction;
-        }
+    const nextStatus = STATUS_TRANSITIONS[target.transactionStatus];
 
-        const nextStatus = STATUS_TRANSITIONS[transaction.transactionStatus];
+    try {
+      // API 호출
+      await orderApi.updateOrderStatus(
+        ownerId,
+        target.transactionId,
+        {
+          transactionType: target.transactionType,
+          status: nextStatus,
+        },
+        accessToken,
+      );
 
-        return {
-          ...transaction,
-          transactionStatus: nextStatus,
-        };
-      }),
-    );
+      // 성공하면 로컬 상태 업데이트
+      setTransactions((previous) =>
+        previous.map((transaction) => {
+          const isSameTransaction =
+            transaction.transactionId === target.transactionId &&
+            transaction.transactionType === target.transactionType;
+
+          if (!isSameTransaction) {
+            return transaction;
+          }
+
+          return {
+            ...transaction,
+            transactionStatus: nextStatus,
+          };
+        }),
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("주문 상태를 변경하는 중 문제가 발생했습니다.");
+      }
+    }
   };
 
   const headerDescription =

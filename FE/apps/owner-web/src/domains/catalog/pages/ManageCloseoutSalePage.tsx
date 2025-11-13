@@ -21,6 +21,9 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+import { AddMenuModal, type MenuData, type MenuFormData } from "@/components/ui/addMenuModal"
+import { menuApi } from "@/domains/catalog/apis/menu.api"
+import { useOwnerStore } from "@/store/useOwnerStore"
 
 interface CloseoutMenuItem {
   id: number
@@ -33,42 +36,6 @@ interface CloseoutMenuItem {
   discountPrice: number
   originalPrice: number
 }
-
-const SAMPLE_CLOSEOUT_MENUS: CloseoutMenuItem[] = [
-  {
-    id: 1,
-    menuName: "에그타르트",
-    price: 4800,
-    categoryName: "디저트",
-    imageUrl: "https://picsum.photos/seed/egg/112/112",
-    saleQuantity: 12,
-    discountRate: 30,
-    discountPrice: 3360,
-    originalPrice: 4800,
-  },
-  {
-    id: 2,
-    menuName: "메뉴이름",
-    price: 8500,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu1/112/112",
-    saleQuantity: 8,
-    discountRate: 40,
-    discountPrice: 5100,
-    originalPrice: 8500,
-  },
-  {
-    id: 3,
-    menuName: "메뉴이름",
-    price: 5200,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu2/112/112",
-    saleQuantity: 15,
-    discountRate: 25,
-    discountPrice: 3900,
-    originalPrice: 5200,
-  },
-]
 
 function SortableCloseoutMenuItem({ menu }: { menu: CloseoutMenuItem }) {
   const {
@@ -105,7 +72,10 @@ function SortableCloseoutMenuItem({ menu }: { menu: CloseoutMenuItem }) {
 }
 
 export default function ManageCloseoutSalePage() {
-  const [menus, setMenus] = React.useState(SAMPLE_CLOSEOUT_MENUS)
+  const [discountMenus, setDiscountMenus] = React.useState<CloseoutMenuItem[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [closeoutSaleModalOpen, setCloseoutSaleModalOpen] = React.useState(false)
+  const { ownerId, accessToken, shops, getMenuById, menus } = useOwnerStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -118,11 +88,53 @@ export default function ManageCloseoutSalePage() {
     }),
   )
 
+  // 마감세일 목록 조회
+  React.useEffect(() => {
+    const fetchDiscounts = async () => {
+      if (!ownerId || !accessToken || shops.length === 0) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        const shopId = shops[0].shopId
+        const response = await menuApi.getDiscounts(ownerId, shopId, accessToken)
+
+        if (response.data?.discounts) {
+          // Store의 메뉴 정보를 활용하여 카테고리 정보 채우기
+          const mappedMenus: CloseoutMenuItem[] = response.data.discounts.map((discount) => {
+            const menuInfo = getMenuById(discount.menuId)
+            return {
+              id: discount.discountId,
+              menuName: discount.menuName,
+              price: discount.discountPrice,
+              categoryName: menuInfo?.categoryName || "기타",
+              imageUrl: discount.menuImage,
+              saleQuantity: discount.discountMenuAmount,
+              discountRate: discount.discountRate,
+              discountPrice: discount.discountPrice,
+              originalPrice: discount.menuPrice,
+            }
+          })
+          setDiscountMenus(mappedMenus)
+        }
+      } catch (error) {
+        console.error("마감세일 목록 조회 실패:", error)
+        window.alert(error instanceof Error ? error.message : "마감세일 목록을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDiscounts()
+  }, [ownerId, accessToken, shops, getMenuById])
+
   const handleDragEnd = React.useCallback((event: DragEndEvent) => {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      setMenus((items) => {
+      setDiscountMenus((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id)
         const newIndex = items.findIndex((item) => item.id === over.id)
 
@@ -131,21 +143,79 @@ export default function ManageCloseoutSalePage() {
     }
   }, [])
 
+  // Store의 메뉴를 availableMenus 형식으로 변환
+  const availableMenus: MenuData[] = React.useMemo(() => {
+    return menus.map((menu) => ({
+      menuId: menu.menuId,
+      name: menu.menuName,
+      price: menu.menuPrice,
+      image: menu.menuImage,
+      description: menu.menuDescription,
+      category: menu.categoryName,
+    }))
+  }, [menus])
+
   const handleAddMenu = React.useCallback(() => {
-    // TODO: 연결된 모달/페이지로 이동
-    window.alert("새 마감세일 메뉴를 추가하는 동작이 연결될 예정입니다.")
+    setCloseoutSaleModalOpen(true)
   }, [])
 
-  const handleSaveMenus = React.useCallback(() => {
-    // TODO: 저장 API 연동
-    window.alert("마감세일 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
-  }, [])
+  const handleSaveCloseout = React.useCallback(async (_menuId: number, data: MenuFormData) => {
+    if (!ownerId || !accessToken || shops.length === 0 || !data.selectedMenu) {
+      window.alert("필수 정보가 누락되었습니다.")
+      return
+    }
+
+    try {
+      const shopId = shops[0].shopId
+      await menuApi.createDiscount(
+        ownerId,
+        shopId,
+        {
+          menuId: data.selectedMenu.menuId!,
+          discountPrice: parseInt(data.discountPrice || "0", 10),
+          discountMenuAmount: parseInt(data.quantity || "0", 10),
+        },
+        accessToken
+      )
+
+      // 마감세일 목록 새로고침
+      const response = await menuApi.getDiscounts(ownerId, shopId, accessToken)
+      if (response.data?.discounts) {
+        const mappedMenus: CloseoutMenuItem[] = response.data.discounts.map((discount) => {
+          const menuInfo = getMenuById(discount.menuId)
+          return {
+            id: discount.discountId,
+            menuName: discount.menuName,
+            price: discount.discountPrice,
+            categoryName: menuInfo?.categoryName || "기타",
+            imageUrl: discount.menuImage,
+            saleQuantity: discount.discountMenuAmount,
+            discountRate: discount.discountRate,
+            discountPrice: discount.discountPrice,
+            originalPrice: discount.menuPrice,
+          }
+        })
+        setDiscountMenus(mappedMenus)
+      }
+
+      setCloseoutSaleModalOpen(false)
+      window.alert("마감세일 메뉴가 등록되었습니다.")
+    } catch (error) {
+      console.error("마감세일 등록 실패:", error)
+      window.alert(error instanceof Error ? error.message : "마감세일 등록에 실패했습니다.")
+    }
+  }, [ownerId, accessToken, shops, getMenuById])
+
+  // const handleSaveMenus = React.useCallback(() => {
+  //   // TODO: 저장 API 연동
+  //   window.alert("마감세일 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
+  // }, [])
 
   return (
     <div className="flex h-full w-full justify-center bg-bg-2">
       <div className="flex h-full w-full max-w-[412px] flex-col">
         <div className="flex-1 overflow-y-auto px-4 pt-6">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 pb-4">
             <section className="rounded-2xl bg-bg-0 p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
@@ -166,27 +236,37 @@ export default function ManageCloseoutSalePage() {
             </section>
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={menus.map((m) => m.id)}
-                  strategy={verticalListSortingStrategy}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <p className="p1 text-secondary">로딩 중...</p>
+                </div>
+              ) : discountMenus.length === 0 ? (
+                <div className="flex items-center justify-center py-20">
+                  <p className="p1 text-secondary">등록된 마감세일 메뉴가 없습니다</p>
+                </div>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <div className="flex flex-col">
-                    {menus.map((menu) => (
-                      <SortableCloseoutMenuItem key={menu.id} menu={menu} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+                  <SortableContext
+                    items={discountMenus.map((m) => m.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="flex flex-col">
+                      {discountMenus.map((menu) => (
+                        <SortableCloseoutMenuItem key={menu.id} menu={menu} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
             </section>
           </div>
         </div>
 
-        <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
+        {/* <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
           <Button
             btnStyle="filled-red"
             size="lg"
@@ -195,8 +275,18 @@ export default function ManageCloseoutSalePage() {
           >
             저장하기
           </Button>
-        </div>
+        </div> */}
       </div>
+
+      {/* 마감세일 등록 모달 */}
+      <AddMenuModal
+        open={closeoutSaleModalOpen}
+        onClose={() => setCloseoutSaleModalOpen(false)}
+        variant="create-closeout"
+        onSave={handleSaveCloseout}
+        availableMenus={availableMenus}
+        shopId={shops.length > 0 ? shops[0].shopId : undefined}
+      />
     </div>
   )
 }

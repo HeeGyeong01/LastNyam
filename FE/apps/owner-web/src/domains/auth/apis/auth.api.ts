@@ -136,7 +136,7 @@ export const authApi = {
   },
 
   // 액세스 토큰 재발급
-  refresh: async (refreshToken: string): Promise<AuthResponse> => {
+  refresh: async (): Promise<AuthResponse> => {
     const url = `${OWNER_API_BASE_URL.replace(/\/$/, '')}/api/owner/auth/refresh`;
     
     const response = await fetch(url, {
@@ -144,7 +144,7 @@ export const authApi = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include', // 쿠키에서 refreshToken 자동 전송
     });
 
     const responseBody = await response.json().catch(() => null) as AuthResponse | null;
@@ -153,6 +153,12 @@ export const authApi = {
       throw new Error(
         responseBody?.message || '토큰 재발급에 실패했습니다.'
       );
+    }
+
+    // 새로운 accessToken 가져오기
+    const accessToken = response.headers.get('authorization') || response.headers.get('Authorization');
+    if (accessToken && responseBody.data) {
+      responseBody.data.accessToken = accessToken;
     }
 
     return responseBody;

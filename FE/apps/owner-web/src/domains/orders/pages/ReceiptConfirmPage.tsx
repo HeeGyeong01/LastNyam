@@ -1,21 +1,21 @@
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { LargeHeader } from "@/components/ui/owner/LargeHeader";
 import { Button } from "@shared/src/components/Button";
-
-type TransactionType = "DISCOUNT" | "FOOCKETING";
+import { Modal } from "@/components/ui/modal";
+import { useOwnerStore } from "@/store/useOwnerStore";
+import {
+  orderApi,
+  type TransactionType,
+  type DiscountItem,
+  type FoocketingDetail,
+} from "../apis/order.api";
 
 interface OrderItem {
   name: string;
   menuPrice: number;
   amount: number;
   subtotal: number;
-}
-
-interface ReceiptConfirmPageProps {
-  transactionId?: number;
-  transactionType?: TransactionType;
-  items?: OrderItem[];
-  totalAmount?: number;
-  onConfirm?: () => void;
 }
 
 const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
@@ -26,19 +26,168 @@ const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("ko-KR").format(value);
 
-export default function ReceiptConfirmPage({
-  transactionId = 1,
-  transactionType = "DISCOUNT",
-  items = [
-    { name: "메뉴명", menuPrice: 10000, amount: 2, subtotal: 20000 },
-    { name: "메뉴명", menuPrice: 15000, amount: 1, subtotal: 15000 },
-    { name: "메뉴명", menuPrice: 8000, amount: 3, subtotal: 24000 },
-  ],
-  totalAmount = 59000,
-  onConfirm,
-}: ReceiptConfirmPageProps) {
-  const transactionTypeLabel = TRANSACTION_TYPE_LABEL[transactionType];
-  const title = `${transactionTypeLabel} ${transactionId}`;
+// API 응답을 OrderItem 형식으로 변환하는 함수
+const convertDiscountItemsToOrderItems = (items: DiscountItem[]): OrderItem[] => {
+  return items.map((item) => ({
+    name: item.menuName,
+    menuPrice: item.menuPrice,
+    amount: item.transactionAmount,
+    subtotal: item.discountPrice * item.transactionAmount,
+  }));
+};
+
+const convertFoocketingToOrderItems = (detail: FoocketingDetail): OrderItem[] => {
+  return [
+    {
+      name: detail.menuName,
+      menuPrice: detail.menuPrice,
+      amount: detail.foocketingAmount,
+      subtotal: detail.menuPrice * detail.foocketingAmount,
+    },
+  ];
+};
+
+export default function ReceiptConfirmPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { ownerId, accessToken } = useOwnerStore();
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [transactionId, setTransactionId] = useState<number | null>(null);
+  const [transactionType, setTransactionType] = useState<TransactionType>("DISCOUNT");
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    const fetchTransactionDetail = async () => {
+      try {
+        // URL 파라미터에서 transactionId와 type 가져오기
+        const transactionIdParam = searchParams.get("transactionId");
+        const typeParam = searchParams.get("type") as TransactionType | null;
+
+        if (!transactionIdParam || !typeParam) {
+          setError("거래 정보가 없습니다.");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!ownerId || !accessToken) {
+          setError("인증 정보가 없습니다.");
+          setIsLoading(false);
+          return;
+        }
+
+        const txId = parseInt(transactionIdParam, 10);
+        setTransactionId(txId);
+        setTransactionType(typeParam);
+
+        // API 호출
+        const response = await orderApi.getTransactionDetail(
+          ownerId,
+          txId,
+          typeParam,
+          accessToken
+        );
+
+        if (!response.data) {
+          throw new Error("거래 데이터를 불러올 수 없습니다.");
+        }
+
+        // 데이터 변환
+        let orderItems: OrderItem[] = [];
+        let total = 0;
+
+        if (typeParam === "DISCOUNT" && response.data.discountItems) {
+          orderItems = convertDiscountItemsToOrderItems(response.data.discountItems);
+          total = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+        } else if (typeParam === "FOOCKETING" && response.data.foocketingDetail) {
+          orderItems = convertFoocketingToOrderItems(response.data.foocketingDetail);
+          total = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+        }
+
+        setItems(orderItems);
+        setTotalAmount(total);
+        setIsLoading(false);
+      } catch (err) {
+        console.error("거래 상세 조회 실패:", err);
+        setError(err instanceof Error ? err.message : "거래 정보를 불러오는데 실패했습니다.");
+        setIsLoading(false);
+      }
+    };
+
+    fetchTransactionDetail();
+  }, [searchParams, ownerId, accessToken]);
+
+  const handleConfirm = () => {
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmReceipt = async () => {
+    if (!transactionId || !ownerId || !accessToken) {
+      return;
+    }
+
+    try {
+      setIsConfirming(true);
+      
+      // 주문 상태를 WAITING_PICKUP으로 변경 (수령 확인)
+      await orderApi.updateOrderStatus(
+        ownerId,
+        transactionId,
+        {
+          transactionType: transactionType,
+          status: "WAITING_PICKUP",
+        },
+        accessToken
+      );
+      
+      // 수령 확인 후 주문 목록 페이지로 이동
+      setIsConfirmModalOpen(false);
+      navigate("/orders");
+    } catch (err) {
+      console.error("수령 확인 실패:", err);
+      alert(err instanceof Error ? err.message : "수령 확인에 실패했습니다.");
+      setIsConfirmModalOpen(false);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  const transactionTypeLabel = transactionType ? TRANSACTION_TYPE_LABEL[transactionType] : "";
+  const title = transactionId ? `${transactionTypeLabel} ${transactionId}` : "";
+
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full bg-bg-2">
+        <LargeHeader
+          pageName="주문 상세보기"
+          pageExplanation="포장된 음식을 확인 후 수령확인 버튼을 누루세요"
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="p2 text-secondary">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 발생
+  if (error) {
+    return (
+      <div className="flex flex-col h-full bg-bg-2">
+        <LargeHeader
+          pageName="주문 상세보기"
+          pageExplanation="포장된 음식을 확인 후 수령확인 버튼을 누루세요"
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="p2 text-error">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-bg-2">
@@ -109,11 +258,26 @@ export default function ReceiptConfirmPage({
           btnStyle="filled-red"
           size="lg"
           className="w-full"
-          onClick={onConfirm}
+          onClick={handleConfirm}
         >
           수령 확인
         </Button>
       </div>
+
+      {/* 수령 확인 모달 */}
+      <Modal
+        open={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        title="수령 확인"
+        detail="수령 확인 시 되돌릴 수 없습니다.&#10;수령 확인하시겠습니까?"
+        icon="exclamation"
+        variant="two-button"
+        primaryButtonText="확인"
+        secondaryButtonText="취소"
+        onPrimaryClick={handleConfirmReceipt}
+        onSecondaryClick={() => setIsConfirmModalOpen(false)}
+        primaryButtonDisabled={isConfirming}
+      />
     </div>
   );
 }

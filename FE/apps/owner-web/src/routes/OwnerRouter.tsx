@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "../App";
 import OwnerSettingPage from "../domains/settings/pages/OwnerSettingPage";
+import ShopManagePage from "../domains/settings/pages/ShopManagePage";
 import ReceiptConfirmPage from "../domains/orders/pages/ReceiptConfirmPage";
 import OrderListPage from "../domains/orders/pages/OrderListPage";
 import QRScanPage from "../domains/orders/pages/QRScanPage";
@@ -170,7 +171,16 @@ const router = createBrowserRouter([
               },
               {
                 path: "settings",
-                element: <OwnerSettingPage />,
+                children: [
+                  {
+                    index: true,
+                    element: <OwnerSettingPage />,
+                  },
+                  {
+                    path: "shop",
+                    element: <ShopManagePage />,
+                  },
+                ],
               },
             ],
           },

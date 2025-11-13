@@ -4,6 +4,9 @@ import { Button } from "@shared/src/components/Button"
 import { Plus } from "lucide-react"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
+import { AddMenuModal, type MenuData, type MenuFormData } from "@/components/ui/addMenuModal"
+import { useOwnerStore } from "@/store/useOwnerStore"
+import { foocketingApi } from "@/domains/catalog/apis/foocketing.api"
 
 interface FoocketingMenuItem {
   id: number
@@ -15,42 +18,76 @@ interface FoocketingMenuItem {
   foocketingTime: string
 }
 
-const SAMPLE_FOOCKETING_MENUS: FoocketingMenuItem[] = [
-  {
-    id: 1,
-    menuName: "에그타르트",
-    price: 4800,
-    categoryName: "디저트",
-    imageUrl: "https://picsum.photos/seed/egg/112/112",
-    foocketingQuantity: 12,
-    foocketingTime: "00:00",
-  },
-  {
-    id: 2,
-    menuName: "메뉴이름",
-    price: 8500,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu1/112/112",
-    foocketingQuantity: 8,
-    foocketingTime: "00:00",
-  },
-  {
-    id: 3,
-    menuName: "메뉴이름",
-    price: 5200,
-    categoryName: "카테고리",
-    imageUrl: "https://picsum.photos/seed/menu2/112/112",
-    foocketingQuantity: 15,
-    foocketingTime: "00:00",
-  },
-]
-
 export default function ManageFoocketingPage() {
-  const [menus, setMenus] = React.useState(SAMPLE_FOOCKETING_MENUS)
+  const [menus, setMenus] = React.useState<FoocketingMenuItem[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+  const [foocketingModalOpen, setFoocketingModalOpen] = React.useState(false)
+  
+  const { ownerId, accessToken, shops, getMenuById, menus: storeMenus } = useOwnerStore()
+  const shopId = shops[0]?.shopId
+
+  // 푸켓팅 목록 조회
+  React.useEffect(() => {
+    const fetchFoocketings = async () => {
+      if (!ownerId || !shopId || !accessToken) {
+        setError("인증 정보가 없습니다.")
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const response = await foocketingApi.getFoocketings(
+          ownerId,
+          shopId,
+          accessToken
+        )
+
+        if (response.data?.foocketings) {
+          const foocketingMenus: FoocketingMenuItem[] = response.data.foocketings.map(
+            (foocketing) => {
+              // store에서 menuId로 카테고리 정보 가져오기
+              const menuInfo = getMenuById(foocketing.menuId)
+              
+              // foocketingTime을 시간만 표시 (HH:mm 형식)
+              const foocketingTimeDisplay = foocketing.foocketingTime
+                ? new Date(foocketing.foocketingTime).toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })
+                : "00:00"
+
+              return {
+                id: foocketing.foocketingId,
+                menuName: foocketing.menuName,
+                price: foocketing.menuPrice,
+                categoryName: menuInfo?.categoryName || "미분류",
+                imageUrl: foocketing.menuImage,
+                foocketingQuantity: foocketing.foocketingAmount,
+                foocketingTime: foocketingTimeDisplay,
+              }
+            }
+          )
+          
+          setMenus(foocketingMenus)
+        }
+      } catch (err) {
+        console.error("푸켓팅 목록 조회 실패:", err)
+        setError(err instanceof Error ? err.message : "푸켓팅 목록을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFoocketings()
+  }, [ownerId, shopId, accessToken, getMenuById])
 
   const handleAddMenu = React.useCallback(() => {
-    // TODO: 연결된 모달/페이지로 이동
-    window.alert("새 푸켓팅 메뉴를 추가하는 동작이 연결될 예정입니다.")
+    setFoocketingModalOpen(true)
   }, [])
 
   const handleEditMenu = React.useCallback((menu: FoocketingMenuItem) => {
@@ -62,16 +99,93 @@ export default function ManageFoocketingPage() {
     setMenus((prevMenus) => prevMenus.filter((menu) => menu.id !== menuId))
   }, [])
 
-  const handleSaveMenus = React.useCallback(() => {
-    // TODO: 저장 API 연동
-    window.alert("푸켓팅 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
-  }, [])
+  // const handleSaveMenus = React.useCallback(() => {
+  //   // TODO: 저장 API 연동
+  //   window.alert("푸켓팅 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
+  // }, [])
+
+  const handleSaveFoocketing = React.useCallback(async (menuId: number, data: MenuFormData) => {
+    if (!ownerId || !shopId || !accessToken) {
+      window.alert("인증 정보가 없습니다.")
+      return
+    }
+
+    try {
+      // 푸켓팅 시간 형식 변환: "HH:mm" -> "HH:mm:ss"
+      const foocketingTime = data.foocketingTime 
+        ? `${data.foocketingTime}:00` 
+        : "00:00:00"
+      
+      // 푸켓팅 등록 API 호출
+      await foocketingApi.createFoocketing(
+        ownerId,
+        shopId,
+        {
+          foocketingTime,
+          foocketingAmount: parseInt(data.quantity || "0", 10),
+          menuId,
+        },
+        accessToken
+      )
+
+      // 등록 성공 후 목록 새로고침
+      const response = await foocketingApi.getFoocketings(
+        ownerId,
+        shopId,
+        accessToken
+      )
+      
+      if (response.data?.foocketings) {
+        const foocketingMenus: FoocketingMenuItem[] = response.data.foocketings.map(
+          (foocketing) => {
+            const menuInfo = getMenuById(foocketing.menuId)
+            const foocketingTimeDisplay = foocketing.foocketingTime
+              ? new Date(foocketing.foocketingTime).toLocaleTimeString('ko-KR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                })
+              : "00:00"
+
+            return {
+              id: foocketing.foocketingId,
+              menuName: foocketing.menuName,
+              price: foocketing.menuPrice,
+              categoryName: menuInfo?.categoryName || "미분류",
+              imageUrl: foocketing.menuImage,
+              foocketingQuantity: foocketing.foocketingAmount,
+              foocketingTime: foocketingTimeDisplay,
+            }
+          }
+        )
+        setMenus(foocketingMenus)
+      }
+
+      setFoocketingModalOpen(false)
+      window.alert("푸켓팅 메뉴가 등록되었습니다.")
+    } catch (err) {
+      console.error("푸켓팅 등록 실패:", err)
+      window.alert(err instanceof Error ? err.message : "푸켓팅 등록에 실패했습니다.")
+    }
+  }, [ownerId, shopId, accessToken, getMenuById])
+
+  // store의 메뉴를 MenuData 형태로 변환
+  const availableMenus: MenuData[] = React.useMemo(() => {
+    return storeMenus.map((menu) => ({
+      menuId: menu.menuId,
+      name: menu.menuName,
+      price: menu.menuPrice,
+      image: menu.menuImage,
+      description: menu.menuDescription,
+      category: menu.categoryName,
+    }))
+  }, [storeMenus])
 
   return (
     <div className="flex h-full w-full justify-center bg-bg-2">
       <div className="flex h-full w-full max-w-[412px] flex-col">
         <div className="flex-1 overflow-y-auto px-4 pt-6">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 pb-4">
             <section className="rounded-2xl bg-bg-0 p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
@@ -92,28 +206,42 @@ export default function ManageFoocketingPage() {
             </section>
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
-              <div className="flex flex-col">
-                {menus.map((menu) => (
-                  <MenuListItem
-                    key={menu.id}
-                    variant="foocketing"
-                    menuName={menu.menuName}
-                    price={menu.price}
-                    categoryName={menu.categoryName}
-                    imageUrl={menu.imageUrl}
-                    foocketingQuantity={menu.foocketingQuantity}
-                    foocketingTime={menu.foocketingTime}
-                    reorderable={false}
-                    onEdit={() => handleEditMenu(menu)}
-                    onDelete={() => handleDeleteMenu(menu.id)}
-                  />
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">푸켓팅 목록을 불러오는 중...</p>
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-error">{error}</p>
+                </div>
+              ) : menus.length === 0 ? (
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">등록된 푸켓팅 메뉴가 없습니다.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {menus.map((menu) => (
+                    <MenuListItem
+                      key={menu.id}
+                      variant="foocketing"
+                      menuName={menu.menuName}
+                      price={menu.price}
+                      categoryName={menu.categoryName}
+                      imageUrl={menu.imageUrl}
+                      foocketingQuantity={menu.foocketingQuantity}
+                      foocketingTime={menu.foocketingTime}
+                      reorderable={false}
+                      onEdit={() => handleEditMenu(menu)}
+                      onDelete={() => handleDeleteMenu(menu.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         </div>
 
-        <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
+        {/* <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
           <Button
             btnStyle="filled-red"
             size="lg"
@@ -122,8 +250,16 @@ export default function ManageFoocketingPage() {
           >
             저장하기
           </Button>
-        </div>
+        </div> */}
       </div>
+
+      <AddMenuModal
+        open={foocketingModalOpen}
+        onClose={() => setFoocketingModalOpen(false)}
+        variant="create-foocketing"
+        onSave={handleSaveFoocketing}
+        availableMenus={availableMenus}
+      />
     </div>
   )
 }

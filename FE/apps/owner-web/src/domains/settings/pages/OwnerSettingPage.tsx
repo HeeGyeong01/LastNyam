@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, Settings, Presentation, Calculator, ChevronRight, Store, TestTube } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -15,8 +15,33 @@ interface MenuItem {
 export default function OwnerSettingPage() {
   const navigate = useNavigate();
   const accessToken = useOwnerStore((state) => state.accessToken);
+  const ownerId = useOwnerStore((state) => state.ownerId);
+  const shops = useOwnerStore((state) => state.shops);
+  const setShops = useOwnerStore((state) => state.setShops);
   const clearAuth = useOwnerStore((state) => state.logout);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoadingShops, setIsLoadingShops] = useState(false);
+
+  // 가게 정보 불러오기
+  useEffect(() => {
+    const fetchShops = async () => {
+      if (!ownerId || !accessToken) return;
+      
+      setIsLoadingShops(true);
+      try {
+        const response = await authApi.getShops(ownerId, accessToken);
+        if (response.status === "SUCCESS" && response.data?.shops) {
+          setShops(response.data.shops);
+        }
+      } catch (error) {
+        console.error("가게 정보를 불러오는데 실패했습니다:", error);
+      } finally {
+        setIsLoadingShops(false);
+      }
+    };
+
+    fetchShops();
+  }, [ownerId, accessToken, setShops]);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -35,8 +60,10 @@ export default function OwnerSettingPage() {
     }
   };
 
-  // 가게 이미지 URL (없으면 null 또는 undefined)
-  const storeImageUrl: string | null = null; // 나중에 API에서 받아온 이미지 URL로 교체
+  // 첫 번째 가게 정보 사용 (여러 가게가 있을 수 있지만 일단 첫 번째 가게를 표시)
+  const currentShop = shops.length > 0 ? shops[0] : null;
+  const storeImageUrl = currentShop?.shopBanner || null;
+  const storeName = currentShop?.shopName || "가게 이름";
 
   const menuItems: MenuItem[] = [
     {
@@ -47,10 +74,12 @@ export default function OwnerSettingPage() {
     {
       icon: Settings,
       label: "가게 관리",
+      onClick: () => navigate("/owner/settings/shop"),
     },
     {
       icon: Presentation,
       label: "가게 통계",
+      onClick: () => navigate("/owner/insights/report"),
     },
     {
       icon: Calculator,
@@ -79,12 +108,15 @@ export default function OwnerSettingPage() {
           </div>
         )}
         <div className="pl-5 flex flex-col gap-2 items-start justify-center flex-1 overflow-hidden">
-          <div className="flex flex-row gap-2.5 items-center justify-start w-full h-9">
+          <button
+            onClick={() => navigate("/owner/settings/shop")}
+            className="flex flex-row gap-2.5 items-center justify-start w-full h-9 hover:opacity-80 transition-opacity"
+          >
             <div className="text-brand h2-b leading-9 flex items-center justify-start">
-              가게 이름
+              {isLoadingShops ? "로딩 중..." : storeName}
             </div>
             <ChevronRight className="w-6 h-6 flex-shrink-0" />
-          </div>
+          </button>
           <Button
             btnStyle="outlined-red"
             btnShape="rounded"
