@@ -11,6 +11,7 @@ const pageTitles: Record<string, string> = {
   '/owner/catalog/closeout-sale': '마감세일',
   '/owner/insights/report': '주간 레포트',
   '/owner/settings': '가게 설정',
+  '/owner/settings/shop': '가게 관리',
 };
 
 export default function Header() {
@@ -27,7 +28,7 @@ export default function Header() {
   // 현재 경로에 해당하는 제목 가져오기, 없으면 기본값 '헤더'
   const title = pageTitles[location.pathname] || '헤더';
   const isQRScanPage = location.pathname === '/owner/orders/qr-scan';
-  const shouldHideSettingsButton = ['/owner/orders/qr-scan', '/owner/catalog/menu', '/owner/settings'].includes(location.pathname);
+  const shouldHideSettingsButton = ['/owner/orders/qr-scan', '/owner/catalog/menu', '/owner/settings', '/owner/settings/shop'].includes(location.pathname);
 
   return (
     <header className={cn("fixed top-0 left-0 right-0 z-50 w-full", isQRScanPage ? "bg-brand" : "bg-bg-0")}>
