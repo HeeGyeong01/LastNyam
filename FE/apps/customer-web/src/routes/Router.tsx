@@ -1,17 +1,24 @@
 import { createBrowserRouter, Outlet } from 'react-router-dom';
-import { MainLayout, DetailLayout } from '../components/layout';
-import { BottomNavBar } from '../components/common';
-import Home from '../pages/home';
-import { Login, KakaoCallback, AdditionalInfo, SignupComplete } from '../pages/auth';
-import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from '../pages/foocketing';
-import { Discount } from '../pages/discount';
-import { ShopDetail } from '../pages/shop';
+import { MainLayout, DetailLayout } from '@/shared/layout';
+import { BottomNavBar } from '@/shared/components';
+import Home from '@/features/home/pages/Home';
+import Login from '@/features/auth/pages/Login';
+import KakaoCallback from '@/features/auth/pages/KakaoCallback';
+import AdditionalInfo from '@/features/auth/pages/AdditionalInfo';
+import SignupComplete from '@/features/auth/pages/SignupComplete';
+import Foocketing from '@/features/foocketing/pages/Foocketing';
+import FoocketingDetail from '@/features/foocketing/pages/FoocketingDetail';
+import FoocketingSuccess from '@/features/foocketing/pages/FoocketingSuccess';
+import FoocketingFail from '@/features/foocketing/pages/FoocketingFail';
+import Discount from '@/features/discount/pages/Discount';
+import ShopDetail from '@/features/shop/pages/ShopDetail';
 import { Cart, PaymentSuccess } from '../pages/cart';
-import { Favorite } from '../pages/favorite';
-import { Search, SearchResult } from '../pages/search';
-import OrderList from '../pages/order';
-import MyPage from '../pages/mypage';
-import QR from '../pages/qr';
+import Favorite from '@/features/favorite/pages/Favorite';
+import Search from '@/features/search/pages/Search';
+import SearchResult from '@/features/search/pages/SearchResult';
+import OrderList from '@/features/order/pages/OrderList';
+import MyPage from '@/features/mypage/pages/MyPage';
+import QR from '@/features/qr/pages/QR';
 
 // Cart 전용 레이아웃 (BottomNavBar는 있지만 padding 없음)
 function CartLayout() {

@@ -1,6 +1,6 @@
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
-import Stepper from '@/components/common/Stepper';
+import Stepper from '@/shared/components/Stepper';
 
 interface CartMenuCardProps {
   menuName: string;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, BottomSheet } from '@/components/common';
+import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import CartMenuCard from './component/cartMenuCard';
 
