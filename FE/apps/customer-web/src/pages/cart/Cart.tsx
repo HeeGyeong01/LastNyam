@@ -107,9 +107,9 @@ export default function Cart() {
 
   return (
     <>
-    <div className="bg-bg-1 min-h-screen">
-      <PageHeader title="장바구니" variant="light" />
-        <div className="px-4 py-5 flex flex-col gap-3">
+      <div className="bg-bg-1 min-h-screen">
+        <PageHeader title="장바구니" variant="light" />
+        <div className="px-4 py-5 pb-44 flex flex-col gap-3">
           {/* 가게 정보 */}
           {cartData.cartItems.length > 0 && (
             <div className="py-1 flex gap-1.5 items-center">
