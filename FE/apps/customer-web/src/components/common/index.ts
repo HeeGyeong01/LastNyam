@@ -4,4 +4,5 @@ export { default as BottomSheet } from './BottomSheet';
 export { default as HomeHeader } from './HomeHeader';
 export { default as PageHeader } from './PageHeader';
 export { default as DraggableBottomSheet } from './DraggableBottomSheet';
+export { default as Stepper } from './Stepper';
 

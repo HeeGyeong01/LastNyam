@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { DiscountCategory } from '@/types';
 import BakeryIcon from '@/components/icons/BakeryIcon';
 import SushiIcon from '@/components/icons/SushiIcon';
@@ -26,8 +27,12 @@ interface DiscountCategoryTabProps {
 export default function DiscountCategoryTab({
   onCategoryChange,
 }: DiscountCategoryTabProps) {
+  const navigate = useNavigate();
+
   const handleCategoryClick = (category: DiscountCategory) => {
     onCategoryChange?.(category);
+    // discount 페이지로 이동하면서 카테고리 쿼리 파라미터 전달
+    navigate(`/discount?category=${category}`);
   };
 
   return (
