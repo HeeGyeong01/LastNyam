@@ -4,11 +4,15 @@ import { cn } from "@/lib/utils"
 import { Button } from "@shared/src/components/Button"
 import { ImageUpload, type UploadedFileInfo } from "./imageUpload"
 import { Input } from "./ownerInput"
+import { Modal } from "./modal"
+import { useOwnerStore } from "@/store/useOwnerStore"
+import { menuApi } from "@/domains/catalog/apis/menu.api"
 
 export interface AddMenuModalProps {
   open: boolean
   onClose: () => void
-  onSave?: (data: MenuFormData) => void
+  onSave?: (menuId: number, data: MenuFormData) => void
+  shopId?: number
   categories?: Array<{ value: string; label: string }>
   className?: string
 }
@@ -27,6 +31,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
       open,
       onClose,
       onSave,
+      shopId,
       categories = [
         { value: "label1", label: "label" },
         { value: "label2", label: "label" },
@@ -38,6 +43,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
     ref
   ) => {
     const [isVisible, setIsVisible] = React.useState(false)
+    const [isLoading, setIsLoading] = React.useState(false)
     const [formData, setFormData] = React.useState<MenuFormData>({
       image: null,
       name: "",
@@ -45,6 +51,8 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
       description: "",
       category: "",
     })
+    
+    const { ownerId, accessToken } = useOwnerStore()
 
     React.useEffect(() => {
       if (open) {
@@ -63,12 +71,74 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
       }
     }
 
-    const handleSave = () => {
-      onSave?.(formData)
-      onClose()
+    const handleSave = async () => {
+      // 필수 필드 검증
+      if (!formData.name.trim()) {
+        alert('메뉴 이름을 입력해주세요.')
+        return
+      }
+      
+      if (!formData.price || parseInt(formData.price, 10) <= 0) {
+        alert('메뉴 가격을 입력해주세요.')
+        return
+      }
+      
+      if (!formData.description.trim()) {
+        alert('메뉴 설명을 입력해주세요.')
+        return
+      }
+      
+      if (!formData.category) {
+        alert('메뉴 카테고리를 선택해주세요.')
+        return
+      }
+      
+      // API 호출을 위한 필수 데이터 검증
+      if (!ownerId || !shopId || !accessToken) {
+        alert('로그인 정보가 없습니다. 다시 로그인해주세요.')
+        return
+      }
+      
+      setIsLoading(true)
+      
+      try {
+        const response = await menuApi.createMenu(
+          ownerId,
+          shopId,
+          {
+            menuName: formData.name,
+            menuDescription: formData.description,
+            menuImage: formData.image?.fileUrl || '',
+            menuPrice: parseInt(formData.price, 10),
+            category: typeof formData.category === 'string' 
+              ? formData.category 
+              : formData.category[0] || '',
+          },
+          accessToken
+        )
+        
+        if (response.data?.menuId) {
+          onSave?.(response.data.menuId, formData)
+          // 폼 초기화
+          setFormData({
+            image: null,
+            name: "",
+            price: "",
+            description: "",
+            category: "",
+          })
+          onClose()
+        }
+      } catch (error) {
+        console.error('메뉴 등록 실패:', error)
+        alert(error instanceof Error ? error.message : '메뉴 등록에 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     return (
+      <>
       <div
         ref={ref}
         className={cn(
@@ -115,7 +185,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
               새로운 메뉴 등록하기
             </h2>
             <p className="p3 text-subtle text-center">
-              판매가의 메뉴를 등록하세요
+              이름, 가격, 설명, 카테고리는 필수입니다
             </p>
           </div>
 
@@ -233,12 +303,26 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
               onClick={handleSave}
               btnStyle="filled-red"
               className="w-full py-2.5 px-5"
+              disabled={isLoading}
             >
               저장하기
             </Button>
           </div>
         </div>
       </div>
+
+      {/* 로딩 모달 */}
+      <Modal
+        open={isLoading}
+        onClose={() => {}}
+        title="메뉴 등록 중..."
+        detail="잠시만 기다려주세요."
+        icon="loading"
+        iconShow={true}
+        xButtonShow={false}
+        buttonShow={false}
+      />
+      </>
     )
   }
 )

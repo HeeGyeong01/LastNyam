@@ -907,7 +907,7 @@ export default function ComponentTestPage() {
             <AddMenuModal
               open={addMenuModalOpen}
               onClose={() => setAddMenuModalOpen(false)}
-              onSave={(data) => {
+              onSave={(_menuId, data) => {
                 setLastSavedMenu(data);
                 setAddMenuModalOpen(false);
               }}

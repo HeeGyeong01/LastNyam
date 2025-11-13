@@ -22,6 +22,8 @@ import { CSS } from "@dnd-kit/utilities"
 
 import { MenuListItem } from "@/components/ui/menuListItem"
 import { AddMenuModal, type MenuFormData } from "@/components/ui/addMenuModal"
+import { useOwnerStore } from "@/store/useOwnerStore"
+import { menuApi } from "../apis/menu.api"
 
 interface MenuItem {
   id: number
@@ -91,8 +93,63 @@ function SortableMenuItem({ menu }: { menu: MenuItem }) {
 }
 
 export default function ManageMenuPage() {
-  const [menus, setMenus] = React.useState(SAMPLE_MENUS)
+  const [menus, setMenus] = React.useState<MenuItem[]>([])
   const [isAddMenuModalOpen, setIsAddMenuModalOpen] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
+  const { shops, ownerId, accessToken } = useOwnerStore()
+  
+  // 첫 번째 shop의 ID를 사용 (실제로는 선택된 shop을 사용해야 함)
+  const currentShopId = shops[0]?.shopId
+
+  // 메뉴 목록 조회
+  React.useEffect(() => {
+    const fetchMenus = async () => {
+      console.log('🔍 메뉴 조회 시작')
+      console.log('ownerId:', ownerId)
+      console.log('currentShopId:', currentShopId)
+      console.log('accessToken:', accessToken ? '있음' : '없음')
+      
+      if (!ownerId || !currentShopId || !accessToken) {
+        console.log('❌ 필수 정보 없음 - 조회 중단')
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        const response = await menuApi.getMenus(ownerId, currentShopId, accessToken)
+        console.log('📦 API 응답:', response)
+        
+        if (response.data?.menus) {
+          console.log('📝 받은 메뉴 개수:', response.data.menus.length)
+          console.log('📝 원본 메뉴 데이터:', response.data.menus)
+          
+          const fetchedMenus: MenuItem[] = response.data.menus.map((menu) => ({
+            id: menu.menuId,
+            menuName: menu.menuName,
+            price: menu.menuPrice,
+            categoryName: menu.categoryName,
+            imageUrl: menu.menuImage,
+          }))
+          
+          console.log('✅ 변환된 메뉴 데이터:', fetchedMenus)
+          setMenus(fetchedMenus)
+        } else {
+          console.log('⚠️ 응답에 메뉴 데이터 없음')
+        }
+      } catch (error) {
+        console.error('❌ 메뉴 목록 조회 실패:', error)
+        // 에러 발생 시 샘플 데이터 사용
+        setMenus(SAMPLE_MENUS)
+        console.log('🔄 샘플 데이터로 폴백')
+      } finally {
+        setIsLoading(false)
+        console.log('✨ 메뉴 조회 완료')
+      }
+    }
+
+    fetchMenus()
+  }, [ownerId, currentShopId, accessToken])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,21 +179,27 @@ export default function ManageMenuPage() {
     setIsAddMenuModalOpen(true)
   }, [])
 
-  const handleSaveNewMenu = React.useCallback((data: MenuFormData) => {
-    // 새 메뉴 ID 생성 (현재 최대 ID + 1)
-    const newId = Math.max(...menus.map((m) => m.id), 0) + 1
+  const handleSaveNewMenu = React.useCallback((menuId: number, data: MenuFormData) => {
+    console.log('➕ 새 메뉴 추가')
+    console.log('menuId:', menuId)
+    console.log('폼 데이터:', data)
     
+    // API에서 받은 menuId를 사용하여 새 메뉴 생성
     const newMenu: MenuItem = {
-      id: newId,
+      id: menuId,
       menuName: data.name,
       price: parseInt(data.price, 10) || 0,
       categoryName: typeof data.category === 'string' ? data.category : data.category[0] || '기타',
       imageUrl: data.image?.fileUrl,
     }
 
-    setMenus((prev) => [...prev, newMenu])
-    setIsAddMenuModalOpen(false)
-  }, [menus])
+    console.log('생성된 메뉴:', newMenu)
+    setMenus((prev) => {
+      const updatedMenus = [...prev, newMenu]
+      console.log('업데이트된 전체 메뉴:', updatedMenus)
+      return updatedMenus
+    })
+  }, [])
 
   const handleSaveMenus = React.useCallback(() => {
     // TODO: 저장 API 연동
@@ -168,22 +231,32 @@ export default function ManageMenuPage() {
             </section>
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={menus.map((m) => m.id)}
-                  strategy={verticalListSortingStrategy}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <p className="p2 text-secondary">메뉴 목록을 불러오는 중...</p>
+                </div>
+              ) : menus.length === 0 ? (
+                <div className="flex items-center justify-center py-20">
+                  <p className="p2 text-secondary">등록된 메뉴가 없습니다.</p>
+                </div>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <div className="flex flex-col">
-                    {menus.map((menu) => (
-                      <SortableMenuItem key={menu.id} menu={menu} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+                  <SortableContext
+                    items={menus.map((m) => m.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="flex flex-col">
+                      {menus.map((menu) => (
+                        <SortableMenuItem key={menu.id} menu={menu} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
             </section>
           </div>
         </div>
@@ -205,12 +278,13 @@ export default function ManageMenuPage() {
         open={isAddMenuModalOpen}
         onClose={() => setIsAddMenuModalOpen(false)}
         onSave={handleSaveNewMenu}
+        shopId={currentShopId}
         categories={[
-          { value: '시그니처', label: '시그니처' },
-          { value: '디저트', label: '디저트' },
-          { value: '음료', label: '음료' },
-          { value: '식사류', label: '식사류' },
-          { value: '면/분식', label: '면/분식' },
+          { value: '베이커리', label: '베이커리' },
+          { value: '회/초밥', label: '회/초밥' },
+          { value: '김밥/분식', label: '김밥/분식' },
+          { value: '샐러드/포케', label: '샐러드/포케' },
+          { value: '기타', label: '기타' },
         ]}
       />
     </div>
