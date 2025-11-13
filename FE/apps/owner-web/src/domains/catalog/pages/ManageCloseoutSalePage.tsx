@@ -206,10 +206,10 @@ export default function ManageCloseoutSalePage() {
     }
   }, [ownerId, accessToken, shops, getMenuById])
 
-  const handleSaveMenus = React.useCallback(() => {
-    // TODO: 저장 API 연동
-    window.alert("마감세일 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
-  }, [])
+  // const handleSaveMenus = React.useCallback(() => {
+  //   // TODO: 저장 API 연동
+  //   window.alert("마감세일 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
+  // }, [])
 
   return (
     <div className="flex h-full w-full justify-center bg-bg-2">
@@ -266,7 +266,7 @@ export default function ManageCloseoutSalePage() {
           </div>
         </div>
 
-        <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
+        {/* <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
           <Button
             btnStyle="filled-red"
             size="lg"
@@ -275,7 +275,7 @@ export default function ManageCloseoutSalePage() {
           >
             저장하기
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* 마감세일 등록 모달 */}

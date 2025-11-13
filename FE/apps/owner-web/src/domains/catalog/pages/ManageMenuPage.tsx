@@ -186,10 +186,10 @@ export default function ManageMenuPage() {
     console.log('✅ Store에 메뉴 추가 완료')
   }, [addMenu])
 
-  const handleSaveMenus = React.useCallback(() => {
-    // TODO: 저장 API 연동
-    window.alert("메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
-  }, [])
+  // const handleSaveMenus = React.useCallback(() => {
+  //   // TODO: 저장 API 연동
+  //   window.alert("메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
+  // }, [])
 
   return (
     <div className="flex h-full w-full justify-center bg-bg-2">
@@ -245,7 +245,7 @@ export default function ManageMenuPage() {
             </section>
           </div>
         </div>
-
+{/* 
         <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
           <Button
             btnStyle="filled-red"
@@ -255,7 +255,7 @@ export default function ManageMenuPage() {
           >
             저장하기
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* 메뉴 추가 모달 */}

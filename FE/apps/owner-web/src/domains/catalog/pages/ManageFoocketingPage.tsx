@@ -99,10 +99,10 @@ export default function ManageFoocketingPage() {
     setMenus((prevMenus) => prevMenus.filter((menu) => menu.id !== menuId))
   }, [])
 
-  const handleSaveMenus = React.useCallback(() => {
-    // TODO: 저장 API 연동
-    window.alert("푸켓팅 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
-  }, [])
+  // const handleSaveMenus = React.useCallback(() => {
+  //   // TODO: 저장 API 연동
+  //   window.alert("푸켓팅 메뉴 구성이 저장되는 동작이 연결될 예정입니다.")
+  // }, [])
 
   const handleSaveFoocketing = React.useCallback(async (menuId: number, data: MenuFormData) => {
     if (!ownerId || !shopId || !accessToken) {
@@ -241,7 +241,7 @@ export default function ManageFoocketingPage() {
           </div>
         </div>
 
-        <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
+        {/* <div className="shrink-0 px-4 pb-4 pt-3 bg-bg-0">
           <Button
             btnStyle="filled-red"
             size="lg"
@@ -250,7 +250,7 @@ export default function ManageFoocketingPage() {
           >
             저장하기
           </Button>
-        </div>
+        </div> */}
       </div>
 
       <AddMenuModal
