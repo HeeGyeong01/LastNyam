@@ -4,7 +4,7 @@ metadata:
   name: foocketing-publisher-svc
   namespace: default
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: foocketing-publisher
   ports:
