@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { LargeHeader } from "@/components/ui/owner/LargeHeader";
 import { Button } from "@shared/src/components/Button";
+import { Modal } from "@/components/ui/modal";
 import { useOwnerStore } from "@/store/useOwnerStore";
 import {
   orderApi,
@@ -48,6 +49,7 @@ const convertFoocketingToOrderItems = (detail: FoocketingDetail): OrderItem[] =>
 
 export default function ReceiptConfirmPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { ownerId, accessToken } = useOwnerStore();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +58,8 @@ export default function ReceiptConfirmPage() {
   const [transactionType, setTransactionType] = useState<TransactionType>("DISCOUNT");
   const [items, setItems] = useState<OrderItem[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     const fetchTransactionDetail = async () => {
@@ -118,8 +122,38 @@ export default function ReceiptConfirmPage() {
   }, [searchParams, ownerId, accessToken]);
 
   const handleConfirm = () => {
-    // TODO: 수령 확인 API 호출
-    console.log("수령 확인:", transactionId, transactionType);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmReceipt = async () => {
+    if (!transactionId || !ownerId || !accessToken) {
+      return;
+    }
+
+    try {
+      setIsConfirming(true);
+      
+      // 주문 상태를 WAITING_PICKUP으로 변경 (수령 확인)
+      await orderApi.updateOrderStatus(
+        ownerId,
+        transactionId,
+        {
+          transactionType: transactionType,
+          status: "WAITING_PICKUP",
+        },
+        accessToken
+      );
+      
+      // 수령 확인 후 주문 목록 페이지로 이동
+      setIsConfirmModalOpen(false);
+      navigate("/orders");
+    } catch (err) {
+      console.error("수령 확인 실패:", err);
+      alert(err instanceof Error ? err.message : "수령 확인에 실패했습니다.");
+      setIsConfirmModalOpen(false);
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   const transactionTypeLabel = transactionType ? TRANSACTION_TYPE_LABEL[transactionType] : "";
@@ -229,6 +263,21 @@ export default function ReceiptConfirmPage() {
           수령 확인
         </Button>
       </div>
+
+      {/* 수령 확인 모달 */}
+      <Modal
+        open={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        title="수령 확인"
+        detail="수령 확인 시 되돌릴 수 없습니다.&#10;수령 확인하시겠습니까?"
+        icon="exclamation"
+        variant="two-button"
+        primaryButtonText="확인"
+        secondaryButtonText="취소"
+        onPrimaryClick={handleConfirmReceipt}
+        onSecondaryClick={() => setIsConfirmModalOpen(false)}
+        primaryButtonDisabled={isConfirming}
+      />
     </div>
   );
 }
