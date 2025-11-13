@@ -154,7 +154,7 @@ export default function ShopManagePage() {
       <div className="bg-bg-0 mt-2.5 p-5">
         <Button
           btnStyle="filled-red"
-          btnShape="rounded"
+          size="lg"
           onClick={() => {
             // TODO: 편집 기능 구현
             alert("가게 정보 편집 기능은 준비 중입니다.");

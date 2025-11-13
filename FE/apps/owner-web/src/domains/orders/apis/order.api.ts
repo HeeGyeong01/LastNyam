@@ -50,6 +50,49 @@ export interface UpdateOrderStatusResponse {
   message?: string;
 }
 
+export interface DiscountItem {
+  transactionItemId: number;
+  transactionAmount: number;
+  discountId: number;
+  discountRate: number;
+  discountPrice: number;
+  menuId: number;
+  menuName: string;
+  menuPrice: number;
+  menuImage: string;
+}
+
+export interface FoocketingDetail {
+  foocketingId: number;
+  foocketingTime: string;
+  foocketingAmount: number;
+  menuId: number;
+  menuName: string;
+  menuPrice: number;
+  menuImage: string;
+}
+
+export interface TransactionDetailResponse {
+  data?: {
+    transactionId: number;
+    transactionStatus: TransactionStatus;
+    transactionQrImage: string;
+    createdAt: string;
+    transactionType: TransactionType;
+    userId: number;
+    userNickname: string;
+    userProfile: string;
+    shopId: number;
+    shopName: string;
+    shopAddress: string;
+    discountItems: DiscountItem[] | null;
+    foocketingDetail: FoocketingDetail | null;
+  };
+  status: string;
+  code?: number;
+  message?: string;
+}
+
 const sanitizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/$/, "");
 
 export const orderApi = {
@@ -111,6 +154,38 @@ export const orderApi = {
     if (!response.ok || body?.status !== "SUCCESS") {
       throw new Error(
         body?.message ?? "주문 상태를 변경하는 중 문제가 발생했습니다.",
+      );
+    }
+
+    return body;
+  },
+
+  async getTransactionDetail(
+    ownerId: number,
+    transactionId: number,
+    transactionType: TransactionType,
+    accessToken: string,
+  ): Promise<TransactionDetailResponse> {
+    const url = `${sanitizeBaseUrl(
+      OWNER_API_BASE_URL,
+    )}/api/owner/${ownerId}/transaction/${transactionId}?type=${transactionType}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      credentials: "include",
+    });
+
+    const body = (await response
+      .json()
+      .catch(() => null)) as TransactionDetailResponse | null;
+
+    if (!response.ok || body?.status !== "SUCCESS") {
+      throw new Error(
+        body?.message ?? "거래 상세 정보를 불러오는 중 문제가 발생했습니다.",
       );
     }
 
