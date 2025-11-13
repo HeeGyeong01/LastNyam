@@ -1,4 +1,4 @@
-// 마감세일 관련 타입
+// 푸켓팅 조회
 // 1. 베이커리 2. 회/초밥 3. 김밥/분식 4. 샐러드/포케 5. 기타
 export type FoocketingCategory = 
   | 1
@@ -60,6 +60,8 @@ export interface FoocketingDetail extends Omit<FoocketingItem, 'menu'> {
   menu: FoocketingMenuDetail;
 }
 
+
+//////////////////////////////////////////////////////////////
 // 푸켓팅 참여 응답
 export interface FoocketingEntryResponse {
   success: boolean;
@@ -67,7 +69,7 @@ export interface FoocketingEntryResponse {
   message: string;
 }
 
-// 푸켓팅 결과
+// 푸켓팅 참여 결과
 export interface FoocketingResult {
   foocketingId: number;
   userId: number;
@@ -75,5 +77,32 @@ export interface FoocketingResult {
   entryTime: string;
   resultTime?: string;
   message: string;
+}
+
+
+//////////////////////////////////////////////////////////////
+// 푸켓팅 검색용 가게 정보 (shopId, bannerUrl 없음)
+export interface FoocketingSearchShop {
+  name: string;
+  lat: number;
+  lng: number;
+  distance: number;
+  rating: number;
+  ratingCount: number;
+}
+
+// 푸켓팅 검색 결과 아이템
+export interface FoocketingSearchItem {
+  foocketingId: number;
+  openTime: string;
+  menu: FoocketingMenu;
+  shop: FoocketingSearchShop;
+}
+
+// 푸켓팅 검색 결과 데이터 (커서 기반 페이지네이션)
+export interface FoocketingSearchData {
+  content: FoocketingSearchItem[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
 }
 

@@ -10,10 +10,11 @@ export {
   getFoocketingDetail,
   entryFoocketing,
   getFoocketingResult,
+  searchFoocketing,
 } from './foocketing';
 
 // Discount (마감세일) APIs
-export { getDiscountList } from './discount';
+export { getDiscountList, searchDiscount } from './discount';
 
 // Shop APIs
 export { getShopDetail } from './shop';

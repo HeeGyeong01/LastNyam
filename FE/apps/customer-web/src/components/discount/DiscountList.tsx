@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import type { DiscountItem, ShopDetailDiscount } from '@/types';
+import type { DiscountItem, ShopDetailDiscount, DiscountSearchItem } from '@/types';
 import { DiscountCard } from '.';
 
 interface DiscountListProps {
-  discounts: DiscountItem[] | ShopDetailDiscount[];
+  discounts: DiscountItem[] | ShopDetailDiscount[] | DiscountSearchItem[];
   shopInfo?: {
     rating: number;
     ratingCount: number;
@@ -18,9 +18,13 @@ export default function DiscountList({
 }: DiscountListProps) {
   const navigate = useNavigate();
 
-  // DiscountItem인지 ShopDetailDiscount인지 확인하는 타입 가드
-  const isDiscountItem = (item: DiscountItem | ShopDetailDiscount): item is DiscountItem => {
-    return 'menuInfo' in item;
+  // DiscountItem인지 ShopDetailDiscount인지 DiscountSearchItem인지 확인하는 타입 가드
+  const isDiscountItem = (item: DiscountItem | ShopDetailDiscount | DiscountSearchItem): item is DiscountItem => {
+    return 'menuInfo' in item && 'description' in item.menuInfo;
+  };
+
+  const isDiscountSearchItem = (item: DiscountItem | ShopDetailDiscount | DiscountSearchItem): item is DiscountSearchItem => {
+    return 'menuInfo' in item && !('description' in item.menuInfo);
   };
 
   return (
@@ -37,6 +41,25 @@ export default function DiscountList({
               key={item.discountId}
               foodName={item.menuInfo.name}
               foodDescription={item.menuInfo.description}
+              discountRate={item.discountRate}
+              discountedPrice={item.discountPrice}
+              originalPrice={item.menuInfo.price}
+              rating={item.shopInfo.rating}
+              reviewCount={item.shopInfo.ratingCount}
+              storeName={item.shopInfo.name}
+              remainingQuantity={item.discountAmount}
+              foodImage={item.menuInfo.photoUrl}
+              onClick={() => navigate(`/discount/${item.discountId}`)}
+            />
+          );
+        } else if (isDiscountSearchItem(item)) {
+          // DiscountSearchItem 타입
+          return (
+            <DiscountCard
+              className={borderClass}
+              key={item.discountId}
+              foodName={item.menuInfo.name}
+              foodDescription="" // 검색 결과에는 description이 없음
               discountRate={item.discountRate}
               discountedPrice={item.discountPrice}
               originalPrice={item.menuInfo.price}

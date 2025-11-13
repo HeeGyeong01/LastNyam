@@ -7,6 +7,7 @@ import type {
   FoocketingResult,
   FoocketingSortType,
   FoocketingCategory,
+  FoocketingSearchData,
   ApiResponseWrapper,
 } from '@/types';
 
@@ -97,5 +98,44 @@ export const getFoocketingResult = async (
     }
   );
   return response.data;
+};
+
+/**
+ * 5. 푸켓팅 검색
+ * GET /api/foocketing/search?sort={sortType}&lat={latitude}&lng={longitude}&keyword={keyword}&cursor={cursor}
+ * 
+ * @param params.sort - 정렬 타입 (필수): IMMINENT, CLOSEST, PRICE
+ * @param params.keyword - 검색어 (필수)
+ * @param params.cursor - 커서 값 (무한 스크롤용, 선택)
+ * @param params.lat - 위도 (필수, 없으면 자동으로 가져옴)
+ * @param params.lng - 경도 (필수, 없으면 자동으로 가져옴)
+ */
+export const searchFoocketing = async (
+  params: {
+    sort: FoocketingSortType;
+    keyword: string;
+    cursor?: string | null;
+    lat?: number;
+    lng?: number;
+  }
+): Promise<FoocketingSearchData> => {
+  // 위치 정보가 없으면 자동으로 가져오기
+  const location = params.lat && params.lng 
+    ? { lat: params.lat, lng: params.lng }
+    : await getLocation();
+
+  const response = await apiClient.get<ApiResponseWrapper<FoocketingSearchData>>(
+    '/api/foocketing/search',
+    {
+      params: {
+        sort: params.sort,
+        keyword: params.keyword,
+        lat: location.lat,
+        lng: location.lng,
+        ...(params.cursor ? { cursor: params.cursor } : {}),
+      },
+    }
+  );
+  return response.data.data;
 };
 

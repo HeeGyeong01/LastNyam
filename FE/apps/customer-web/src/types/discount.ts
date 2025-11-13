@@ -46,3 +46,28 @@ export interface DiscountListData {
   hasNextPage: boolean;
 }
 
+//////////////////////////////////////////////////////////////
+// 마감세일 검색용 메뉴 정보 (description 없음)
+export interface DiscountSearchMenuInfo {
+  name: string;
+  price: number;
+  photoUrl: string;
+}
+
+// 마감세일 검색 결과 아이템
+export interface DiscountSearchItem {
+  discountId: number;
+  discountAmount: number;
+  discountRate: number;
+  discountPrice: number;
+  menuInfo: DiscountSearchMenuInfo;
+  shopInfo: DiscountShopInfo;
+}
+
+// 마감세일 검색 결과 데이터 (커서 기반 페이지네이션)
+export interface DiscountSearchData {
+  content: DiscountSearchItem[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+}
+

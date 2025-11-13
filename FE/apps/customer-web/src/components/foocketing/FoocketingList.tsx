@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { FoocketingCardHorizontal } from '.';
-import type { FoocketingItem, ShopDetailFoocketing } from '@/types';
+import type { FoocketingItem, ShopDetailFoocketing, FoocketingSearchItem } from '@/types';
 
 interface FoocketingListProps {
-  foocketings: FoocketingItem[] | ShopDetailFoocketing[];
+  foocketings: FoocketingItem[] | ShopDetailFoocketing[] | FoocketingSearchItem[];
   shopInfo?: {
     name: string;
     distance: number; // km 단위
@@ -20,9 +20,13 @@ export default function FoocketingList({
 }: FoocketingListProps) {
   const navigate = useNavigate();
 
-  // FoocketingItem인지 ShopDetailFoocketing인지 확인하는 타입 가드
-  const isFoocketingItem = (item: FoocketingItem | ShopDetailFoocketing): item is FoocketingItem => {
-    return 'menu' in item;
+  // FoocketingItem인지 ShopDetailFoocketing인지 FoocketingSearchItem인지 확인하는 타입 가드
+  const isFoocketingItem = (item: FoocketingItem | ShopDetailFoocketing | FoocketingSearchItem): item is FoocketingItem => {
+    return 'menu' in item && 'shopId' in item.shop;
+  };
+
+  const isFoocketingSearchItem = (item: FoocketingItem | ShopDetailFoocketing | FoocketingSearchItem): item is FoocketingSearchItem => {
+    return 'menu' in item && !('shopId' in item.shop);
   };
 
   return (
@@ -30,6 +34,23 @@ export default function FoocketingList({
       {foocketings.map((item) => {
         if (isFoocketingItem(item)) {
           // FoocketingItem 타입
+          return (
+            <FoocketingCardHorizontal
+              key={item.foocketingId}
+              openTime={item.openTime}
+              menuName={item.menu.name}
+              originalPrice={item.menu.price}
+              shopName={item.shop.name}
+              menuProfileImage={item.menu.photoUrl}
+              distance={item.shop.distance}
+              rating={item.shop.rating}
+              reviewCount={item.shop.ratingCount}
+              discountedPrice={0}
+              onClick={() => navigate(`/foocketing/${item.foocketingId}`)}
+            />
+          );
+        } else if (isFoocketingSearchItem(item)) {
+          // FoocketingSearchItem 타입
           return (
             <FoocketingCardHorizontal
               key={item.foocketingId}
