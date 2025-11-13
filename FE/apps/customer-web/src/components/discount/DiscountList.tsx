@@ -23,12 +23,15 @@ export default function DiscountList({
 
   return (
     <div className="w-full flex flex-col gap-5">
-      {discounts.map((item) => {
+      {discounts.map((item, index) => {
+        const isLast = index === discounts.length - 1;
+        const borderClass = isLast ? '' : 'border-b border-stroke-subtle';
+        
         if (isDiscountItem(item)) {
           // DiscountItem 타입
           return (
             <DiscountCard
-              className="border-b border-stroke-subtle"
+              className={borderClass}
               key={item.discountId}
               foodName={item.menuInfo.name}
               foodDescription={item.menuInfo.description}
@@ -47,7 +50,7 @@ export default function DiscountList({
           // ShopDiscount 타입
           return (
             <DiscountCard
-              className="border-b border-stroke-subtle"
+              className={borderClass}
               key={item.discountId}
               foodName={item.menuName}
               foodDescription={item.menuDescription}

@@ -1,13 +1,12 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { PhoneIcon, ShareIcon } from '@heroicons/react/24/outline';
-import { HeartIcon } from '@heroicons/react/24/solid';
-import { StarIcon } from '@heroicons/react/24/solid';
 import { PageHeader } from '@/components/common';
 import { DiscountList } from '@/components/discount';
 import { FoocketingList } from '@/components/foocketing';
+import { Tab } from '@shared/components/Tab';
 import { useShopDetail } from '@/hooks';
 import ShopInfoTabs from './components/ShopInfoTabs';
+import ShopProfile from './components/ShopProfile';
 
 export default function ShopDetail() {
   const { id } = useParams();
@@ -63,54 +62,15 @@ export default function ShopDetail() {
         />
       </div>
       
-      {/* 배너 이미지 - 스크롤 시 같이 움직임 */}
-      {detail && !loading && (
-        <div className="relative w-full h-40">
-          <img
-            className="w-full h-full object-cover"
-            src={detail.shopBanner || 'https://placehold.co/400x200'}
-            alt={detail.shopName}
-          />
-          {/* 그라데이션 오버레이 - 위는 어둡고 아래는 투명 */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
-          
-          {/* 가게 프로필 - 배너 이미지 위에 겹쳐서 배치 */}
-          <div className="absolute top-28 left-4 right-4">
-            <div className="flex flex-col self-stretch p-5 rounded-2xl border border-stroke-subtle bg-white justify-start items-start gap-4">
-              {/* 가게이름 */}
-              <div className="self-stretch text-center text-primary h4-b">
-                {detail.shopName}
-              </div>
-
-              {/* 별점과 리뷰 수 */}
-              <div className="self-stretch flex justify-center items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <StarIcon className="w-4 h-4 text-[#F79616]" />
-                  <span className="text-primary p2-b">{detail.rating.toFixed(1)}</span>
-                </div>
-                <div className="w-px h-4 bg-stroke-subtle" />
-                <span className="text-secondary p2">{detail.ratingCount.toLocaleString('ko-KR')}명 참여</span>
-              </div>
-              
-              {/* 전화, 찜, 공유 버튼 */}
-              <div className="self-stretch flex justify-center items-center gap-8 pt-2 border-t border-stroke-subtle">
-                <div className="flex flex-col items-center gap-1">
-                  <PhoneIcon className="w-5 h-5 text-primary" />
-                  <span className="text-secondary caption2">전화</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <HeartIcon className="w-5 h-5 text-red-500" />
-                  <span className="text-secondary caption2">{detail.ratingCount.toLocaleString('ko-KR')}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <ShareIcon className="w-5 h-5 text-primary" />
-                  <span className="text-secondary caption2">공유</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 가게 프로필 */}
+      {/* {detail && !loading && (
+        <ShopProfile
+          shopBanner={detail.shopBanner}
+          shopName={detail.shopName}
+          rating={detail.rating}
+          ratingCount={detail.ratingCount}
+        />
+      )} */}
       
       {loading && <p>로딩 중...</p>}
       
@@ -119,7 +79,13 @@ export default function ShopDetail() {
       )}
       
       {detail && !loading && (
-        <div className="w-full p-4 flex flex-col justify-center items-start gap-6">
+        <div className="w-full flex flex-col">
+          <ShopProfile
+            shopBanner={detail.shopBanner}
+            shopName={detail.shopName}
+            rating={detail.rating}
+            ratingCount={detail.ratingCount}
+          />
           {/* 가게 정보 탭 (노쇼 시간, 가게 위치, 가게 소개) */}
           <div className="w-full mt-28">
             <ShopInfoTabs
@@ -129,41 +95,40 @@ export default function ShopDetail() {
               shopName={detail.shopName}
               shopAddress={detail.shopAddress}
               distanceMeters={detail.distanceMeters}
+              shopPickupEndTime={detail.shopPickupEndTime}
             />
           </div>
+          <div className="pt-3">
+            <Tab tabLabels={['마감세일', '푸켓팅']}/>
+          </div>
+          
           {/* 마감세일 목록 */}
           {detail.discounts && detail.discounts.length > 0 && (
-            <div className="self-stretch pt-3 bg-white flex flex-col justify-start items-start gap-3">
-              <div className="self-stretch px-4 inline-flex justify-start items-center gap-36">
-                <div className="text-center justify-start text-black text-lg font-bold font-['Pretendard'] leading-7">
-                  마감세일 중인 메뉴
-                </div>
+            <div className="flex flex-col pt-3 px-4 items-start gap-3">
+              <div className="text-primary h5-b">
+                마감세일 중인 메뉴
               </div>
-                <DiscountList
-                  discounts={detail.discounts}
-                />
+              <DiscountList
+                discounts={detail.discounts}
+              />
             </div>
           )}
 
           {/* 푸켓팅 목록 */}
           {detail.foocketings && detail.foocketings.length > 0 && (
             <div className="self-stretch pt-3 bg-white flex flex-col justify-start items-start gap-3">
-              <div className="self-stretch px-4 inline-flex justify-start items-center gap-36">
-                <div className="text-center justify-start text-black text-lg font-bold font-['Pretendard'] leading-7">
-                  푸켓팅 중인 메뉴
-                </div>
+              <div className="text-center justify-start text-black text-lg font-bold font-['Pretendard'] leading-7">
+                푸켓팅 중인 메뉴
               </div>
-              <div className="px-4 flex flex-col justify-start items-start gap-5">
-                <FoocketingList
-                  foocketings={detail.foocketings}
-                  shopInfo={{
-                    name: detail.shopName,
-                    distance: detail.distanceMeters / 1000, // 미터를 km로 변환
-                    rating: detail.rating,
-                    ratingCount: detail.ratingCount,
-                  }}
-                />
-              </div>
+              <FoocketingList
+                foocketings={detail.foocketings}
+                shopInfo={{
+                  name: detail.shopName,
+                  distance: detail.distanceMeters / 1000, // 미터를 km로 변환
+                  rating: detail.rating,
+                  ratingCount: detail.ratingCount,
+                }}
+              />
             </div>
           )}
         </div>

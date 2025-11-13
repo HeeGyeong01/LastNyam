@@ -1,62 +1,66 @@
 import { apiClient } from './client';
-import type { Cart, CartOrderResponse } from '@/types';
+import type { CartResponse, ApiResponseWrapper } from '@/types';
 
 // 요청 타입
 export interface AddToCartRequest {
   discountId: number;
-  quantity: number;
+  cartItemAmount: number;
 }
 
 export interface UpdateCartItemRequest {
   cartItemId: number;
-  quantity: number;
+  cartItemAmount: number;
+}
+
+export interface RemoveFromCartRequest {
+  cartItemId: number;
 }
 
 /**
- * 7. 장바구니 조회
+ * 1. 장바구니 조회
  * GET /api/cart/{userId}
  */
-export const getCart = async (userId: number): Promise<Cart> => {
-  const response = await apiClient.get(`/api/cart/${userId}`);
-  return response.data;
+export const getCart = async (userId: number): Promise<CartResponse> => {
+  const response = await apiClient.get<ApiResponseWrapper<CartResponse>>(`/api/cart/${userId}`);
+  return response.data.data;
 };
 
 /**
- * 8. 장바구니 물품 추가
- * PUT /api/cart/{userId}
+ * 2. 장바구니 물품 추가
+ * POST /api/cart/{userId}
  */
 export const addToCart = async (
   userId: number,
   data: AddToCartRequest
-): Promise<Cart> => {
-  const response = await apiClient.put(`/api/cart/${userId}`, data);
-  return response.data;
+): Promise<CartResponse> => {
+  const response = await apiClient.post<ApiResponseWrapper<CartResponse>>(`/api/cart/${userId}`, data);
+  return response.data.data;
 };
 
 /**
- * 9. 장바구니 물품 개수 수정
+ * 3. 장바구니 물품 개수 수정
  * PATCH /api/cart/{userId}
  */
 export const updateCartItem = async (
   userId: number,
   data: UpdateCartItemRequest
-): Promise<Cart> => {
-  const response = await apiClient.patch(`/api/cart/${userId}`, data);
-  return response.data;
+): Promise<CartResponse> => {
+  const response = await apiClient.patch<ApiResponseWrapper<CartResponse>>(`/api/cart/${userId}`, data);
+  return response.data.data;
 };
 
 /**
- * 10. 장바구니 물품 제거
+ * 4. 장바구니 물품 제거
  * DELETE /api/cart/{userId}
  */
 export const removeFromCart = async (
   userId: number,
-  cartItemId: number
-): Promise<Cart> => {
-  const response = await apiClient.delete(`/api/cart/${userId}`, {
-    data: { cartItemId },
+  data: RemoveFromCartRequest
+): Promise<CartResponse> => {
+  const response = await apiClient.delete<ApiResponseWrapper<CartResponse>>(`/api/cart/${userId}`, {
+    data,
   });
-  return response.data;
+  return response.data.data;
 };
 
 /**
@@ -65,7 +69,7 @@ export const removeFromCart = async (
  */
 export const orderCart = async (
   userId: number
-): Promise<CartOrderResponse> => {
+): Promise<unknown> => {
   const response = await apiClient.post(`/api/cart/${userId}/order`);
   return response.data;
 };

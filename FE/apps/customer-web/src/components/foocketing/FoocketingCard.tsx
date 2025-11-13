@@ -34,62 +34,62 @@ export default function FoocketingCard({
 
   return (
     <div
-      className={cn('flex flex-col w-36 items-start justify-center gap-2 cursor-pointer', className)}
+      className={cn('flex flex-col w-36 flex-shrink-0 items-start gap-2 cursor-pointer', className)}
       onClick={onClick}
     >
       {/* 이미지 영역 */}
-      <div className="relative self-stretch w-full bg-[#e6e6e6] rounded-lg overflow-hidden aspect-square">
+      <div className="relative w-full rounded-lg overflow-hidden aspect-square">
         <img
-          className="absolute top-[calc(50%_-_72px)] left-[calc(50%_-_72px)] w-36 h-36 object-cover"
+          className="w-full h-full object-cover"
           alt={menuName}
           src={menuProfileImage}
         />
 
         {/* 오픈시간 배지 */}
-        <div className="flex w-36 items-center justify-center gap-1 px-0 py-1 absolute left-0 bottom-0 bg-brand-bg-2">
-          <div className="relative w-fit p3-b text-brand whitespace-nowrap">
+        <div className="flex items-center justify-center gap-1 py-1 absolute left-0 right-0 bottom-0 bg-brand-bg-2">
+          <div className="p3-b text-brand whitespace-nowrap">
             {openTime}
           </div>
-          <div className="relative w-fit p3-b text-brand whitespace-nowrap">
+          <div className="p3-b text-brand whitespace-nowrap">
             OPEN
           </div>
         </div>
       </div>
 
       {/* 정보 영역 */}
-      <div className="flex flex-col items-start gap-1 relative self-stretch w-full">
-        <div className="flex flex-col items-start gap-0.5 relative self-stretch w-full">
+      <div className="flex flex-col items-start gap-1 w-full">
+        <div className="flex flex-col items-start gap-0.5 w-full">
           {/* 메뉴명 */}
-          <div className="relative self-stretch p1-b text-primary overflow-hidden text-ellipsis line-clamp-1">
+          <div className="p1-b text-primary overflow-hidden text-ellipsis line-clamp-1">
             {menuName}
           </div>
 
           {/* 별점과 가게명 */}
-          <div className="flex items-center gap-1 relative self-stretch w-full">
-            <div className="inline-flex items-center relative flex-[0_0_auto] gap-1">
-              <StarIcon className="w-3 h-3 text-[#F79616]" />
-              <div className="relative w-fit caption2 text-tertiary whitespace-nowrap">
+          <div className="flex items-center gap-1 w-full">
+            <div className="flex items-center gap-1">
+              <StarIcon className="w-3 h-3 text-brand-subtle" />
+              <div className="caption2 text-tertiary whitespace-nowrap">
                 {rating.toFixed(1)} ({formattedReviewCount})
               </div>
             </div>
 
-            <div className="relative flex-1 caption2 text-tertiary overflow-hidden text-ellipsis line-clamp-1">
+            <div className="flex-1 caption2 text-tertiary overflow-hidden text-ellipsis line-clamp-1">
               {shopName}
             </div>
           </div>
         </div>
 
         {/* 거리 */}
-        <div className="relative self-stretch caption1 text-secondary">
+        <div className="caption1 text-secondary">
           {distance}
         </div>
 
         {/* 가격 */}
-        <div className="flex items-center gap-1 relative self-stretch w-full">
-          <div className="relative w-fit p2-b text-brand whitespace-nowrap overflow-hidden text-ellipsis line-clamp-1">
+        <div className="flex items-center gap-1 w-full">
+          <div className="p2-b text-brand whitespace-nowrap">
             {formattedDiscountedPrice}원
           </div>
-          <div className="relative w-fit p3 text-secondary line-through whitespace-nowrap overflow-hidden text-ellipsis line-clamp-1">
+          <div className="p3 text-secondary line-through whitespace-nowrap">
             {formattedOriginalPrice}원
           </div>
         </div>

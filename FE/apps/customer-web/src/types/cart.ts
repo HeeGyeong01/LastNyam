@@ -1,30 +1,19 @@
 // 장바구니 관련 타입 (응답)
-export interface CartItem {
+
+export interface CartItemResponse {
   cartItemId: number;
   discountId: number;
-  shopId: number;
-  shopName: string;
+  cartItemAmount: number;
   menuName: string;
-  originalPrice: number;
   discountPrice: number;
   discountRate: number;
-  imageUrl: string;
-  quantity: number;
-  deadline: string;
+  shopId: number;
+  shopName: string;
 }
 
-export interface Cart {
+export interface CartResponse {
+  cartId: number | null;
   userId: number;
-  items: CartItem[];
-  totalOriginalPrice: number;
-  totalDiscountPrice: number;
-  totalSavings: number;
-}
-
-export interface CartOrderResponse {
-  success: boolean;
-  orderId: number;
-  message: string;
-  totalAmount: number;
+  cartItems: CartItemResponse[];
 }
 

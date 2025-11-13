@@ -64,7 +64,7 @@ export default function FoocketingCardHorizontal({
             <div className="inline-flex items-center relative flex-[0_0_auto] gap-1">
               <StarIcon className="w-3 h-3 text-[#F79616]" />
               <div className="relative w-fit caption2 text-tertiary whitespace-nowrap">
-                {rating?.toFixed(1)} ({formattedReviewCount ? `(${formattedReviewCount})` : ''})
+                {rating?.toFixed(1)} {formattedReviewCount ? `(${formattedReviewCount})` : ''}
               </div>
             </div>
 

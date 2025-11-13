@@ -8,6 +8,7 @@ interface ShopInfoTabsProps {
   shopName: string;
   shopAddress?: string;
   distanceMeters?: number;
+  shopPickupEndTime?: string;
 }
 
 export default function ShopInfoTabs({
@@ -17,11 +18,19 @@ export default function ShopInfoTabs({
   shopName,
   shopAddress,
   distanceMeters,
+  shopPickupEndTime,
 }: ShopInfoTabsProps) {
-  const [selectedTab, setSelectedTab] = useState<'noshow' | 'location' | 'introduction'>('location');
+  const [selectedTab, setSelectedTab] = useState<'noshow' | 'location' | 'introduction'>('noshow');
+
+  // 시간 포맷팅: "20:00:00" -> "20:00"
+  const formatPickupTime = (timeString?: string) => {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}:${minutes}`;
+  };
 
   const tabs = [
-    { id: 'noshow' as const, label: '노쇼 시간' },
+    { id: 'noshow' as const, label: '픽업 마감시간' },
     { id: 'location' as const, label: '가게 위치' },
     { id: 'introduction' as const, label: '가게 소개' },
   ];
@@ -34,33 +43,55 @@ export default function ShopInfoTabs({
   };
 
   return (
-    <div className="self-stretch flex flex-col">
+    <div className="self-stretch flex flex-col mt-2">
       {/* 탭 헤더 */}
       <div className="flex border-b border-stroke-subtle">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setSelectedTab(tab.id)}
-            className={`flex-1 py-3 text-center p2-b relative ${
+            className={`flex-1 py-2 text-center p2-b relative ${
               selectedTab === tab.id
-                ? 'text-primary'
+                ? 'text-brand'
                 : 'text-secondary'
             }`}
           >
             {tab.label}
             {selectedTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
             )}
           </button>
         ))}
       </div>
 
       {/* 탭 컨텐츠 */}
-      <div className="mt-4">
+      <div className="p-4">
         {selectedTab === 'noshow' && (
-          <div className="self-stretch text-secondary p2">
-            {/* TODO: 노쇼 시간 정보 표시 */}
-            노쇼 시간 정보가 곧 추가될 예정입니다.
+          <div className="self-stretch flex flex-col gap-4">
+            {/* 픽업 시간 안내 */}
+            {shopPickupEndTime && (
+              <div className="flex flex-col gap-3">
+                <div className="text-primary h5-b">
+                  {formatPickupTime(shopPickupEndTime)}시 까지 픽업해주세요
+                  {/* 경고 메시지 */}
+                  <div className="text-brand p2 pt-0.5">
+                    이후 방문 시 주문이 취소되며, 환불이 불가하니 유의해주세요
+                  </div>
+                </div>
+                
+                
+                {/* 안내 사항 */}
+                <div className="flex flex-col gap-1 text-secondary p3">
+                  <p>• 발급받으신 QR을 음식 수령 시 사장님께 제시해주세요</p>
+                  <p>• QR은 주문내역에서 확인할 수 있습니다</p>
+                </div>
+              </div>
+            )}
+            {!shopPickupEndTime && (
+              <div className="text-secondary p2">
+                픽업 시간 정보가 없습니다.
+              </div>
+            )}
           </div>
         )}
 
@@ -146,6 +177,7 @@ export default function ShopInfoTabs({
           </div>
         )}
       </div>
+      <div className="h-px bg-stroke-subtle"></div>
     </div>
   );
 }
