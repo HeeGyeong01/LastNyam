@@ -28,7 +28,7 @@ export default function HomeHeader() {
 
         {/* 장바구니 버튼 */}
         <button
-          onClick={() => navigate('/shopping-bag')}
+          onClick={() => navigate('/cart')}
           className="w-8 h-8 flex justify-center items-center"
         >
           <ShoppingBagIcon className="w-5 h-5 text-primary" strokeWidth={2} />

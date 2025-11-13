@@ -39,7 +39,7 @@ export default function PageHeader({ title, onBack, variant, showCart = true, cl
   };
 
   const handleCartClick = () => {
-    navigate('/shopping-bag');
+    navigate('/cart');
   };
 
   return (
