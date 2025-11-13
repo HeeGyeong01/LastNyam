@@ -81,6 +81,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
     const [isLoading, setIsLoading] = React.useState(false)
     const [showMenuSelectModal, setShowMenuSelectModal] = React.useState(false)
     const [selectedMenuForList, setSelectedMenuForList] = React.useState<string | null>(null)
+    const [showConfirmModal, setShowConfirmModal] = React.useState(false)
     const [formData, setFormData] = React.useState<MenuFormData>({
       image: null,
       name: "",
@@ -313,6 +314,12 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
             alert('푸켓팅 시간을 입력해주세요.')
             return
           }
+          
+          // 푸켓팅 등록 시 무료 등록 동의 모달 띄우기
+          if (variant === "create-foocketing") {
+            setShowConfirmModal(true)
+            return
+          }
         }
       }
       
@@ -369,6 +376,13 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
         onSave?.(formData.selectedMenu?.menuId || 0, formData)
         onClose()
       }
+    }
+
+    const handleConfirmSave = () => {
+      setShowConfirmModal(false)
+      // 푸켓팅 등록 실행
+      onSave?.(formData.selectedMenu?.menuId || 0, formData)
+      onClose()
     }
 
     return (
@@ -699,6 +713,20 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
           onMenuSelect={handleMenuSelect}
         />
       )}
+
+      {/* 무료 등록 동의 모달 (푸켓팅용) */}
+      <Modal
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="무료 등록 동의"
+        detail={`이 물건은 ${formData.foocketingTime}에 무료로 공개됩니다.\n이에 동의하신다면 진행해주세요.`}
+        icon="exclamation"
+        variant="two-button"
+        primaryButtonText="확인"
+        secondaryButtonText="취소"
+        onPrimaryClick={handleConfirmSave}
+        onSecondaryClick={() => setShowConfirmModal(false)}
+      />
       </>
     )
   }
