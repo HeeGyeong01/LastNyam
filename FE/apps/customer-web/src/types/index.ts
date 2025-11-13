@@ -7,6 +7,6 @@ export * from './discount';
 export * from './shop';
 export * from './cart';
 export * from './order';
-export * from './likes';
+export * from './favorite';
 export * from './search';
 

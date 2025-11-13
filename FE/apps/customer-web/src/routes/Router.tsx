@@ -7,7 +7,7 @@ import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from 
 import { Discount } from '../pages/discount';
 import { ShopDetail } from '../pages/shop';
 import { Cart, PaymentSuccess } from '../pages/cart';
-import Likes from '../pages/likes';
+import { Favorite } from '../pages/favorite';
 import { Search, SearchResult } from '../pages/search';
 import OrderList from '../pages/order';
 import MyPage from '../pages/mypage';
@@ -73,8 +73,8 @@ export const router = createBrowserRouter([
         element: <PaymentSuccess />,
       },
       {
-        path: '/likes',
-        element: <Likes />,
+        path: '/favorite',
+        element: <Favorite />,
       },
       {
         path: '/search',
