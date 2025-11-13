@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { FoocketingCardHorizontal } from '@/components/cards';
+import { FoocketingCardHorizontal } from '.';
 import type { FoocketingItem, ShopDetailFoocketing } from '@/types';
 
 interface FoocketingListProps {

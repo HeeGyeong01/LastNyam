@@ -5,7 +5,7 @@ import { ClockIcon } from '@heroicons/react/24/outline';
 import { getFoocketingDetail } from '@/api/foocketing';
 import { Badge } from '@shared/components/Badge';
 import { PageHeader } from '@/components/common';
-import { ShopCardHorizontal } from '@/components/cards';
+import { ShopCardHorizontal } from '@/components/shop';
 import { BottomSheet } from '@/components/common';
 import NaverMap from '@/components/map/NaverMap';
 import { formatTimeToKorean, formatISOStringToKorean } from '@/lib/time';

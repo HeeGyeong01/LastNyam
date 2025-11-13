@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@shared/components/Input';
 import { HomeHeader } from '@/components/common';
-import { FoocketingCard } from '@/components/cards';
+import { FoocketingCard } from '@/components/foocketing';
 import DiscountCategoryTab from './DiscountCategoryTab';
 import { Button } from '@shared/components/Button';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';

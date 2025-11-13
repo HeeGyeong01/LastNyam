@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { DiscountItem, ShopDetailDiscount } from '@/types';
-import { MenuCard } from '@/components/cards';
+import { DiscountCard } from '.';
 
 interface DiscountListProps {
   discounts: DiscountItem[] | ShopDetailDiscount[];
@@ -27,7 +27,7 @@ export default function DiscountList({
         if (isDiscountItem(item)) {
           // DiscountItem 타입
           return (
-            <MenuCard
+            <DiscountCard
               className="border-b border-stroke-subtle"
               key={item.discountId}
               foodName={item.menuInfo.name}
@@ -46,7 +46,7 @@ export default function DiscountList({
         } else {
           // ShopDiscount 타입
           return (
-            <MenuCard
+            <DiscountCard
               className="border-b border-stroke-subtle"
               key={item.discountId}
               foodName={item.menuName}
