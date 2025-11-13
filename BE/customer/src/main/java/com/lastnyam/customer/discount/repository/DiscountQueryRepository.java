@@ -193,16 +193,14 @@ public class DiscountQueryRepository {
                      ST_DWithin(
                         ST_Point(s.shop_lng, s.shop_lat)::geography,
                         ST_Point(?, ?)::geography,
-                        1000
+                        3000
                      )
-                     AND d.discount_date = ?
+                     AND d.discount_close_time > NOW()
                     """);
             params.add(lon);
             params.add(lat);
             params.add(lon);
             params.add(lat);
-
-            params.add(LocalDate.now(ZoneId.of("Asia/Seoul")));
         }
 
         public String getSql() {
@@ -243,8 +241,10 @@ public class DiscountQueryRepository {
         }
 
         public void addCategoryCondition(Integer categoryId) {
-            sql.append(" AND m.category_id = ?");
-            params.add(categoryId);
+            if (categoryId != null) {
+                sql.append(" AND m.category_id = ?");
+                params.add(categoryId);
+            }
         }
 
         public void addSortCondition(DiscountSortType type) {
