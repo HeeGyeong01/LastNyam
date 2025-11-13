@@ -57,6 +57,7 @@ export default function ComponentTestPage() {
   const { ownerId, shops } = useOwnerStore();
   const [loading, setLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -487,6 +488,47 @@ export default function ComponentTestPage() {
     }
   };
 
+  // 사업자 프로필 조회 API 테스트
+  const handleFetchOwnerProfile = async () => {
+    setProfileLoading(true);
+    try {
+      const url = `${OWNER_API_BASE_URL}/api/owner/auth/profile`;
+      console.log('===== 사업자 프로필 조회 API 호출 시작 =====');
+      console.log('요청 URL:', url);
+      console.log('요청 메서드: GET');
+      
+      const response = await fetchWithAuth(url, {
+        method: 'GET',
+      });
+
+      console.log('응답 상태 코드:', response.status);
+      console.log('응답 상태 텍스트:', response.statusText);
+
+      // 에러 응답도 파싱해서 확인
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.log('===== 사업자 프로필 조회 API 에러 응답 =====');
+        console.log('에러 데이터:', data);
+        console.log('JSON 형식:', JSON.stringify(data, null, 2));
+        console.log('===============================================');
+        throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+      }
+
+      console.log('===== 사업자 프로필 조회 API 성공 응답 =====');
+      console.log('전체 응답 데이터:', data);
+      console.log('JSON 형식:', JSON.stringify(data, null, 2));
+      console.log('===========================================');
+      
+      alert('사업자 프로필 조회 성공! 콘솔을 확인하세요.');
+    } catch (error) {
+      console.error('사업자 프로필 조회 실패:', error);
+      alert(`사업자 프로필 조회 실패: ${error instanceof Error ? error.message : '알 수 없는 에러'}`);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-8">
       <h1 className="text-3xl font-bold mb-8">컴포넌트 테스트 페이지</h1>
@@ -494,6 +536,8 @@ export default function ComponentTestPage() {
       {/* API 테스트 섹션 */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">API 테스트</h2>
+        
+        {/* 주간 리포트 조회 */}
         <div className="border rounded-lg p-6 space-y-4">
           <div className="space-y-2">
             <h3 className="text-lg font-medium">주간 리포트 조회 API</h3>
@@ -514,6 +558,27 @@ export default function ComponentTestPage() {
             >
               {reportLoading && <Spinner className="size-4" />}
               <span>{reportLoading ? '조회 중...' : '주간 리포트 조회하기'}</span>
+            </button>
+            <p className="text-xs text-gray-500">
+              ※ 버튼 클릭 시 API 응답이 콘솔에 출력됩니다. (F12 → Console 탭 확인)
+            </p>
+          </div>
+        </div>
+
+        {/* 사업자 프로필 조회 */}
+        <div className="border rounded-lg p-6 space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">사업자 프로필 조회 API</h3>
+            <p className="text-sm text-gray-600">
+              엔드포인트: <code className="bg-gray-100 px-2 py-1 rounded">GET /api/owner/auth/profile</code>
+            </p>
+            <button
+              onClick={handleFetchOwnerProfile}
+              disabled={profileLoading}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {profileLoading && <Spinner className="size-4" />}
+              <span>{profileLoading ? '조회 중...' : '사업자 프로필 조회하기'}</span>
             </button>
             <p className="text-xs text-gray-500">
               ※ 버튼 클릭 시 API 응답이 콘솔에 출력됩니다. (F12 → Console 탭 확인)

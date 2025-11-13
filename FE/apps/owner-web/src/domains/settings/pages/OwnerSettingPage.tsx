@@ -79,6 +79,7 @@ export default function OwnerSettingPage() {
     {
       icon: Presentation,
       label: "가게 통계",
+      onClick: () => navigate("/owner/insights/report"),
     },
     {
       icon: Calculator,
