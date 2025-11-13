@@ -1,5 +1,6 @@
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { DiscountSortType } from '@/types';
+import { Button } from '@shared/components/Button';
 
 interface DiscountListHeaderProps {
   sort: DiscountSortType;
@@ -14,15 +15,12 @@ export default function DiscountListHeader({
 }: DiscountListHeaderProps) {
 
   return (
-    <div className="bg-white flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
+    <div className="bg-white flex justify-center mb-1 sticky top-0 bg-white z-10">
       {/* 정렬 옵션 */}
-      <button 
-        className="flex items-center gap-1 text-slate-500 text-sm font-semibold"
-        onClick={onSortClick}
-      >
+      <Button btnStyle="ghost" size="default" onClick={onSortClick}>
         <span>{sortLabels[sort]}</span>
         <ChevronDownIcon className="w-3.5 h-3.5" />
-      </button>
+      </Button>
     </div>
   );
 }

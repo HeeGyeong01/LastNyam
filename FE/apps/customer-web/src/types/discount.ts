@@ -9,25 +9,40 @@ export type DiscountCategory =
 // 찜하기순, 별점순, 거리순, 할인율순, 가격순
 export type DiscountSortType = 'FAVORITES' | 'RATING' | 'CLOSEST' | 'DISCOUNT' | 'PRICE';
 
-// 각각의 마감세일 아이템(마감세일 중인 가게)
+// 메뉴 정보
+export interface DiscountMenuInfo {
+  name: string;
+  description: string;
+  price: number;
+  photoUrl: string;
+}
+
+// 가게 정보
+export interface DiscountShopInfo {
+  shopId: number;
+  bannerUrl: string | null;
+  name: string;
+  lat: number;
+  lng: number;
+  distance: number;
+  rating: number;
+  ratingCount: number;
+}
+
+// 각각의 마감세일 아이템
 export interface DiscountItem {
   discountId: number;
-  shopId: number;
-  shopName: string;
-  menuName: string;
-  originalPrice: number;
-  discountPrice: number;
+  discountAmount: number;
   discountRate: number;
-  imageUrl: string;
-  distance?: number;
-  deadline: string;
-  stock: number;
-  category: DiscountCategory;
+  discountPrice: number;
+  menuInfo: DiscountMenuInfo;
+  shopInfo: DiscountShopInfo;
 }
 
 // API 응답의 data(마감세일 목록) 부분
-export interface DiscountListResponse {
-  items: DiscountItem[];
-  total: number;
+export interface DiscountListData {
+  content: DiscountItem[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
 }
 

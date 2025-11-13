@@ -1,9 +1,10 @@
 import { apiClient } from './client';
 import { getLocation } from '@/lib/geolocation';
 import type {
-  DiscountListResponse,
+  DiscountListData,
   DiscountCategory,
   DiscountSortType,
+  ApiResponseWrapper,
 } from '@/types';
 
 /**
@@ -20,19 +21,20 @@ export const getDiscountList = async (
     lat?: number;
     lng?: number;
   } = {}
-): Promise<DiscountListResponse> => {
+): Promise<DiscountListData> => {
   // 위치 정보가 없으면 자동으로 가져오기
   const location = params.lat && params.lng 
     ? { lat: params.lat, lng: params.lng }
     : await getLocation();
 
-  const response = await apiClient.get('/api/discount', {
+  const response = await apiClient.get<ApiResponseWrapper<DiscountListData>>('/api/discount', {
     params: {
       ...params,
       lat: location.lat,
       lng: location.lng,
     },
   });
-  return response.data;
+  // 응답 구조: { data: { content: [], nextCursor, hasNextPage }, status, code, message }
+  return response.data.data;
 };
 

@@ -1,10 +1,16 @@
 import { Outlet } from 'react-router-dom';
 import { BottomNavBar } from '../common';
+import { useLayout } from '@/contexts/LayoutContext';
 
 export default function MainLayout() {
+  const { bottomPadding } = useLayout();
+
   return (
     <>
-      <div className="h-screen max-w-[500px] mx-auto pb-20 overflow-y-auto">
+      <div 
+        className="h-screen max-w-[500px] mx-auto overflow-y-auto"
+        style={{ paddingBottom: `${bottomPadding}px` }}
+      >
         {/* 메인 컨텐츠 - 각 페이지에서 헤더 관리 */}
         <Outlet />
       </div>

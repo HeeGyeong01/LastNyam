@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { MainLayout } from '../components/layout';
+import { MainLayout, DetailLayout } from '../components/layout';
 import Home from '../pages/home';
 import { Login, KakaoCallback, AdditionalInfo, SignupComplete } from '../pages/auth';
 import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from '../pages/foocketing';
@@ -44,10 +44,6 @@ export const router = createBrowserRouter([
         element: <Foocketing />,
       },
       {
-        path: '/foocketing/:id',
-        element: <FoocketingDetail />,
-      },
-      {
         path: '/foocketing-success',
         element: <FoocketingSuccess />,
       },
@@ -58,10 +54,6 @@ export const router = createBrowserRouter([
       {
         path: '/discount',
         element: <Discount />,
-      },
-      {
-        path: '/shop/:id',
-        element: <ShopDetail />,
       },
       {
         path: '/cart',
@@ -94,6 +86,21 @@ export const router = createBrowserRouter([
       {
         path: '/qr',
         element: <QR />,
+      },
+    ],
+  },
+  
+  // Detail routes (네비게이션 바 없음)
+  {
+    element: <DetailLayout />,
+    children: [
+      {
+        path: '/foocketing/:id',
+        element: <FoocketingDetail />,
+      },
+      {
+        path: '/shop/:id',
+        element: <ShopDetail />,
       },
     ],
   },
