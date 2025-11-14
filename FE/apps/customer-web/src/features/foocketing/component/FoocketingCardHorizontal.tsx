@@ -38,7 +38,7 @@ export default function FoocketingCardHorizontal({
 
   return (
     <div
-      className={cn('flex w-full items-start gap-3 pt-0 pb-5 px-0 cursor-pointer', className)}
+      className={cn('w-full flex items-start gap-3 pt-0 pb-5 px-0 cursor-pointer', className)}
       onClick={onClick}
     >
       {/* 오픈시간 배지 (왼쪽) */}
