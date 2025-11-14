@@ -1,20 +1,17 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
-import { BottomSheet, PageHeader } from '@/shared/components';
+import { PageHeader } from '@/shared/components';
 import { DiscountList } from '@/features/discount/component';
 import { FoocketingList } from '@/features/foocketing/component';
 import { Tab } from '@shared/components/Tab';
 import { useShopDetail } from '@/features/shop/hook';
-import type { ShopDetailDiscount, ShopDetailFoocketing } from '@/features/shop/type';
-import { ShopInfoTabs, ShopProfile, MenuDetail } from '@/features/shop/component';
+import type { ShopDetailFoocketing } from '@/features/shop/type';
+import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
 
 export default function ShopDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ShopDetailDiscount | ShopDetailFoocketing | null>(null);
-  const [selectedItemType, setSelectedItemType] = useState<'discount' | 'foocketing' | null>(null);
   const discountSectionRef = useRef<HTMLDivElement>(null);
   const foocketingSectionRef = useRef<HTMLDivElement>(null);
 
@@ -102,21 +99,8 @@ export default function ShopDetail() {
     }
   };
 
-  // 카드 클릭 시 BottomSheet 열기
-  const handleDiscountCardClick = (item: ShopDetailDiscount) => {
-    setSelectedItem(item);
-    setSelectedItemType('discount');
-    setIsBottomSheetOpen(true);
-  };
-
   const handleFoocketingCardClick = (item: ShopDetailFoocketing) => {
     navigate(`/foocketing/${item.foocketingId}`);
-  };
-
-  const handleCloseBottomSheet = () => {
-    setIsBottomSheetOpen(false);
-    setSelectedItem(null);
-    setSelectedItemType(null);
   };
 
   return (
@@ -175,7 +159,6 @@ export default function ShopDetail() {
               </div>
               <DiscountList
                 discounts={detail.discounts}
-                onCardClick={handleDiscountCardClick}
               />
             </div>
             {/* 구분선 */}
@@ -202,16 +185,6 @@ export default function ShopDetail() {
             </div>
           )}
         </div>
-      )}
-
-      {/* BottomSheet */}
-      {isBottomSheetOpen && selectedItem && selectedItemType === 'discount' && 'discountRate' in selectedItem && (
-        <BottomSheet
-          showBackdrop={true}
-          onBackdropClick={handleCloseBottomSheet}
-        >
-          <MenuDetail detail={selectedItem} />
-        </BottomSheet>
       )}
     </>
   );
