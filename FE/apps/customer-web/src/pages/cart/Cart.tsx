@@ -1,34 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import CartMenuCard from './component/cartMenuCard';
-
-// API 응답 타입
-interface CartItem {
-  cartItemId: number;
-  discountId: number;
-  cartItemAmount: number;
-  menuName: string;
-  discountPrice: number;
-  discountRate: number;
-  menuImage: string;
-  discountMenuAmount: number; // 메뉴의 남은 수량
-}
-
-interface Shop {
-  shopId: number;
-  shopName: string;
-  shopBanner: string;
-  shopCloses: string; // 예: "21:00:00"
-}
-
-interface CartData {
-  cartId: number;
-  userId: number;
-  cartItems: CartItem[];
-  shop: Shop;
-}
+import { getCart, type CartData } from './api/cart.api';
 
 // shopCloses 시간을 "HH시 MM분" 형식으로 변환
 function formatCloseTime(closeTime: string): string {
@@ -38,61 +13,59 @@ function formatCloseTime(closeTime: string): string {
 
 export default function Cart() {
   const navigate = useNavigate();
-  
-  // 테스트용 샘플 데이터 (API 응답 구조에 맞춤)
-  const [cartData, setCartData] = useState<CartData>({
-    cartId: 2,
-    userId: 1,
-    shop: {
-      shopId: 1,
-      shopName: '생연어전문점 청라수산',
-      shopBanner: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=150&h=100&fit=crop',
-      shopCloses: '21:00:00',
-    },
-    cartItems: [
-      {
-        cartItemId: 1,
-        discountId: 1,
-        cartItemAmount: 2,
-        menuName: '초팝 한판 세트',
-        discountPrice: 800000,
-        discountRate: 10,
-        menuImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&h=100&fit=crop',
-        discountMenuAmount: 5,
-      },
-      {
-        cartItemId: 2,
-        discountId: 1,
-        cartItemAmount: 1,
-        menuName: '냉모밀세트',
-        discountPrice: 800000,
-        discountRate: 10,
-        menuImage: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=150&h=100&fit=crop',
-        discountMenuAmount: 3,
-      },
-    ],
-  });
+  const [cartData, setCartData] = useState<CartData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 장바구니 데이터 조회
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        // TODO: 로그인 구현 후 실제 userId 사용
+        const data = await getCart(2);
+        console.log('Cart API Response:', data);
+        setCartData(data);
+      } catch (err) {
+        console.error('장바구니 조회 실패:', err);
+        setError('장바구니를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, []);
 
   const handleQuantityChange = (cartItemId: number, newQuantity: number) => {
-    setCartData(prev => ({
-      ...prev,
-      cartItems: prev.cartItems.map(item =>
-        item.cartItemId === cartItemId 
-          ? { ...item, cartItemAmount: newQuantity } 
-          : item
-      ),
-    }));
+    setCartData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        cartItems: prev.cartItems.map(item =>
+          item.cartItemId === cartItemId 
+            ? { ...item, cartItemAmount: newQuantity } 
+            : item
+        ),
+      };
+    });
   };
 
   const handleRemove = (cartItemId: number) => {
-    setCartData(prev => ({
-      ...prev,
-      cartItems: prev.cartItems.filter(item => item.cartItemId !== cartItemId),
-    }));
+    setCartData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        cartItems: prev.cartItems.filter(item => item.cartItemId !== cartItemId),
+      };
+    });
   };
 
   const handleAddMore = () => {
-    navigate(`/shop/${cartData.shop.shopId}`);
+    if (cartData?.shop?.shopId) {
+      navigate(`/shop/${cartData.shop.shopId}`);
+    }
   };
 
   const handleOrder = () => {
@@ -100,10 +73,10 @@ export default function Cart() {
     console.log('주문하기');
   };
 
-  const totalPrice = cartData.cartItems.reduce(
+  const totalPrice = cartData?.cartItems.reduce(
     (sum, item) => sum + item.discountPrice * item.cartItemAmount,
     0
-  );
+  ) || 0;
 
   return (
     <>
@@ -111,7 +84,24 @@ export default function Cart() {
       <div className="fixed inset-0 bg-bg-1 -z-10 max-w-[500px] mx-auto" />
       
       <PageHeader title="장바구니" variant="light" />
-      <div className="px-4 py-5 flex flex-col gap-3">
+
+      {/* 로딩 상태 */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-16 gap-2">
+          <div className="p1 text-tertiary">장바구니를 불러오는 중...</div>
+        </div>
+      )}
+
+      {/* 에러 상태 */}
+      {error && !isLoading && (
+        <div className="flex flex-col items-center justify-center py-16 gap-2">
+          <div className="p1 text-tertiary">{error}</div>
+        </div>
+      )}
+
+      {/* 장바구니 데이터 */}
+      {!isLoading && !error && cartData && (
+        <div className="px-4 py-5 flex flex-col gap-3">
           {/* 가게 정보 */}
           {cartData.cartItems.length > 0 && (
             <div className="py-1 flex gap-1.5 items-center">
@@ -166,10 +156,10 @@ export default function Cart() {
             </div>
           )}
         </div>
-      {/* </div> */}
+      )}
 
       {/* 하단 주문 정보 */}
-      {cartData.cartItems.length > 0 && (
+      {!isLoading && !error && cartData && cartData.cartItems.length > 0 && (
         <BottomSheet showBackdrop={false}>
           <div className="flex flex-col items-center gap-3">
             {/* 픽업 마감시간 */}
