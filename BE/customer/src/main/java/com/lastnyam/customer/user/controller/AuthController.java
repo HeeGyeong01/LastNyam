@@ -31,7 +31,7 @@ public class AuthController {
     @RequestMapping(value = "/social/kakao", method = { RequestMethod.GET, RequestMethod.POST })
     public void socialLogin(HttpServletResponse response) throws IOException {
         log.info("카카오 소셜 로그인 요청");
-        response.sendRedirect("/oauth2/authorization/kakao");
+        response.sendRedirect("/api/oauth2/authorization/kakao");
     }
 
     /**
