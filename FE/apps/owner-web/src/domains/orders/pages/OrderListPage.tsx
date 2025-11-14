@@ -242,7 +242,7 @@ export default function OrderListPage() {
         </div>
       </section>
 
-      <section className="mt-4 pb-6">
+      <section className="mt-4 pb-20">
         <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
           <div className="mx-auto inline-flex items-center gap-1 rounded-full border border-stroke-3 bg-bg-0 p-1 shadow-sm">
             {TRANSACTION_TABS.map((tab) => {

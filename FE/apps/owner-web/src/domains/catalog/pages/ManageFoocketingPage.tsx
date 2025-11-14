@@ -7,6 +7,7 @@ import { MenuListItem } from "@/components/ui/menuListItem"
 import { AddMenuModal, type MenuData, type MenuFormData } from "@/components/ui/addMenuModal"
 import { useOwnerStore } from "@/store/useOwnerStore"
 import { foocketingApi } from "@/domains/catalog/apis/foocketing.api"
+import { menuApi } from "@/domains/catalog/apis/menu.api"
 
 interface FoocketingMenuItem {
   id: number
@@ -24,8 +25,47 @@ export default function ManageFoocketingPage() {
   const [error, setError] = React.useState<string | null>(null)
   const [foocketingModalOpen, setFoocketingModalOpen] = React.useState(false)
   
-  const { ownerId, accessToken, shops, getMenuById, menus: storeMenus } = useOwnerStore()
+  const { 
+    ownerId, 
+    accessToken, 
+    shops, 
+    getMenuById, 
+    menus: storeMenus,
+    setMenus: setStoreMenus,
+    setMenusLoading 
+  } = useOwnerStore()
   const shopId = shops[0]?.shopId
+
+  // 메뉴 데이터 로드 (store에 없으면)
+  React.useEffect(() => {
+    const fetchMenus = async () => {
+      // 이미 메뉴가 있으면 스킵
+      if (storeMenus.length > 0) {
+        return
+      }
+
+      if (!ownerId || !shopId || !accessToken) {
+        return
+      }
+
+      try {
+        console.log('📋 푸켓팅 페이지에서 메뉴 로드 중...')
+        setMenusLoading(true)
+        const response = await menuApi.getMenus(ownerId, shopId, accessToken)
+        
+        if (response.data?.menus) {
+          setStoreMenus(response.data.menus)
+          console.log('✅ 메뉴 로드 완료:', response.data.menus.length, '개')
+        }
+      } catch (err) {
+        console.error('❌ 메뉴 로드 실패:', err)
+      } finally {
+        setMenusLoading(false)
+      }
+    }
+
+    fetchMenus()
+  }, [ownerId, shopId, accessToken, storeMenus.length, setStoreMenus, setMenusLoading])
 
   // 푸켓팅 목록 조회
   React.useEffect(() => {
