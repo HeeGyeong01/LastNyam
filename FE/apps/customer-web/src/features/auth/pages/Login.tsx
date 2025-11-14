@@ -1,38 +1,143 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import catImage from '@/shared/assets/lastnyam-cat.png';
+import TypoLogo from '@/shared/assets/typo-logo.svg?react';
+import { kakaoLogin } from '../api/auth';
+
 export default function Login() {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 팝업에서 메시지 받기 (카카오 로그인 완료 후)
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      // 보안을 위해 origin 체크 (필요시 추가)
+      // if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'KAKAO_LOGIN_SUCCESS') {
+        const { code } = event.data;
+        setIsLoading(true);
+        
+        try {
+          // 백엔드 API 호출
+          const response = await kakaoLogin(code);
+          
+          // 토큰 저장
+          if (response.token && response.refreshToken) {
+            localStorage.setItem('accessToken', response.token);
+            localStorage.setItem('refreshToken', response.refreshToken);
+          }
+          
+          // 백엔드 응답에 따라 분기
+          if (response.isNewUser) {
+            // 신규 회원 -> 추가정보 입력 페이지로
+            navigate('/auth/additional-info');
+          } else {
+            // 기존 회원 -> 홈으로
+            navigate('/');
+          }
+        } catch (error) {
+          console.error('로그인 처리 실패:', error);
+          alert('로그인에 실패했습니다. 다시 시도해주세요.');
+          setIsLoading(false);
+        }
+      } else if (event.data.type === 'KAKAO_LOGIN_ERROR') {
+        console.error('카카오 로그인 에러:', event.data.error);
+        alert('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+        setIsLoading(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [navigate]);
+
   const handleKakaoLogin = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
     const KAKAO_REDIRECT_URI = `${window.location.origin}/auth/kakao/callback`;
     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
     
-    window.location.href = kakaoAuthUrl;
+    // 팝업 창으로 카카오 로그인 열기
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    
+    const popup = window.open(
+      kakaoAuthUrl,
+      '카카오 로그인',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+
+    // 팝업이 차단되었는지 확인
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // 팝업이 닫혔는지 확인하는 인터벌
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        setIsLoading(false);
+      }
+    }, 500);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white">
-      <div className="w-full max-w-md">
-        {/* 로고/제목 */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">라스트냠</h1>
-          <p className="text-gray-600">마감 임박 음식을 특별한 가격에</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center w-full max-w-md">
+        {/* 고양이 이미지 - 원형 배경 */}
+        <div className="relative mb-4">
+          <img 
+            src={catImage} 
+            alt="Last Nyam Cat" 
+            className="w-32 h-32 object-contain"
+          />
+        </div>
+
+        {/* LAST NYAM 로고 */}
+        <div className="mb-16">
+          <TypoLogo className="h-7 w-auto aspect-[123/16]" />
         </div>
 
         {/* 카카오 로그인 버튼 */}
-        <button
-          onClick={handleKakaoLogin}
-          className="w-full bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] font-semibold py-4 px-4 rounded-lg flex items-center justify-center gap-3 transition-colors"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M10 0C4.477 0 0 3.68 0 8.222c0 2.866 1.867 5.388 4.694 6.868-.194.712-.634 2.367-.732 2.75-.117.458.168.452.354.329.154-.102 2.373-1.57 3.262-2.155C8.458 16.253 9.216 16.444 10 16.444c5.523 0 10-3.68 10-8.222S15.523 0 10 0z"
-              fill="#000000"
-            />
-          </svg>
-          카카오로 시작하기
-        </button>
+        <div className="w-full px-4">
+          <button
+            onClick={handleKakaoLogin}
+            disabled={isLoading}
+            className="w-full bg-[#FEE500] p1-b text-primary py-4 px-6 rounded-full flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
+                <span>로그인 중...</span>
+              </>
+            ) : (
+              <>
+                {/* 카카오 말풍선 아이콘 */}
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 20 20" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M10 0C4.477 0 0 3.68 0 8.222c0 2.866 1.867 5.388 4.694 6.868-.194.712-.634 2.367-.732 2.75-.117.458.168.452.354.329.154-.102 2.373-1.57 3.262-2.155C8.458 16.253 9.216 16.444 10 16.444c5.523 0 10-3.68 10-8.222S15.523 0 10 0z"
+                    fill="#000000"
+                  />
+                </svg>
+                <span>카카오로 시작하기</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-

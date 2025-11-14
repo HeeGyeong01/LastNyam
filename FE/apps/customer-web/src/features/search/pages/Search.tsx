@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { PageHeader } from '@/shared/components';
 import { Tab } from '@shared/components/Tab';
 import { Input } from '@shared/components/Input';
@@ -7,6 +8,7 @@ import { DiscountList } from '@/features/discount/component';
 import { FoocketingList } from '@/features/foocketing/component';
 import { searchDiscount } from '@/features/discount/api';
 import { searchFoocketing } from '@/features/foocketing/api';
+import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import type { DiscountSearchItem, DiscountSortType } from '@/features/discount/type';
 import type { FoocketingSearchItem, FoocketingSortType } from '@/features/foocketing/type';
 // Note: SearchTab type is defined locally in this file
@@ -15,8 +17,14 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 type SearchTab = 'discount' | 'foocketing';
 
 export default function Search() {
-  const [keyword, setKeyword] = useState('');
-  const [activeTab, setActiveTab] = useState<SearchTab>('discount');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const keywordFromUrl = searchParams.get('q') || '';
+  const tabFromUrl = (searchParams.get('tab') || 'discount') as SearchTab;
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const [keyword, setKeyword] = useState(keywordFromUrl);
+  const [activeTab, setActiveTab] = useState<SearchTab>(tabFromUrl);
   const [discountSort] = useState<DiscountSortType>('RATING');
   const [foocketingSort] = useState<FoocketingSortType>('IMMINENT');
 
@@ -25,16 +33,16 @@ export default function Search() {
   const [discountNextCursor, setDiscountNextCursor] = useState<string | null>(null);
   const [discountHasNextPage, setDiscountHasNextPage] = useState(false);
   const [isLoadingMoreDiscount, setIsLoadingMoreDiscount] = useState(false);
-  const discountObserverTarget = useRef<HTMLDivElement>(null);
 
   // 푸켓팅 검색 결과 상태
   const [foocketings, setFoocketings] = useState<FoocketingSearchItem[]>([]);
   const [foocketingNextCursor, setFoocketingNextCursor] = useState<string | null>(null);
   const [foocketingHasNextPage, setFoocketingHasNextPage] = useState(false);
   const [isLoadingMoreFoocketing, setIsLoadingMoreFoocketing] = useState(false);
-  const foocketingObserverTarget = useRef<HTMLDivElement>(null);
 
   // 마감세일 검색 API 호출
+  // refetchOnMount: false로 설정하여 뒤로가기 시 캐시된 데이터 사용
+  // 새로고침 시에만 API를 다시 호출 (staleTime이 지나지 않았으면 캐시 사용)
   const {
     data: discountData,
     isLoading: isLoadingDiscount,
@@ -46,9 +54,13 @@ export default function Search() {
       sort: discountSort,
     }),
     enabled: keyword.length > 0,
+    refetchOnMount: false, // 뒤로가기 시 캐시된 데이터 사용
+    staleTime: Infinity, // 새로고침 시에만 API 호출
   });
 
   // 푸켓팅 검색 API 호출
+  // refetchOnMount: false로 설정하여 뒤로가기 시 캐시된 데이터 사용
+  // 새로고침 시에만 API를 다시 호출 (staleTime이 지나지 않았으면 캐시 사용)
   const {
     data: foocketingData,
     isLoading: isLoadingFoocketing,
@@ -60,6 +72,8 @@ export default function Search() {
       sort: foocketingSort,
     }),
     enabled: keyword.length > 0,
+    refetchOnMount: false, // 뒤로가기 시 캐시된 데이터 사용
+    staleTime: Infinity, // 새로고침 시에만 API 호출
   });
 
   // 마감세일 검색 결과 설정
@@ -123,67 +137,80 @@ export default function Search() {
   }, [foocketingNextCursor, foocketingHasNextPage, isLoadingMoreFoocketing, keyword, foocketingSort]);
 
   // 마감세일 무한 스크롤
-  useEffect(() => {
-    if (activeTab !== 'discount') return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && discountHasNextPage && !isLoadingMoreDiscount) {
-          loadMoreDiscount();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = discountObserverTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [activeTab, discountHasNextPage, isLoadingMoreDiscount, loadMoreDiscount]);
+  const discountObserverTarget = useInfiniteScroll({
+    hasNextPage: discountHasNextPage,
+    isLoading: isLoadingMoreDiscount,
+    onLoadMore: loadMoreDiscount,
+    enabled: activeTab === 'discount',
+  });
 
   // 푸켓팅 무한 스크롤
+  const foocketingObserverTarget = useInfiniteScroll({
+    hasNextPage: foocketingHasNextPage,
+    isLoading: isLoadingMoreFoocketing,
+    onLoadMore: loadMoreFoocketing,
+    enabled: activeTab === 'foocketing',
+  });
+
+  // URL 쿼리 파라미터에서 초기값 읽어오기
   useEffect(() => {
-    if (activeTab !== 'foocketing') return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && foocketingHasNextPage && !isLoadingMoreFoocketing) {
-          loadMoreFoocketing();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = foocketingObserverTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
+    if (keywordFromUrl !== keyword) {
+      setKeyword(keywordFromUrl);
     }
+    if (tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keywordFromUrl, tabFromUrl]);
 
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [activeTab, foocketingHasNextPage, isLoadingMoreFoocketing, loadMoreFoocketing]);
+  // Home에서 이동한 경우 Input에 자동 focus
+  useEffect(() => {
+    const state = location.state as { shouldFocus?: boolean } | null;
+    if (state?.shouldFocus && inputRef.current) {
+      // 약간의 지연을 두어 DOM이 완전히 렌더링된 후 focus
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [location.state]);
 
-  // 검색어가 변경되면 결과 초기화 (useQuery가 자동으로 다시 호출함)
+  // 검색어가 변경되면 결과 초기화 및 URL 업데이트
   useEffect(() => {
     if (keyword.length === 0) {
       setDiscounts([]);
       setFoocketings([]);
       setDiscountNextCursor(null);
       setFoocketingNextCursor(null);
+      // URL에서 검색어 제거
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete('q');
+        newParams.delete('tab');
+        return newParams;
+      });
+    } else {
+      // URL에 검색어와 탭 저장
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set('q', keyword);
+        newParams.set('tab', activeTab);
+        return newParams;
+      });
     }
-  }, [keyword]);
+  }, [keyword, activeTab, setSearchParams]);
 
   const handleTabChange = (index: number) => {
-    setActiveTab(index === 0 ? 'discount' : 'foocketing');
+    const newTab = index === 0 ? 'discount' : 'foocketing';
+    setActiveTab(newTab);
+    // URL 업데이트
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (keyword.length > 0) {
+        newParams.set('q', keyword);
+      }
+      newParams.set('tab', newTab);
+      return newParams;
+    });
   };
 
   const handleSearch = (value: string) => {
@@ -193,16 +220,16 @@ export default function Search() {
   return (
     <>
       <PageHeader title="검색" variant="light" />
-      <div className="px-4 pb-4">
+      <div className="px-4 space-y-2">
         {/* 검색 입력 */}
-        <div className="pt-4 pb-4">
           <Input
-            placeholder="검색어를 입력하세요"
+            ref={inputRef}
+            placeholder="먹고 싶은 음식을 검색해보세요"
             value={keyword}
             onChange={(e) => handleSearch(e.target.value)}
+            onClearClick={() => handleSearch('')}
             icon={<MagnifyingGlassIcon />}
           />
-        </div>
 
         {/* 탭 */}
         {keyword.length > 0 && (
@@ -210,6 +237,7 @@ export default function Search() {
             tabLabels={['마감세일', '푸켓팅']}
             defaultSelectedIndex={activeTab === 'discount' ? 0 : 1}
             onTabChange={handleTabChange}
+            className="px-0"
           />
         )}
 
@@ -221,7 +249,7 @@ export default function Search() {
         )}
 
         {keyword.length > 0 && activeTab === 'discount' && (
-          <div className="pt-4">
+          <>
             {isLoadingDiscount && <p className="py-4 text-center">로딩 중...</p>}
             {discountError && (
               <p className="py-4 text-center text-red-500">
@@ -240,11 +268,11 @@ export default function Search() {
                 )}
               </>
             )}
-          </div>
+          </>
         )}
 
         {keyword.length > 0 && activeTab === 'foocketing' && (
-          <div className="pt-4">
+          <>
             {isLoadingFoocketing && <p className="py-4 text-center">로딩 중...</p>}
             {foocketingError && (
               <p className="py-4 text-center text-red-500">
@@ -263,7 +291,7 @@ export default function Search() {
                 )}
               </>
             )}
-          </div>
+          </>
         )}
       </div>
     </>

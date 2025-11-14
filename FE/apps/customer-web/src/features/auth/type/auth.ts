@@ -27,3 +27,16 @@ export interface TokenRefreshResponse {
   refreshToken: string;
 }
 
+// 카카오 소셜 로그인 응답
+export interface KakaoLoginResponse {
+  token: string;
+  refreshToken: string;
+  isNewUser: boolean; // 신규 회원 여부
+  user?: {
+    userId: number;
+    email: string;
+    name: string;
+    nickname: string;
+  };
+}
+

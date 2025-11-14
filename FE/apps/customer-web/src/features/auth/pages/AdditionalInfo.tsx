@@ -1,31 +1,74 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import catImage from '@/shared/assets/lastnyam-cat.png';
+import { Button } from '@shared/components/Button';
 
-const foodCategories = [
-  '한식',
-  '중식',
-  '일식',
-  '양식',
-  '분식',
-  '치킨',
-  '피자',
-  '버거',
-  '아시안',
-  '디저트',
-  '카페',
-  '베이커리',
+// 음식 카테고리 타입 정의 (1-19)
+export type FoodCategory = 
+  | 1  // 빵
+  | 2  // 샌드위치
+  | 3  // 디저트
+  | 4  // 음료
+  | 5  // 케이크
+  | 6  // 회
+  | 7  // 초밥
+  | 8  // 육회
+  | 9  // 해산물
+  | 10 // 김밥
+  | 11 // 떡볶이
+  | 12 // 튀김
+  | 13 // 철판,그릴
+  | 14 // 떡
+  | 15 // 샐러드
+  | 16 // 포케
+  | 17 // 반찬
+  | 18 // 국,탕,찌개
+  | 19; // 스프
+
+interface FoodCategoryItem {
+  id: FoodCategory;
+  label: string;
+}
+
+const foodCategories: FoodCategoryItem[] = [
+  { id: 1, label: '빵' },
+  { id: 2, label: '샌드위치' },
+  { id: 3, label: '디저트' },
+  { id: 4, label: '음료' },
+  { id: 5, label: '케이크' },
+  { id: 6, label: '회' },
+  { id: 7, label: '초밥' },
+  { id: 8, label: '육회' },
+  { id: 9, label: '해산물' },
+  { id: 10, label: '김밥' },
+  { id: 11, label: '떡볶이' },
+  { id: 12, label: '튀김' },
+  { id: 13, label: '철판·그릴' },
+  { id: 14, label: '떡' },
+  { id: 15, label: '샐러드' },
+  { id: 16, label: '포케' },
+  { id: 17, label: '반찬' },
+  { id: 18, label: '국·탕·찌개' },
+  { id: 19, label: '스프' },
 ];
 
 export default function AdditionalInfo() {
   const navigate = useNavigate();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<FoodCategory[]>([]);
 
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
-    );
+  const toggleCategory = (categoryId: FoodCategory) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        // 이미 선택된 경우 제거
+        return prev.filter((id) => id !== categoryId);
+      } else {
+        // 최대 5개까지만 선택 가능
+        if (prev.length >= 5) {
+          return prev;
+        }
+        return [...prev, categoryId];
+      }
+    });
   };
 
   const handleSubmit = async () => {
@@ -46,44 +89,58 @@ export default function AdditionalInfo() {
   };
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-2xl mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-2">좋아하는 음식을 선택해주세요</h1>
-        <p className="text-gray-600 mb-8">
-          선택하신 카테고리를 기반으로 맞춤 상품을 추천해드려요!
+    <div className="flex flex-col items-center min-h-screen bg-white px-4 pt-24">
+      <div className="flex flex-col items-center w-full max-w-md">
+        {/* 고양이 이미지 - 원형 배경 */}
+        <div className="relative mb-4">
+          <img 
+            src={catImage} 
+            alt="Last Nyam Cat" 
+            className="w-28 h-28 object-contain"
+          />
+        </div>
+
+        {/* 질문 */}
+        <h1 className="h4-b text-brand text-center">
+          어떤 음식을 좋아하시나요?
+        </h1>
+
+        {/* 안내 문구 */}
+        <p className="text-tertiary p3 mb-8 text-center">
+          1개 선택 필수, 최대 5개까지 선택 가능합니다
         </p>
 
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {foodCategories.map((category) => (
-            <button
-              key={category}
-              onClick={() => toggleCategory(category)}
-              className={`py-4 px-4 rounded-lg font-medium transition-colors ${
-                selectedCategories.includes(category)
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+        {/* 음식 카테고리 그리드 */}
+        <div className="flex flex-wrap gap-2 w-full mb-8 px-6">
+          {foodCategories.map((category) => {
+            const isSelected = selectedCategories.includes(category.id);
+            return (
+              <Button
+                key={category.id}
+                onClick={() => toggleCategory(category.id)}
+                btnStyle={isSelected ? 'outlined-red' : 'outlined-default'}
+                size="default"
+                className="flex-1 min-w-[calc(25%-0.375rem)]"
+              >
+                {category.label}
+              </Button>
+            );
+          })}
         </div>
 
-        <div className="mb-4">
-          <p className="text-sm text-gray-600">
-            선택된 카테고리: {selectedCategories.length}개
-          </p>
+        {/* 회원가입 완료 버튼 */}
+        <div className="w-full px-4 mt-auto">
+          <Button
+            onClick={handleSubmit}
+            disabled={selectedCategories.length === 0}
+            btnStyle={selectedCategories.length === 0 ? 'filled-default' : 'filled-yellow'}
+            size="lg"
+            className="w-full"
+          >
+            회원가입 완료하기
+          </Button>
         </div>
-
-        <button
-          onClick={handleSubmit}
-          disabled={selectedCategories.length === 0}
-          className="w-full bg-primary text-white font-semibold py-4 px-4 rounded-lg hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          완료
-        </button>
       </div>
     </div>
   );
 }
-

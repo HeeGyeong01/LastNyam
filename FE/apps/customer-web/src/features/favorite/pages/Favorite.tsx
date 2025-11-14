@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/shared/components';
 import { ShopList } from '@/features/shop/component';
+import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import { getFavoriteShops } from '@/features/favorite/api';
 import type { FavoriteShop, FavoriteShopListData } from '@/features/favorite/type';
 
@@ -86,6 +87,7 @@ const generateMockFavoriteShops = (page: number = 0): FavoriteShopListData => {
 
 // TODO: 백엔드 완성 후 제거 - 가라 데이터 API 함수
 const getMockFavoriteShops = async (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _userId: number = 2,
   params: { cursor?: string | null } = {}
 ): Promise<FavoriteShopListData> => {
@@ -108,7 +110,6 @@ export default function Favorite() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const observerTarget = useRef<HTMLDivElement>(null);
 
   // 첫 페이지 데이터 가져오기
   const {
@@ -151,28 +152,12 @@ export default function Favorite() {
     }
   }, [nextCursor, hasNextPage, isLoadingMore]);
 
-  // Intersection Observer로 무한 스크롤 구현
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isLoadingMore) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [hasNextPage, isLoadingMore, loadMore]);
+  // 무한 스크롤
+  const observerTarget = useInfiniteScroll({
+    hasNextPage,
+    isLoading: isLoadingMore,
+    onLoadMore: loadMore,
+  });
 
   return (
     <>
