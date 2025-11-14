@@ -16,11 +16,17 @@
  */
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
+import type { ShopDetailDiscount } from '@/features/shop/type';
 
 interface LayoutContextType {
   bottomPadding: number;
   registerBottomElement: (id: string, height: number) => void;
   unregisterBottomElement: (id: string) => void;
+  // MenuDetail BottomSheet 관련
+  selectedDiscount: ShopDetailDiscount | null;
+  isMenuDetailOpen: boolean;
+  openMenuDetail: (discount: ShopDetailDiscount) => void;
+  closeMenuDetail: () => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -30,6 +36,10 @@ const BOTTOM_NAVBAR_HEIGHT = 80; // BottomNavBar 높이 (pb-20 = 80px)
 export function LayoutProvider({ children }: { children: ReactNode }) {
   const [bottomPadding, setBottomPadding] = useState(BOTTOM_NAVBAR_HEIGHT);
   const elementsRef = useRef<Map<string, number>>(new Map());
+
+  // MenuDetail BottomSheet 상태
+  const [selectedDiscount, setSelectedDiscount] = useState<ShopDetailDiscount | null>(null);
+  const [isMenuDetailOpen, setIsMenuDetailOpen] = useState(false);
 
   const updatePadding = useCallback(() => {
     const heights = Array.from(elementsRef.current.values());
@@ -47,8 +57,28 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
     updatePadding();
   }, [updatePadding]);
 
+  const openMenuDetail = useCallback((discount: ShopDetailDiscount) => {
+    setSelectedDiscount(discount);
+    setIsMenuDetailOpen(true);
+  }, []);
+
+  const closeMenuDetail = useCallback(() => {
+    setIsMenuDetailOpen(false);
+    setSelectedDiscount(null);
+  }, []);
+
   return (
-    <LayoutContext.Provider value={{ bottomPadding, registerBottomElement, unregisterBottomElement }}>
+    <LayoutContext.Provider 
+      value={{ 
+        bottomPadding, 
+        registerBottomElement, 
+        unregisterBottomElement,
+        selectedDiscount,
+        isMenuDetailOpen,
+        openMenuDetail,
+        closeMenuDetail,
+      }}
+    >
       {children}
     </LayoutContext.Provider>
   );

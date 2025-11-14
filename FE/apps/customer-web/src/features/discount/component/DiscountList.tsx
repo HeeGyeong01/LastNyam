@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom';
 import type { DiscountItem, DiscountSearchItem } from '../type/discount';
 import type { ShopDetailDiscount } from '@/features/shop/type';
+import { useLayout } from '@/contexts/LayoutContext';
 import { DiscountCard } from '.';
 
 interface DiscountListProps {
@@ -17,7 +17,7 @@ export default function DiscountList({
   discounts,
   onCardClick,
 }: DiscountListProps) {
-  const navigate = useNavigate();
+  const { openMenuDetail } = useLayout();
 
   // DiscountItem인지 ShopDetailDiscount인지 DiscountSearchItem인지 확인하는 타입 가드
   const isDiscountItem = (item: DiscountItem | ShopDetailDiscount | DiscountSearchItem): item is DiscountItem => {
@@ -35,7 +35,21 @@ export default function DiscountList({
         const borderClass = isLast ? '' : 'border-b border-stroke-subtle';
         
         if (isDiscountItem(item)) {
-          // DiscountItem 타입
+          // DiscountItem 타입 - ShopDetailDiscount로 변환하여 BottomSheet 열기
+          const handleClick = () => {
+            const converted: ShopDetailDiscount = {
+              discountId: item.discountId,
+              menuName: item.menuInfo.name,
+              originalPrice: item.menuInfo.price,
+              discountRate: item.discountRate,
+              price: item.discountPrice,
+              menuImage: item.menuInfo.photoUrl,
+              menuDescription: item.menuInfo.description,
+              stock: item.discountAmount,
+            };
+            openMenuDetail(converted);
+          };
+
           return (
             <DiscountCard
               className={borderClass}
@@ -50,11 +64,25 @@ export default function DiscountList({
               storeName={item.shopInfo.name}
               remainingQuantity={item.discountAmount}
               foodImage={item.menuInfo.photoUrl}
-              onClick={() => navigate(`/discount/${item.discountId}`)}
+              onClick={handleClick}
             />
           );
         } else if (isDiscountSearchItem(item)) {
-          // DiscountSearchItem 타입
+          // DiscountSearchItem 타입 - ShopDetailDiscount로 변환하여 BottomSheet 열기
+          const handleClick = () => {
+            const converted: ShopDetailDiscount = {
+              discountId: item.discountId,
+              menuName: item.menuInfo.name,
+              originalPrice: item.menuInfo.price,
+              discountRate: item.discountRate,
+              price: item.discountPrice,
+              menuImage: item.menuInfo.photoUrl,
+              menuDescription: '', // 검색 결과에는 description이 없음
+              stock: item.discountAmount,
+            };
+            openMenuDetail(converted);
+          };
+
           return (
             <DiscountCard
               className={borderClass}
@@ -69,11 +97,19 @@ export default function DiscountList({
               storeName={item.shopInfo.name}
               remainingQuantity={item.discountAmount}
               foodImage={item.menuInfo.photoUrl}
-              onClick={() => navigate(`/discount/${item.discountId}`)}
+              onClick={handleClick}
             />
           );
         } else {
-          // ShopDiscount 타입
+          // ShopDetailDiscount 타입
+          const handleClick = () => {
+            if (onCardClick) {
+              onCardClick(item);
+            } else {
+              openMenuDetail(item);
+            }
+          };
+
           return (
             <DiscountCard
               className={borderClass}
@@ -85,7 +121,7 @@ export default function DiscountList({
               originalPrice={item.originalPrice}
               remainingQuantity={item.stock}
               foodImage={item.menuImage}
-              onClick={onCardClick ? () => onCardClick(item) : undefined}
+              onClick={handleClick}
             />
           );
         }

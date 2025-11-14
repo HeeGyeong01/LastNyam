@@ -1,5 +1,6 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
+import { formatTimeToHHmm } from '@/shared/lib/time';
 
 interface FoocketingCardProps {
   openTime: string;
@@ -7,7 +8,7 @@ interface FoocketingCardProps {
   originalPrice: number;
   shopName: string;
   menuProfileImage: string;
-  distance: string;
+  distance: number;
   rating: number;
   reviewCount: number;
   discountedPrice?: number;
@@ -28,6 +29,8 @@ export default function FoocketingCard({
   onClick,
   className = '',
 }: FoocketingCardProps) {
+  const formattedOpenTime = formatTimeToHHmm(openTime);
+
   const formattedOriginalPrice = originalPrice.toLocaleString('ko-KR');
   const formattedDiscountedPrice = discountedPrice.toLocaleString('ko-KR');
   const formattedReviewCount = reviewCount.toLocaleString('ko-KR');
@@ -48,7 +51,7 @@ export default function FoocketingCard({
         {/* 오픈시간 배지 */}
         <div className="flex items-center justify-center gap-1 py-1 absolute left-0 right-0 bottom-0 bg-brand-bg-2">
           <div className="p3-b text-brand whitespace-nowrap">
-            {openTime}
+            {formattedOpenTime}
           </div>
           <div className="p3-b text-brand whitespace-nowrap">
             OPEN
@@ -81,7 +84,7 @@ export default function FoocketingCard({
 
         {/* 거리 */}
         <div className="caption1 text-secondary">
-          {distance}
+          {distance}km
         </div>
 
         {/* 가격 */}

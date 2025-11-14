@@ -19,18 +19,6 @@ import OrderList from '@/features/transaction/pages/Transaction';
 import MyPage from '@/features/mypage/pages/MyPage';
 import QR from '@/features/qr/pages/QR';
 
-// Cart 전용 레이아웃 (BottomNavBar는 있지만 padding 없음)
-// function CartLayout() {
-//   return (
-//     <>
-//       <div className="h-screen max-w-[500px] mx-auto overflow-y-auto">
-//         <Outlet />
-//       </div>
-//       <BottomNavBar />
-//     </>
-//   );
-// }
-
 export const router = createBrowserRouter([
   // Auth routes (네비게이션 바 없음)
   {
@@ -119,16 +107,5 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  
-  // Cart route (네비게이션 바는 있지만 padding 없음)
-  // {
-  //   element: <CartLayout />,
-  //   children: [
-  //     {
-  //       path: '/cart',
-  //       element: <Cart />,
-  //     },
-  //   ],
-  // },
 ]);
 

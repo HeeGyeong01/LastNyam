@@ -1,9 +1,10 @@
 import { Outlet } from 'react-router-dom';
-import { BottomNavBar } from '../components';
+import { BottomNavBar, BottomSheet } from '../components';
+import { MenuDetail } from '@/features/shop/component';
 import { useLayout } from '@/contexts/LayoutContext';
 
 export default function MainLayout() {
-  const { bottomPadding } = useLayout();
+  const { bottomPadding, isMenuDetailOpen, selectedDiscount, closeMenuDetail } = useLayout();
 
   return (
     <>
@@ -17,6 +18,16 @@ export default function MainLayout() {
       
       {/* 하단 네비게이션 - 독립적으로 fixed */}
       <BottomNavBar />
+
+      {/* MenuDetail BottomSheet */}
+      {isMenuDetailOpen && selectedDiscount && (
+        <BottomSheet
+          showBackdrop={true}
+          onBackdropClick={closeMenuDetail}
+        >
+          <MenuDetail detail={selectedDiscount} />
+        </BottomSheet>
+      )}
     </>
   );
 }
