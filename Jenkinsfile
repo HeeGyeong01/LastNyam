@@ -71,7 +71,7 @@ pipeline {
           ).trim()
           
           echo "=" * 50
-          echo "📋 Git diff 결과:"
+          echo "📋 Git diff 결과: "
           echo changes
           echo "=" * 50
           
