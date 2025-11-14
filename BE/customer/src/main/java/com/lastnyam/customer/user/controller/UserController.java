@@ -4,7 +4,9 @@ import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
 import com.lastnyam.customer.security.dto.UserInfoResponse;
 import com.lastnyam.customer.user.dto.CursorResponse;
+import com.lastnyam.customer.user.dto.DiscountTransactionInfo;
 import com.lastnyam.customer.user.dto.FavoriteShopInfo;
+import com.lastnyam.customer.user.dto.FoocketingTransactionInfo;
 import com.lastnyam.customer.user.dto.TransactionQrResponse;
 import com.lastnyam.customer.user.dto.UploadUrlRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingRequestDto;
@@ -17,6 +19,7 @@ import com.lastnyam.s3.dto.PresignedUrlRequest;
 import com.lastnyam.s3.dto.PresignedUrlResponse;
 import com.lastnyam.s3.enums.S3FileType;
 import com.lastnyam.s3.service.S3Service;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -113,6 +116,36 @@ public class UserController {
     }
 
     /**
+     * 마감할인 내 주문 리스트 조회
+     * 사용자가 구매한 마감할인 거래 목록을 조회합니다.
+     *
+     * @param userId 사용자 ID
+     * @return 마감할인 거래 목록 (거래 ID, 가게 정보, 메뉴 정보, 총 결제 금액)
+     */
+    @GetMapping("/{userId}/transaction/discount")
+    public ResponseEntity<ApiResponse<List<DiscountTransactionInfo>>> getDiscountTransactions(
+            @PathVariable("userId") Integer userId) {
+        List<DiscountTransactionInfo> result = transactionService.getDiscountTransactions(userId);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+    }
+
+
+    /**
+     * 푸케팅 내 주문 리스트 조회
+     * 사용자가 당첨된 푸케팅 거래 목록을 조회합니다.
+     *
+     * @param userId 사용자 ID
+     * @return 푸케팅 거래 목록 (거래 ID, 가게 정보, 메뉴 정보, 총 결제 금액)
+     */
+    @GetMapping("/{userId}/transaction/foocketing")
+    public ResponseEntity<ApiResponse<List<FoocketingTransactionInfo>>> getFoocketingTransactions(
+            @PathVariable("userId") Integer userId) {
+        List<FoocketingTransactionInfo> result = transactionService.getFoocketingTransactions(userId);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+    }
+
+
+    /**
      * 마감할인 거래 QR 조회
      * 사용자가 구매한 마감할인 거래의 QR 코드를 조회합니다.
      *
@@ -127,6 +160,7 @@ public class UserController {
         TransactionQrResponse result = transactionService.getDiscountTransactionQr(userId, transactionId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
+
 
     /**
      * 푸케팅 거래 QR 조회
