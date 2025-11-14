@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export default function KakaoCallback() {
 	const [searchParams] = useSearchParams()
 	const navigate = useNavigate()
+	const login = useAuthStore((state) => state.login)
 
 	useEffect(() => {
 		const accessToken = searchParams.get('accessToken')
@@ -26,13 +28,10 @@ export default function KakaoCallback() {
 		}
 
 		// 백엔드에서 직접 토큰을 전달
-		if (accessToken && refreshToken) {
-			// 토큰 저장
-			localStorage.setItem('accessToken', accessToken)
-			localStorage.setItem('refreshToken', refreshToken)
-			if (userId) {
-				localStorage.setItem('userId', userId)
-			}
+		if (accessToken && refreshToken && userId) {
+			// Store에 로그인 정보 저장 (내부적으로 localStorage도 함께 저장)
+			const userIdNum = parseInt(userId, 10)
+			login(accessToken, refreshToken, userIdNum)
 
 			// 부모 창에 성공 메시지 전송 (팝업인 경우)
 			if (window.opener) {
@@ -47,7 +46,7 @@ export default function KakaoCallback() {
 			}
 			return
 		}
-	}, [searchParams, navigate])
+	}, [searchParams, navigate, login])
 
 	return (
 		<div className="flex items-center justify-center min-h-screen">
