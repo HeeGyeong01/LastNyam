@@ -15,6 +15,7 @@ import { OrderStatusBoard, type OrderStatusBoardTransaction } from '../../orders
 import { Info, ExternalLink } from 'lucide-react';
 import { fetchWithAuth, OWNER_API_BASE_URL } from '../../../lib/apiClient';
 import { useOwnerStore } from '../../../store/useOwnerStore';
+import { orderApi, type TransactionDetailResponse } from '../../orders/apis/order.api';
 
 function reorderById<T extends { id: number }>(list: T[], sourceId: number, targetId: number) {
   const next = [...list];
@@ -51,13 +52,16 @@ const ownerRoutes = [
   { path: '/owner/store-information/step1-input', label: '가게 정보 입력 1단계 - 기본 정보' },
   { path: '/owner/store-information/step1-document', label: '가게 정보 입력 1단계 - 서류 업로드' },
   { path: '/owner/store-information/step2', label: '가게 정보 입력 2단계' },
+  { path: '/owner/qr-test', label: 'QR 테스트 페이지' },
 ];
 
 export default function ComponentTestPage() {
-  const { ownerId, shops } = useOwnerStore();
+  const { ownerId, shops, accessToken } = useOwnerStore();
   const [loading, setLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrData, setQrData] = useState<TransactionDetailResponse['data'] | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -529,6 +533,52 @@ export default function ComponentTestPage() {
     }
   };
 
+  // QR 코드 조회 API 테스트 (transactionId 5, DISCOUNT)
+  const handleFetchQRCode = async () => {
+    const TEST_OWNER_ID = 6;
+    const TEST_TRANSACTION_ID = 5;
+    const TEST_TYPE = 'DISCOUNT' as const;
+
+    if (!accessToken) {
+      alert('로그인이 필요합니다. accessToken이 없습니다.');
+      return;
+    }
+
+    setQrLoading(true);
+    setQrData(null);
+    try {
+      console.log('===== QR 코드 조회 API 호출 시작 =====');
+      console.log('ownerId:', TEST_OWNER_ID);
+      console.log('transactionId:', TEST_TRANSACTION_ID);
+      console.log('type:', TEST_TYPE);
+      console.log('accessToken:', accessToken ? '존재함' : '없음');
+      
+      const response = await orderApi.getTransactionDetail(
+        TEST_OWNER_ID,
+        TEST_TRANSACTION_ID,
+        TEST_TYPE,
+        accessToken
+      );
+
+      console.log('===== QR 코드 조회 API 성공 응답 =====');
+      console.log('전체 응답 데이터:', response);
+      console.log('JSON 형식:', JSON.stringify(response, null, 2));
+      console.log('====================================');
+
+      if (response.data) {
+        setQrData(response.data);
+        alert('QR 코드 조회 성공! 아래에서 QR 이미지를 확인하세요.');
+      } else {
+        throw new Error('응답 데이터가 없습니다.');
+      }
+    } catch (error) {
+      console.error('QR 코드 조회 실패:', error);
+      alert(`QR 코드 조회 실패: ${error instanceof Error ? error.message : '알 수 없는 에러'}`);
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 space-y-8">
       <h1 className="text-3xl font-bold mb-8">컴포넌트 테스트 페이지</h1>
@@ -584,6 +634,114 @@ export default function ComponentTestPage() {
               ※ 버튼 클릭 시 API 응답이 콘솔에 출력됩니다. (F12 → Console 탭 확인)
             </p>
           </div>
+        </div>
+
+        {/* QR 코드 조회 (transactionId 5) */}
+        <div className="border rounded-lg p-6 space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">단일 주문 상세 조회 (QR 코드 포함)</h3>
+            <p className="text-sm text-gray-600">
+              엔드포인트: <code className="bg-gray-100 px-2 py-1 rounded">GET /api/owner/6/transaction/5?type=DISCOUNT</code>
+            </p>
+            <div className="text-sm text-gray-600 space-y-1">
+              <p>테스트 ownerId: <span className="font-semibold">6</span></p>
+              <p>테스트 transactionId: <span className="font-semibold">5</span></p>
+              <p>테스트 type: <span className="font-semibold">DISCOUNT</span></p>
+              <p>현재 accessToken: <span className="font-semibold">{accessToken ? '로그인됨 ✓' : '로그인 필요 ✗'}</span></p>
+            </div>
+            <button
+              onClick={handleFetchQRCode}
+              disabled={qrLoading || !accessToken}
+              className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {qrLoading && <Spinner className="size-4" />}
+              <span>{qrLoading ? '조회 중...' : 'QR 코드 조회하기'}</span>
+            </button>
+            {!accessToken && (
+              <p className="text-xs text-error">로그인이 필요합니다.</p>
+            )}
+            <p className="text-xs text-gray-500">
+              ※ 버튼 클릭 시 API 응답이 콘솔에 출력되고, QR 이미지가 아래에 표시됩니다.
+            </p>
+          </div>
+
+          {/* QR 코드 이미지 표시 */}
+          {qrData && (
+            <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
+              <h4 className="text-md font-semibold text-gray-900">주문 상세 정보</h4>
+              
+              {/* 주문 기본 정보 */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">주문 번호:</span>
+                  <span className="font-semibold">{qrData.transactionId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">상태:</span>
+                  <span className="font-semibold">{qrData.transactionStatus}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">주문 시간:</span>
+                  <span>{new Date(qrData.createdAt).toLocaleString('ko-KR')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">고객:</span>
+                  <span>{qrData.userNickname}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">가게:</span>
+                  <span>{qrData.shopName}</span>
+                </div>
+              </div>
+
+              {/* QR 코드 이미지 */}
+              <div className="flex flex-col items-center space-y-3 bg-white p-6 rounded-lg border-2 border-brand/20">
+                <h4 className="text-md font-semibold text-brand">수령 확인용 QR 코드</h4>
+                {qrData.transactionQrImage ? (
+                  <img
+                    src={qrData.transactionQrImage}
+                    alt="Transaction QR Code"
+                    className="w-64 h-64 object-contain"
+                  />
+                ) : (
+                  <div className="w-64 h-64 flex items-center justify-center bg-gray-100 rounded">
+                    <p className="text-gray-500">QR 이미지 없음</p>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 text-center">
+                  이 QR 코드는 지정된 기간 내에만 유효합니다
+                </p>
+              </div>
+
+              {/* 할인 항목 */}
+              {qrData.discountItems && qrData.discountItems.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-md font-semibold text-gray-900">할인 상품</h4>
+                  <div className="space-y-2">
+                    {qrData.discountItems.map((item, index) => (
+                      <div key={index} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                        <img
+                          src={item.menuImage}
+                          alt={item.menuName}
+                          className="w-16 h-16 object-cover rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        <div className="flex-1 text-sm">
+                          <p className="font-semibold">{item.menuName}</p>
+                          <p className="text-gray-600">수량: {item.transactionAmount}개</p>
+                          <p className="text-brand">
+                            할인율: {item.discountRate}% | 할인가: {item.discountPrice.toLocaleString()}원
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { Loader2 } from "lucide-react";
@@ -16,7 +16,6 @@ export default function QRScanPage() {
   const [showInvalidQRWarning, setShowInvalidQRWarning] = useState(false);
   const [showNotMyShopWarning, setShowNotMyShopWarning] = useState(false);
   const [scannedData, setScannedData] = useState<string>("");
-  const timerRef = useRef<number | null>(null);
 
   const handleScan = async (result: any) => {
     if (result && result[0] && scanning) {
@@ -42,11 +41,11 @@ export default function QRScanPage() {
       // 2️⃣ URL 파라미터 파싱
       const urlParams = new URLSearchParams(url.split('?')[1]);
       const transactionId = urlParams.get('id');
-      const type = urlParams.get('type') as TransactionType | null;
+      const typeRaw = urlParams.get('type');
       
-      console.log("📋 파싱된 파라미터:", { transactionId, type, ownerId, accessToken: !!accessToken });
+      console.log("📋 파싱된 파라미터 (원본):", { transactionId, typeRaw, ownerId, accessToken: !!accessToken });
 
-      if (!transactionId || !type || !ownerId || !accessToken) {
+      if (!transactionId || !typeRaw || !ownerId || !accessToken) {
         console.log("❌ 파라미터 또는 인증 정보 누락");
         setScanning(false);
         setShowInvalidQRWarning(true);
@@ -57,9 +56,10 @@ export default function QRScanPage() {
         return;
       }
 
-      // 3️⃣ type 검증
-      if (type !== "DISCOUNT" && type !== "FOOCKETING") {
-        console.log("❌ type 검증 실패:", type);
+      // 3️⃣ type 검증 및 정규화 (대소문자 구분 없이)
+      const typeUpper = typeRaw.toUpperCase();
+      if (typeUpper !== "DISCOUNT" && typeUpper !== "FOOCKETING") {
+        console.log("❌ type 검증 실패:", typeRaw);
         setScanning(false);
         setShowInvalidQRWarning(true);
         setTimeout(() => {
@@ -69,7 +69,8 @@ export default function QRScanPage() {
         return;
       }
       
-      console.log("✅ type 검증 완료");
+      const type = typeUpper as TransactionType;
+      console.log("✅ type 검증 완료:", type);
 
       // 4️⃣ API 호출해서 주문 정보 가져오기
       try {
@@ -112,34 +113,51 @@ export default function QRScanPage() {
 
         // ✅ 내 가게 주문 - 성공 모달 표시
         console.log("✅ 내 가게 주문 확인! 성공 모달 표시");
-        setShowSuccessModal(true);
         
-        // 5초 후 자동 복귀
-        timerRef.current = setTimeout(() => {
-          setShowSuccessModal(false);
-          setScanning(true);
-        }, 5000);
+        // 모든 경고 상태 초기화 (이전 경고가 있었다면 숨김)
+        setShowInvalidQRWarning(false);
+        setShowNotMyShopWarning(false);
+        
+        // 성공 모달 표시 (사용자가 직접 닫을 때까지 유지)
+        setShowSuccessModal(true);
 
       } catch (err) {
         console.error("❌ 주문 검증 실패:", err);
         setScanning(false);
         setIsVerifying(false);
-        setShowInvalidQRWarning(true);
-        setTimeout(() => {
-          setShowInvalidQRWarning(false);
-          setScanning(true);
-        }, 3000);
+        
+        // 권한 에러인지 확인
+        const errorMessage = err instanceof Error ? err.message : "";
+        const isPermissionError = errorMessage.includes("점주가 아닙니다") || 
+                                 errorMessage.includes("권한이 없습니다");
+        
+        if (isPermissionError) {
+          // 다른 가게 주문
+          setShowNotMyShopWarning(true);
+          setTimeout(() => {
+            setShowNotMyShopWarning(false);
+            setScanning(true);
+          }, 3000);
+        } else {
+          // 잘못된 QR 코드
+          setShowInvalidQRWarning(true);
+          setTimeout(() => {
+            setShowInvalidQRWarning(false);
+            setScanning(true);
+          }, 3000);
+        }
       }
     }
   };
 
   const handleViewOrderDetail = () => {
-    // 타이머 클리어
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
     setShowSuccessModal(false);
     navigate(scannedData);
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    setScanning(true);
   };
 
   const handleError = () => {
@@ -204,37 +222,47 @@ export default function QRScanPage() {
       )}
       {/* QR 스캔 성공 바텀 시트 */}
       {showSuccessModal && (
-        <div
-          className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl transition-transform duration-300 ease-out"
-          style={{
-            animation: "slideUp 0.3s ease-out",
-          }}
-        >
-          <div className="flex flex-col gap-4">
-            
-            {/* 타이틀 */}
-            <div className="text-center space-y-1">
-              <h3 className="h5-b text-brand">수령 확인하시겠습니까?</h3>
-              <p className="p2 text-secondary">
-                주문의 상세 내용을 확인한 후 수령을 확인해주세요
-              </p>
-            </div>
+        <>
+          {/* 배경 오버레이 - 푸터 영역 제외 */}
+          <div
+            className="absolute top-0 left-0 right-0 bottom-[70px] z-[59] bg-black/50"
+            onClick={handleCloseSuccessModal}
+          />
+          
+          {/* 바텀 시트 */}
+          <div
+            className="absolute bottom-[70px] left-0 right-0 z-[60] bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl transition-transform duration-300 ease-out"
+            style={{
+              animation: "slideUp 0.3s ease-out",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-4">
+              
+              {/* 타이틀 */}
+              <div className="text-center space-y-1">
+                <h3 className="h5-b text-brand">수령 확인하시겠습니까?</h3>
+                <p className="p2 text-secondary">
+                  주문의 상세 내용을 확인한 후 수령을 확인해주세요
+                </p>
+              </div>
 
-            {/* 주문 상세보기 버튼 */}
-            <Button
-              btnStyle="filled-red"
-              size="lg"
-              className="w-full"
-              onClick={handleViewOrderDetail}
-            >
-              주문 상세보기
-            </Button>
+              {/* 주문 상세보기 버튼 */}
+              <Button
+                btnStyle="filled-red"
+                size="lg"
+                className="w-full"
+                onClick={handleViewOrderDetail}
+              >
+                주문 상세보기
+              </Button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* 잘못된 QR 경고 바텀 시트 */}
-      {showInvalidQRWarning && (
+      {showInvalidQRWarning && !showSuccessModal && (
         <div
           className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl "
           style={{
@@ -258,7 +286,7 @@ export default function QRScanPage() {
       )}
 
       {/* 권한 없음 경고 바텀 시트 */}
-      {showNotMyShopWarning && (
+      {showNotMyShopWarning && !showSuccessModal && (
         <div
           className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl"
           style={{

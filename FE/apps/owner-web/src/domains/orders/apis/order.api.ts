@@ -129,13 +129,13 @@ export const orderApi = {
 
   async updateOrderStatus(
     ownerId: number,
-    orderId: number | string,
+    transactionId: number | string,
     requestData: UpdateOrderStatusRequest,
     accessToken: string,
   ): Promise<UpdateOrderStatusResponse> {
     const url = `${sanitizeBaseUrl(
       OWNER_API_BASE_URL,
-    )}/api/owner/${ownerId}/order/${orderId}/status`;
+    )}/api/owner/${ownerId}/transaction/${transactionId}/status`;
 
     const response = await fetch(url, {
       method: "PATCH",
