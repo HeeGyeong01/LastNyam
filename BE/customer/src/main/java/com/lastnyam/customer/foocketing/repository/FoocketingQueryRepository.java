@@ -210,8 +210,10 @@ public class FoocketingQueryRepository {
         }
 
         public void addCategoryCondition(Integer categoryId) {
-            sql.append(" AND m.category_id = ?");
-            params.add(categoryId);
+            if (categoryId != null) {
+                sql.append(" AND m.category_id = ?");
+                params.add(categoryId);
+            }
         }
 
         public void addSortCondition(FoocketingSortType type) {

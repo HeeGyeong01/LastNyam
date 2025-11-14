@@ -6,8 +6,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.List;
 
 public interface DiscountTransactionRepository extends JpaRepository<DiscountTransaction, Integer> {
+    List<DiscountTransaction> findByUserUserId(Integer userId);
     /**
      * 특정 사용자의 마감할인 거래 QR 조회
      */
