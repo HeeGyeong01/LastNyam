@@ -11,8 +11,9 @@ export default function QRScanPage() {
   const { ownerId, accessToken, shops } = useOwnerStore();
   
   const [scanning, setScanning] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showInvalidQRWarning, setShowInvalidQRWarning] = useState(false);
   const [showNotMyShopWarning, setShowNotMyShopWarning] = useState(false);
   const [scannedData, setScannedData] = useState<string>("");
   const [notMyShopName, setNotMyShopName] = useState<string>("");
@@ -20,49 +21,71 @@ export default function QRScanPage() {
 
   const handleScan = async (result: any) => {
     if (result && result[0] && scanning) {
-      setScanning(false);
       const url = result[0].rawValue;
       setScannedData(url);
+      
+      console.log("🔍 QR 스캔됨:", url);
 
       // 1️⃣ URL 형식 체크
       if (!url.startsWith("/owner/orders/receipt-confirm")) {
-        setShowSuccessModal(false);
-        setScanning(true);
+        console.log("❌ URL 형식 오류:", url);
+        setScanning(false);
+        setShowInvalidQRWarning(true);
+        setTimeout(() => {
+          setShowInvalidQRWarning(false);
+          setScanning(true);
+        }, 3000);
         return;
       }
+      
+      console.log("✅ URL 형식 확인 완료");
 
       // 2️⃣ URL 파라미터 파싱
       const urlParams = new URLSearchParams(url.split('?')[1]);
       const transactionId = urlParams.get('id');
       const type = urlParams.get('type') as TransactionType | null;
+      
+      console.log("📋 파싱된 파라미터:", { transactionId, type, ownerId, accessToken: !!accessToken });
 
       if (!transactionId || !type || !ownerId || !accessToken) {
-        setError("잘못된 QR 코드입니다");
+        console.log("❌ 파라미터 또는 인증 정보 누락");
+        setScanning(false);
+        setShowInvalidQRWarning(true);
         setTimeout(() => {
-          setError(null);
+          setShowInvalidQRWarning(false);
           setScanning(true);
-        }, 2000);
+        }, 3000);
         return;
       }
 
       // 3️⃣ type 검증
       if (type !== "DISCOUNT" && type !== "FOOCKETING") {
-        setError("지원하지 않는 주문 타입입니다");
+        console.log("❌ type 검증 실패:", type);
+        setScanning(false);
+        setShowInvalidQRWarning(true);
         setTimeout(() => {
-          setError(null);
+          setShowInvalidQRWarning(false);
           setScanning(true);
-        }, 2000);
+        }, 3000);
         return;
       }
+      
+      console.log("✅ type 검증 완료");
 
       // 4️⃣ API 호출해서 주문 정보 가져오기
       try {
+        setScanning(false);
+        setIsVerifying(true);
+        console.log("🌐 API 호출 시작...");
         const response = await orderApi.getTransactionDetail(
           ownerId,
           parseInt(transactionId, 10),
           type,
           accessToken
         );
+        
+        console.log("📦 API 응답:", response);
+        setIsVerifying(false);
 
         if (!response.data) {
           throw new Error("주문 정보를 찾을 수 없습니다");
@@ -72,9 +95,12 @@ export default function QRScanPage() {
         const orderShopId = response.data.shopId;
         const myShopIds = shops.map(shop => shop.shopId);
         const isMyShop = myShopIds.includes(orderShopId);
+        
+        console.log("🏪 가게 검증:", { orderShopId, myShopIds, isMyShop });
 
         if (!isMyShop) {
           // ❌ 다른 가게 주문
+          console.log("❌ 다른 가게 주문");
           setShowNotMyShopWarning(true);
           setNotMyShopName(response.data.shopName);
           
@@ -88,6 +114,7 @@ export default function QRScanPage() {
         }
 
         // ✅ 내 가게 주문 - 성공 모달 표시
+        console.log("✅ 내 가게 주문 확인! 성공 모달 표시");
         setShowSuccessModal(true);
         
         // 5초 후 자동 복귀
@@ -97,12 +124,14 @@ export default function QRScanPage() {
         }, 5000);
 
       } catch (err) {
-        console.error("주문 검증 실패:", err);
-        setError("주문 정보를 확인할 수 없습니다");
+        console.error("❌ 주문 검증 실패:", err);
+        setScanning(false);
+        setIsVerifying(false);
+        setShowInvalidQRWarning(true);
         setTimeout(() => {
-          setError(null);
+          setShowInvalidQRWarning(false);
           setScanning(true);
-        }, 2000);
+        }, 3000);
       }
     }
   };
@@ -117,7 +146,7 @@ export default function QRScanPage() {
   };
 
   const handleError = () => {
-    setError("카메라를 사용할 수 없습니다.");
+    console.error("카메라 에러");
   };
 
   return (
@@ -143,22 +172,20 @@ export default function QRScanPage() {
           }}
         />
       </div>
-      {/* 중앙 안내 텍스트 */}
-      <div className="absolute top-40 left-0 right-0 text-center z-20">
+      {/* 상단 안내 텍스트 */}
+      <div className="absolute top-32 left-0 right-0 text-center z-20">
         <h2 className="text-white h4-b drop-shadow-lg">
           수령 확인용 QR을 찍어주세요
         </h2>
       </div>
 
       {/* 하단 상태 표시 */}
-      {!showSuccessModal && !showNotMyShopWarning && (
+      {!showSuccessModal && !showNotMyShopWarning && !showInvalidQRWarning && (
         <div className="absolute bottom-20 left-0 right-0 z-20">
           <div className="bg-[#0F172A] py-3 flex items-center justify-center gap-2.5">
             <Loader2 className="w-4 h-4 text-white animate-spin" />
             <p className="p4-b text-white text-center">
-              {error
-                ? error
-                : "QR 코드를 인식 중입니다. . ."}
+              {isVerifying ? "주문 정보 확인 중. . ." : "QR 코드를 인식 중입니다. . ."}
             </p>
           </div>
         </div>
@@ -172,11 +199,12 @@ export default function QRScanPage() {
           }}
         >
           <div className="flex flex-col gap-4">
+            
             {/* 타이틀 */}
-            <div className="text-left space-y-1">
-              <h3 className="h5-b text-primary">QR을 인식했습니다!</h3>
-              <p className="p1-b text-secondary">
-                주문의 상세 내용을 확인한 후 수령을 확인해주세요.
+            <div className="text-center space-y-1">
+              <h3 className="h5-b text-brand">수령 확인하시겠습니까?</h3>
+              <p className="p2 text-secondary">
+                주문의 상세 내용을 확인한 후 수령을 확인해주세요
               </p>
             </div>
 
@@ -193,27 +221,45 @@ export default function QRScanPage() {
         </div>
       )}
 
-      {/* 다른 가게 주문 경고 바텀 시트 */}
-      {showNotMyShopWarning && (
+      {/* 잘못된 QR 경고 바텀 시트 */}
+      {showInvalidQRWarning && (
         <div
-          className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl border-t-4 border-error"
+          className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl "
           style={{
             animation: "slideUp 0.3s ease-out",
           }}
         >
           <div className="flex flex-col gap-3">
-            {/* 경고 아이콘 */}
-            <div className="flex justify-center">
-              <div className="w-16 h-16 bg-error/10 rounded-full flex items-center justify-center">
-                <span className="text-3xl">⚠️</span>
-              </div>
-            </div>
             
             {/* 타이틀 */}
             <div className="text-center space-y-2">
-              <h3 className="h5-b text-error">우리 가게 주문이 아닙니다!</h3>
+              <h3 className="h5-b text-error">잘못된 QR 코드입니다</h3>
               <p className="p2 text-secondary">
-                이 주문은 <span className="font-bold">{notMyShopName}</span>의 주문입니다
+                수령 확인용 QR 코드가 아니거나 유효하지 않은 QR 코드입니다
+              </p>
+              <p className="p3 text-tertiary">
+                3초 후 스캔 모드로 돌아갑니다
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 권한 없음 경고 바텀 시트 */}
+      {showNotMyShopWarning && (
+        <div
+          className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl"
+          style={{
+            animation: "slideUp 0.3s ease-out",
+          }}
+        >
+          <div className="flex flex-col gap-3">
+            
+            {/* 타이틀 */}
+            <div className="text-center space-y-2">
+              <h3 className="h5-b text-error">권한이 없습니다</h3>
+              <p className="p2 text-secondary">
+                이 주문은 다른 가게의 주문입니다
               </p>
               <p className="p3 text-tertiary">
                 3초 후 스캔 모드로 돌아갑니다
