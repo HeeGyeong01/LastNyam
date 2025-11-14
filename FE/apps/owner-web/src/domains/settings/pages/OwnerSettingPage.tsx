@@ -112,7 +112,7 @@ export default function OwnerSettingPage() {
             onClick={() => navigate("/owner/settings/shop")}
             className="flex flex-row gap-2.5 items-center justify-start w-full h-9 hover:opacity-80 transition-opacity"
           >
-            <div className="text-brand h2-b leading-9 flex items-center justify-start">
+            <div className="text-brand h2-b leading-9 flex items-center justify-start truncate">
               {isLoadingShops ? "로딩 중..." : storeName}
             </div>
             <ChevronRight className="w-6 h-6 flex-shrink-0" />

@@ -319,7 +319,7 @@ export default function StoreInformationStep2Page() {
             placeholder: "가게 이름을 입력해주세요",
             value: formValues.storeName,
             onChange: handleFieldChange("storeName"),
-            autoComplete: "organization",
+            autoComplete: "off",
           }}
         />
 
@@ -332,7 +332,7 @@ export default function StoreInformationStep2Page() {
             placeholder: "가게 주소를 입력해주세요",
             value: formValues.address,
             onChange: handleFieldChange("address"),
-            autoComplete: "street-address",
+            autoComplete: "off",
           }}
         />
 
@@ -347,6 +347,8 @@ export default function StoreInformationStep2Page() {
             onChange: handleFieldChange("storeDescription"),
             rows: 4,
             className: "min-h-[120px]",
+            maxLength: 200,
+            autoComplete: "off",
           }}
         />
 
