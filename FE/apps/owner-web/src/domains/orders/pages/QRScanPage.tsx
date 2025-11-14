@@ -16,7 +16,6 @@ export default function QRScanPage() {
   const [showInvalidQRWarning, setShowInvalidQRWarning] = useState(false);
   const [showNotMyShopWarning, setShowNotMyShopWarning] = useState(false);
   const [scannedData, setScannedData] = useState<string>("");
-  const [notMyShopName, setNotMyShopName] = useState<string>("");
   const timerRef = useRef<number | null>(null);
 
   const handleScan = async (result: any) => {
@@ -102,12 +101,10 @@ export default function QRScanPage() {
           // ❌ 다른 가게 주문
           console.log("❌ 다른 가게 주문");
           setShowNotMyShopWarning(true);
-          setNotMyShopName(response.data.shopName);
           
           // 3초 후 다시 스캔 모드로
           setTimeout(() => {
             setShowNotMyShopWarning(false);
-            setNotMyShopName("");
             setScanning(true);
           }, 3000);
           return;
@@ -159,6 +156,9 @@ export default function QRScanPage() {
           constraints={{
             facingMode: "environment",
           }}
+          components={{
+            finder: false,
+          }}
           styles={{
             container: {
               width: "100%",
@@ -172,18 +172,30 @@ export default function QRScanPage() {
           }}
         />
       </div>
-      {/* 상단 안내 텍스트 */}
-      <div className="absolute top-32 left-0 right-0 text-center z-20">
-        <h2 className="text-white h4-b drop-shadow-lg">
-          수령 확인용 QR을 찍어주세요
-        </h2>
+      {/* 중앙 스캔 가이드 영역 (헤더/푸터 제외한 중앙) */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pt-15 pb-25">
+        {/* 안내 텍스트 */}
+        <div className="mb-8">
+          <h2 className="text-white h3-b drop-shadow-lg text-center">
+            수령 확인용 QR을 찍어주세요
+          </h2>
+        </div>
+        
+        {/* 스캔 영역 가이드 */}
+        <div className="w-64 h-64 border-4 border-brand/40 rounded-2xl relative">
+          {/* 모서리 강조 */}
+          <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-brand rounded-tl-2xl"></div>
+          <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-brand rounded-tr-2xl"></div>
+          <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-brand rounded-bl-2xl"></div>
+          <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-brand rounded-br-2xl"></div>
+        </div>
       </div>
 
       {/* 하단 상태 표시 */}
       {!showSuccessModal && !showNotMyShopWarning && !showInvalidQRWarning && (
-        <div className="absolute bottom-20 left-0 right-0 z-20">
-          <div className="bg-[#0F172A] py-3 flex items-center justify-center gap-2.5">
-            <Loader2 className="w-4 h-4 text-white animate-spin" />
+        <div className="absolute bottom-20 left-0 right-0 z-20 mb-2">
+          <div className="bg-bg-inverse py-3 flex items-center justify-center gap-2.5">
+            <Loader2 className="w-4 h-4 text-inverse animate-spin" />
             <p className="p4-b text-white text-center">
               {isVerifying ? "주문 정보 확인 중. . ." : "QR 코드를 인식 중입니다. . ."}
             </p>
