@@ -343,7 +343,7 @@ pipeline {
                         echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin 
                         docker build \
                           -t ${REGISTRY}/subscriber:${PUB_TAG} \
-                          -f subscriber/Dockerfile .
+                          -f foocketing-subscriber/Dockerfile .
 
                         echo "🚀 Docker Hub로 이미지 푸시 중..."
                         docker push ${REGISTRY}/subscriber:${PUB_TAG}
