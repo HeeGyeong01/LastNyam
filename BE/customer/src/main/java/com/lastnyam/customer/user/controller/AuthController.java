@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -24,13 +25,12 @@ public class AuthController {
 
     /**
      * 카카오 소셜 로그인 진입점
+     * GET, POST 모두 지원
      * 클라이언트가 이 엔드포인트를 호출하면 카카오 OAuth 인증 페이지로 리다이렉트됩니다.
-     *
      */
-    @GetMapping("/social/kakao")
+    @RequestMapping(value = "/social/kakao", method = { RequestMethod.GET, RequestMethod.POST })
     public void socialLogin(HttpServletResponse response) throws IOException {
         log.info("카카오 소셜 로그인 요청");
-        // Spring Security OAuth2가 자동으로 처리하는 경로로 리다이렉트
         response.sendRedirect("/oauth2/authorization/kakao");
     }
 
