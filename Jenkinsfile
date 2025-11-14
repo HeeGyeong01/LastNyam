@@ -279,29 +279,29 @@ pipeline {
 
                             if (env.BUILD_CUSTOMER == 'true') {
                                 sh """
-                                docker build -t ${REGISTRY}/customer:${PUB_TAG} -f customer/Dockerfile .
-                                docker push ${REGISTRY}/customer:${PUB_TAG}
+                                docker build -t ${REGISTRY}/customer:${env.PUB_TAG} -f customer/Dockerfile .
+                                docker push ${REGISTRY}/customer:${env.PUB_TAG}
                                 """
                                 env.BUILD_CUSTOMER_SUCCESS = 'true'
                             }
                             if (env.BUILD_OWNER == 'true') {
                                 sh """
-                                docker build -t ${REGISTRY}/owner:${PUB_TAG} -f owner/Dockerfile .
-                                docker push ${REGISTRY}/owner:${PUB_TAG}
+                                docker build -t ${REGISTRY}/owner:${env.PUB_TAG} -f owner/Dockerfile .
+                                docker push ${REGISTRY}/owner:${env.PUB_TAG}
                                 """
                                 env.BUILD_OWNER_SUCCESS = 'true'
                             }
                             if (env.BUILD_FS == 'true') {
                                 sh """
-                                docker build -t ${REGISTRY}/subscriber:${PUB_TAG} -f foocketing-subscriber/Dockerfile .
-                                docker push ${REGISTRY}/subscriber:${PUB_TAG}
+                                docker build -t ${REGISTRY}/subscriber:${env.PUB_TAG} -f foocketing-subscriber/Dockerfile .
+                                docker push ${REGISTRY}/subscriber:${env.PUB_TAG}
                                 """
                                 env.BUILD_FS_SUCCESS = 'true'
                             }
                             if (env.BUILD_FP == 'true') {
                                 sh """
-                                docker build -t ${REGISTRY}/foocketing-publisher:${PUB_TAG} -f foocketing-publisher/Dockerfile .
-                                docker push ${REGISTRY}/foocketing-publisher:${PUB_TAG}
+                                docker build -t ${REGISTRY}/foocketing-publisher:${env.PUB_TAG} -f foocketing-publisher/Dockerfile .
+                                docker push ${REGISTRY}/foocketing-publisher:${env.PUB_TAG}
                                 """
                                 env.BUILD_FP_SUCCESS = 'true'
                             }
@@ -347,26 +347,26 @@ pipeline {
 
                         if [ "${env.BUILD_CUSTOMER_SUCCESS}" = "true" ]; then
                         MANIFEST_FILE="app/customer/deployment.yml"
-                        sed -i "s|image: ${REGISTRY}/customer:.*|image: ${REGISTRY}/customer:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                        sed -i "s|image: ${REGISTRY}/customer:.*|image: ${REGISTRY}/customer:${env.PUB_TAG}|g" "\$MANIFEST_FILE"
                         fi
                         if [ "${env.BUILD_OWNER_SUCCESS}" = "true" ]; then
                         MANIFEST_FILE="app/owner/deployment.yml"
-                        sed -i "s|image: ${REGISTRY}/owner:.*|image: ${REGISTRY}/owner:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                        sed -i "s|image: ${REGISTRY}/owner:.*|image: ${REGISTRY}/owner:${env.PUB_TAG}|g" "\$MANIFEST_FILE"
                         fi
                         if [ "${env.BUILD_FS_SUCCESS}" = "true" ]; then
                         MANIFEST_FILE="app/subscriber/deployment.yml"
-                        sed -i "s|image: ${REGISTRY}/subscriber:.*|image: ${REGISTRY}/subscriber:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                        sed -i "s|image: ${REGISTRY}/subscriber:.*|image: ${REGISTRY}/subscriber:${env.PUB_TAG}|g" "\$MANIFEST_FILE"
                         fi
                         if [ "${env.BUILD_FP_SUCCESS}" = "true" ]; then
                         MANIFEST_FILE="app/foocketing-publisher/deployment.yml"
-                        sed -i "s|image: ${REGISTRY}/foocketing-publisher:.*|image: ${REGISTRY}/foocketing-publisher:${PUB_TAG}|g" "\$MANIFEST_FILE"
+                        sed -i "s|image: ${REGISTRY}/foocketing-publisher:.*|image: ${REGISTRY}/foocketing-publisher:${env.PUB_TAG}|g" "\$MANIFEST_FILE"
                         fi
 
                         if git diff --quiet; then
                         echo "Manifest 변경 없음, 푸시 생략"
                         else
                         git add app/*/deployment.yml
-                        git commit -m "CI: Update BE images to ${PUB_TAG}"
+                        git commit -m "CI: Update BE images to ${env.PUB_TAG}"
                         git push origin K8s
                         fi
                     """
