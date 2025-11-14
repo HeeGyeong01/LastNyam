@@ -51,11 +51,11 @@ export const router = createBrowserRouter([
         element: <Foocketing />,
       },
       {
-        path: '/foocketing-success',
+        path: '/foocketing-success/:id',
         element: <FoocketingSuccess />,
       },
       {
-        path: '/foocketing-fail',
+        path: '/foocketing-fail/:id',
         element: <FoocketingFail />,
       },
       {

@@ -13,11 +13,11 @@ export const apiClient = axios.create({
 // Request interceptor (인증 토큰 등 추가 가능)
 apiClient.interceptors.request.use(
   (config) => {
-    // TODO: 인증 토큰이 있다면 여기서 추가
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // localStorage에서 accessToken 가져와서 헤더에 추가
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
     return config;
   },
   (error) => {
