@@ -3,6 +3,7 @@ package com.lastnyam.owner.security.config;
 import com.lastnyam.owner.security.filter.JwtAuthenticationFilter;
 import com.lastnyam.owner.security.handler.CustomAccessDeniedHandler;
 import com.lastnyam.owner.security.handler.CustomAuthenticationEntryPoint;
+import com.lastnyam.owner.security.handler.CustomLogoutSuccessHandler;
 import com.lastnyam.owner.security.handler.JwtAuthenticationFailureHandler;
 import com.lastnyam.owner.security.handler.JwtAuthenticationSuccessHandler;
 import com.lastnyam.owner.security.service.CustomUserDetailsService;
@@ -38,6 +39,8 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
+    private final CustomLogoutSuccessHandler logoutSuccessHandler;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -69,6 +72,10 @@ public class SecurityConfig {
                         .failureHandler(jwtAuthenticationFailureHandler)
                         .permitAll()
                 )
+                .logout(c ->
+                        c.logoutUrl("/api/owner/auth/logout")
+                                .logoutSuccessHandler(logoutSuccessHandler)
+                )
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
@@ -89,7 +96,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://lastnyam.co.kr", "http://localhost:5173", "https://k13a101.p.ssafy.io"));
+        configuration.setAllowedOrigins(
+                List.of("https://lastnyam.co.kr", "http://localhost:5173", "https://k13a101.p.ssafy.io"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.addExposedHeader("Authorization");

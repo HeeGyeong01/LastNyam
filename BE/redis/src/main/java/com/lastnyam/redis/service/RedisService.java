@@ -1,10 +1,10 @@
 package com.lastnyam.redis.service;
 
+import java.time.Duration;
+import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class RedisService {
@@ -17,6 +17,10 @@ public class RedisService {
 
     public void add(String key, Object value) {
         redisTemplate.opsForValue().set(key, value);
+    }
+
+    public void add(String key, Object value, Duration timeout) {
+        redisTemplate.opsForValue().set(key, value, timeout);
     }
 
     public Object get(String key) {
