@@ -102,6 +102,7 @@ public class DiscountQueryRepository {
 
         Integer shopId = rs.getInt("shop_id");
         String shopName = rs.getString("shop_name");
+        String shopBanner = rs.getString("shop_banner");
         double shopLat = rs.getDouble("shop_lat");
         double shopLng = rs.getDouble("shop_lng");
 
@@ -109,7 +110,7 @@ public class DiscountQueryRepository {
         double distanceM = rs.getDouble("distance");
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
-        double shopRating = rs.getInt("shop_rating_avg");
+        double shopRating = rs.getDouble("shop_rating_avg");
         int shopRatingCount = rs.getInt("shop_rating_count");
 
         int discountId = rs.getInt("discount_id");
@@ -127,6 +128,7 @@ public class DiscountQueryRepository {
         ShopInfo shopInfo = ShopInfo.builder()
                 .shopId(shopId)
                 .name(shopName)
+                .bannerUrl(shopBanner)
                 .lat(shopLat)
                 .lng(shopLng)
                 .distance(distanceKm)
@@ -193,16 +195,14 @@ public class DiscountQueryRepository {
                      ST_DWithin(
                         ST_Point(s.shop_lng, s.shop_lat)::geography,
                         ST_Point(?, ?)::geography,
-                        1000
+                        3000
                      )
-                     AND d.discount_date = ?
+                     AND d.discount_close_time > NOW()
                     """);
             params.add(lon);
             params.add(lat);
             params.add(lon);
             params.add(lat);
-
-            params.add(LocalDate.now(ZoneId.of("Asia/Seoul")));
         }
 
         public String getSql() {
@@ -243,8 +243,10 @@ public class DiscountQueryRepository {
         }
 
         public void addCategoryCondition(Integer categoryId) {
-            sql.append(" AND m.category_id = ?");
-            params.add(categoryId);
+            if (categoryId != null) {
+                sql.append(" AND m.category_id = ?");
+                params.add(categoryId);
+            }
         }
 
         public void addSortCondition(DiscountSortType type) {

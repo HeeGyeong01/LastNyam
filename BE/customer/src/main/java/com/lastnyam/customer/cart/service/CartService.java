@@ -7,6 +7,7 @@ import com.lastnyam.customer.cart.dto.CartOrderApproveRequestDto;
 import com.lastnyam.customer.cart.dto.CartOrderResponseDto;
 import com.lastnyam.customer.cart.dto.CartResponseDto;
 import com.lastnyam.customer.cart.dto.CartUpdateRequestDto;
+import com.lastnyam.customer.cart.dto.CartShopInfoDto;
 import com.lastnyam.customer.cart.exception.CartErrorCode;
 import com.lastnyam.customer.cart.exception.CartException;
 import com.lastnyam.customer.cart.repository.CartItemRepository;
@@ -70,16 +71,28 @@ public class CartService {
                             .menuName(discount.getMenu().getMenuName())
                             .discountPrice(discount.getDiscountPrice())
                             .discountRate(discount.getDiscountRate())
-                            .shopId(discount.getMenu().getShop().getShopId())
-                            .shopName(discount.getMenu().getShop().getShopName())
+                            .menuImage(discount.getMenu().getMenuImage())
+                            .discountMenuAmount(discount.getDiscountMenuAmount())
                             .build();
                 })
                 .collect(Collectors.toList());
+
+        CartShopInfoDto shopInfo = null;
+        if (!cartItems.isEmpty()) {
+            Shop shop = cartItems.get(0).getDiscount().getMenu().getShop();
+            shopInfo = CartShopInfoDto.builder()
+                    .shopId(shop.getShopId())
+                    .shopName(shop.getShopName())
+                    .shopBanner(shop.getShopBanner())
+                    .shopCloses(shop.getShopCloses())
+                    .build();
+        }
 
         return CartResponseDto.builder()
                 .cartId(cart.getCartId())
                 .userId(userId)
                 .cartItems(cartItemDtos)
+                .shop(shopInfo)
                 .build();
     }
 

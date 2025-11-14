@@ -16,7 +16,7 @@ public class CartItemResponseDto {
     private String menuName;
     private Integer discountPrice;
     private Integer discountRate;
-    private Integer shopId;
-    private String shopName;
+    private String menuImage;
+    private Integer discountMenuAmount;
 }
 

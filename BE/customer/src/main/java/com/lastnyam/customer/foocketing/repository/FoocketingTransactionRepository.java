@@ -1,4 +1,4 @@
-package com.lastnyam.customer.user.repository;
+package com.lastnyam.customer.foocketing.repository;
 
 import com.lastnyam.database.entity.FoocketingTransaction;
 import java.util.List;
@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface FoocketingTransactionRepository extends JpaRepository<FoocketingTransaction, Integer> {
+    List<FoocketingTransaction> findByUserUserId(Integer userId);
 
     /**
      * 특정 사용자의 푸케팅 거래 QR 조회
@@ -30,3 +31,5 @@ public interface FoocketingTransactionRepository extends JpaRepository<Foocketin
             "ORDER BY ft.createdAt DESC")
     List<FoocketingTransaction> findAllByUserIdWithShopAndFoocketing(@Param("userId") Integer userId);
 }
+
+
