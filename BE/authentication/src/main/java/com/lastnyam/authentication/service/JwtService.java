@@ -1,9 +1,12 @@
 package com.lastnyam.authentication.service;
 
 import com.lastnyam.authentication.dto.TokenDto;
+import com.lastnyam.authentication.enums.TokenType;
 import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.provider.JwtProvider;
 import com.lastnyam.redis.service.RedisService;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,24 @@ public class JwtService {
 
     public String generateRefreshToken(UserRole role, Integer id) {
         return jwtProvider.generateRefreshToken(role, id, UUID.randomUUID().toString());
+    }
+
+    public void blacklistToken(String token, TokenType type) {
+        TokenDto dto = getClaimsFromToken(token);
+        String version = extractVersionOf(token);
+
+        String key = type.getPrefix() + dto.getId() + ":" + version;
+
+        Instant expiration = jwtProvider.getExpiration(token).toInstant();
+        Instant now = Instant.now();
+
+        long duration = Duration.between(now, expiration).toMillis();
+
+        if (duration <= 0) {
+            return;
+        }
+
+        redisService.add(key, true, Duration.ofMillis(duration));
     }
 
     public boolean validateToken(String token) {

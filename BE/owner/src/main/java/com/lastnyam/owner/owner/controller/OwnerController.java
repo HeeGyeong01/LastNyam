@@ -34,7 +34,7 @@ public class OwnerController {
     }
 
     // 점주 가게 조회
-    @GetMapping("/{ownerId}/shops")
+    @GetMapping("/{ownerId}/shop")
     public ResponseEntity<ApiResponse<ShopListResponse>> getOwnerShops(
             @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId) {

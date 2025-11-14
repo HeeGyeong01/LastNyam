@@ -1,30 +1,28 @@
 package com.lastnyam.authentication.provider;
 
 import com.lastnyam.authentication.enums.UserRole;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
+import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtProvider {
 
-    @Value("${security.jwt.secretKey}")
-    private String secretKey;
-
     @Value("${security.jwt.access-token.expiration}")
     public int ACCESS_TOKEN_EXPIRATION;
-
     @Value("${security.jwt.refresh-token.expiration}")
     public int REFRESH_TOKEN_EXPIRATION;
-
+    @Value("${security.jwt.secretKey}")
+    private String secretKey;
     private SecretKey key;
 
     @PostConstruct
@@ -81,6 +79,11 @@ public class JwtProvider {
     public UserRole extractRole(String token) {
         String role = getClaims(token).get("role", String.class);
         return UserRole.valueOf(role);
+    }
+
+    public Date getExpiration(String token) {
+        Claims claims = getClaims(token);
+        return claims.getExpiration();
     }
 
     public Integer extractId(String token) {
