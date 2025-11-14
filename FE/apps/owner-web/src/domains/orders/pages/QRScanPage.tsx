@@ -25,7 +25,7 @@ export default function QRScanPage() {
       console.log("🔍 QR 스캔됨:", url);
 
       // 1️⃣ URL 형식 체크
-      if (!url.startsWith("/owner/orders/receipt-confirm")) {
+      if (!url.startsWith("/orders/receipt-confirm")) {
         console.log("❌ URL 형식 오류:", url);
         setScanning(false);
         setShowInvalidQRWarning(true);

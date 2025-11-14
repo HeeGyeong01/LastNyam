@@ -16,7 +16,7 @@ const PublicRoute = () => {
   const { pathname } = useLocation();
 
   const shouldRedirectAuthenticatedUser =
-    pathname === "/owner/login" || pathname === "/owner/signup";
+    pathname === "/login" || pathname === "/signup";
 
   useEffect(() => {
     if (
@@ -40,7 +40,7 @@ const PublicRoute = () => {
   ) {
     return (
       <Navigate
-        to={postAuthRedirectPath ?? "/owner/orders/list"}
+        to={postAuthRedirectPath ?? "/orders/list"}
         replace
       />
     );
