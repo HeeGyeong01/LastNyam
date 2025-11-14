@@ -6,9 +6,7 @@ import { FoocketingList } from '@/features/foocketing/component';
 import { Tab } from '@shared/components/Tab';
 import { useShopDetail } from '@/features/shop/hook';
 import type { ShopDetailDiscount, ShopDetailFoocketing } from '@/features/shop/type';
-import ShopInfoTabs from './components/ShopInfoTabs';
-import ShopProfile from './components/ShopProfile';
-import MenuDetail from './components/MenuDetail';
+import { ShopInfoTabs, ShopProfile, MenuDetail } from '@/features/shop/component';
 
 export default function ShopDetail() {
   const { id } = useParams();
