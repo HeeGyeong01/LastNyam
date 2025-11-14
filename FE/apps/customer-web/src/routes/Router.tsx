@@ -1,16 +1,35 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { MainLayout, DetailLayout } from '../components/layout';
-import Home from '../pages/home';
-import { Login, KakaoCallback, AdditionalInfo, SignupComplete } from '../pages/auth';
-import { Foocketing, FoocketingDetail, FoocketingSuccess, FoocketingFail } from '../pages/foocketing';
-import { Discount } from '../pages/discount';
-import { ShopDetail } from '../pages/shop';
+import { MainLayout, DetailLayout } from '@/shared/layout';
+// import { BottomNavBar } from '@/shared/components';
+import Home from '@/features/home/pages/Home';
+import Login from '@/features/auth/pages/Login';
+import KakaoCallback from '@/features/auth/pages/KakaoCallback';
+import AdditionalInfo from '@/features/auth/pages/AdditionalInfo';
+import SignupComplete from '@/features/auth/pages/SignupComplete';
+import Foocketing from '@/features/foocketing/pages/Foocketing';
+import FoocketingDetail from '@/features/foocketing/pages/FoocketingDetail';
+import FoocketingSuccess from '@/features/foocketing/pages/FoocketingSuccess';
+import FoocketingFail from '@/features/foocketing/pages/FoocketingFail';
+import Discount from '@/features/discount/pages/Discount';
+import ShopDetail from '@/features/shop/pages/ShopDetail';
 import { Cart, PaymentSuccess } from '../pages/cart';
-import Likes from '../pages/likes';
-import { Search, SearchResult } from '../pages/search';
-import OrderList from '../pages/order';
-import MyPage from '../pages/mypage';
-import QR from '../pages/qr';
+import Favorite from '@/features/favorite/pages/Favorite';
+import Search from '@/features/search/pages/Search';
+import OrderList from '@/features/transaction/pages/Transaction';
+import MyPage from '@/features/mypage/pages/MyPage';
+import QR from '@/features/qr/pages/QR';
+
+// Cart 전용 레이아웃 (BottomNavBar는 있지만 padding 없음)
+// function CartLayout() {
+//   return (
+//     <>
+//       <div className="h-screen max-w-[500px] mx-auto overflow-y-auto">
+//         <Outlet />
+//       </div>
+//       <BottomNavBar />
+//     </>
+//   );
+// }
 
 export const router = createBrowserRouter([
   // Auth routes (네비게이션 바 없음)
@@ -56,24 +75,16 @@ export const router = createBrowserRouter([
         element: <Discount />,
       },
       {
-        path: '/cart',
-        element: <Cart />,
-      },
-      {
         path: '/payment-success',
         element: <PaymentSuccess />,
       },
       {
-        path: '/likes',
-        element: <Likes />,
+        path: '/favorite',
+        element: <Favorite />,
       },
       {
         path: '/search',
         element: <Search />,
-      },
-      {
-        path: '/search-result',
-        element: <SearchResult />,
       },
       {
         path: '/order-list',
@@ -102,7 +113,22 @@ export const router = createBrowserRouter([
         path: '/shop/:id',
         element: <ShopDetail />,
       },
+      {
+        path: '/cart',
+        element: <Cart />,
+      },
     ],
   },
+  
+  // Cart route (네비게이션 바는 있지만 padding 없음)
+  // {
+  //   element: <CartLayout />,
+  //   children: [
+  //     {
+  //       path: '/cart',
+  //       element: <Cart />,
+  //     },
+  //   ],
+  // },
 ]);
 

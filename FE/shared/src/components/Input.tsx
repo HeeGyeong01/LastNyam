@@ -5,7 +5,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const containerVariants = cva(
   // 기본 스타일
-  'w-full rounded-lg bg-bg-1 inline-flex items-center transition-all duration-200 focus-within:ring-2 focus-within:ring-stroke-3',
+  'w-full rounded-lg bg-bg-1 inline-flex items-center transition-all duration-200',
   {
     variants: {
       size: {
