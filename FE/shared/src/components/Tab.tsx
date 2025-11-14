@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
+import { cn } from '@/lib/utils';
 
 export interface TabProps {
   tabLabels: string[];
@@ -20,7 +21,7 @@ const Tab = React.forwardRef<HTMLDivElement, TabProps>(
     };
 
     return (
-      <div ref={ref} className={`flex px-4 py-2 gap-2 bg-bg-0 ${className}`}>
+      <div ref={ref} className={cn('flex px-4 py-2 gap-2 bg-bg-0', className)}>
         {tabLabels.map((label, index) => (
           <Button
             key={index}

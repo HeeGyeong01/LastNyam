@@ -15,8 +15,7 @@ import ShopDetail from '@/features/shop/pages/ShopDetail';
 import { Cart, PaymentSuccess } from '../pages/cart';
 import Favorite from '@/features/favorite/pages/Favorite';
 import Search from '@/features/search/pages/Search';
-import SearchResult from '@/features/search/pages/SearchResult';
-import OrderList from '@/features/order/pages/OrderList';
+import OrderList from '@/features/transaction/pages/Transaction';
 import MyPage from '@/features/mypage/pages/MyPage';
 import QR from '@/features/qr/pages/QR';
 
@@ -75,10 +74,6 @@ export const router = createBrowserRouter([
       {
         path: '/search',
         element: <Search />,
-      },
-      {
-        path: '/search-result',
-        element: <SearchResult />,
       },
       {
         path: '/order-list',

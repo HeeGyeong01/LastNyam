@@ -1,43 +1,49 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 export default function KakaoCallback() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const code = searchParams.get('code');
+    const error = searchParams.get('error');
+    
+    if (error) {
+      // 카카오 로그인 에러 처리
+      console.error('카카오 로그인 에러:', error);
+      // 부모 창에 에러 메시지 전송
+      if (window.opener) {
+        window.opener.postMessage(
+          { type: 'KAKAO_LOGIN_ERROR', error },
+          window.location.origin
+        );
+      }
+      window.close();
+      return;
+    }
     
     if (code) {
-      // 카카오 인증 코드로 백엔드에 로그인 요청
-      handleKakaoLogin(code);
-    } else {
-      // 에러 처리
-      console.error('카카오 로그인 실패');
-      navigate('/login');
-    }
-  }, [searchParams, navigate]);
-
-  const handleKakaoLogin = async (code: string) => {
-    try {
-      // TODO: 백엔드 API 호출
-      console.log('카카오 인증 코드:', code);
-      
-      // 백엔드 응답에 따라 분기
-      const isNewUser = true; // TODO: 실제 응답에서 확인
-      
-      if (isNewUser) {
-        // 신규 회원 -> 추가정보 입력 페이지로
-        navigate('/auth/additional-info');
-      } else {
-        // 기존 회원 -> 홈으로
-        navigate('/');
+      // 부모 창에 성공 메시지와 코드 전송
+      if (window.opener) {
+        window.opener.postMessage(
+          { type: 'KAKAO_LOGIN_SUCCESS', code },
+          window.location.origin
+        );
       }
-    } catch (error) {
-      console.error('로그인 처리 실패:', error);
-      navigate('/login');
+      // 팝업 창 닫기
+      window.close();
+    } else {
+      // 코드가 없는 경우
+      console.error('카카오 인증 코드가 없습니다.');
+      if (window.opener) {
+        window.opener.postMessage(
+          { type: 'KAKAO_LOGIN_ERROR', error: '인증 코드가 없습니다.' },
+          window.location.origin
+        );
+      }
+      window.close();
     }
-  };
+  }, [searchParams]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

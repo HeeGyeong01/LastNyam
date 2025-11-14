@@ -5,6 +5,7 @@ import { FoocketingCard } from '@/features/foocketing/component';
 import DiscountCategoryTab from './DiscountCategoryTab';
 import { Button } from '@shared/components/Button';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -13,6 +14,11 @@ export default function Home() {
     // 푸켓팅 페이지로 이동
     // Foocketing 페이지에서 자동으로 API 호출됨 (useFoocketingCategory 훅)
     navigate('/foocketing');
+  };
+
+  const handleInputClick = () => {
+    // Search 페이지로 이동하고 Input이 자동으로 focus되도록 state 전달
+    navigate('/search', { state: { shouldFocus: true } });
   };
 
   // 테스트용 샘플 데이터
@@ -52,79 +58,18 @@ export default function Home() {
     },
   ];
 
-  // // ShopCard 테스트용 샘플 데이터
-  // const shopData = [
-  //   {
-  //     storeName: '이탈리안 레스토랑',
-  //     storeProfileImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=400&fit=crop',
-  //     rating: 4.7,
-  //     reviewCount: 8888,
-  //     saleMenu: '파스타 세트 50% 할인',
-  //     distance: '500m',
-  //   },
-  //   {
-  //     storeName: '스테이크 하우스',
-  //     storeProfileImage: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=400&fit=crop',
-  //     rating: 4.9,
-  //     reviewCount: 1234,
-  //     saleMenu: '프리미엄 스테이크 특가',
-  //     distance: '1.2km',
-  //   },
-  //   {
-  //     storeName: '헬시 카페',
-  //     storeProfileImage: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
-  //     rating: 4.5,
-  //     reviewCount: 567,
-  //     saleMenu: '샐러드 보울 세일',
-  //     distance: '300m',
-  //   },
-  // ];
-
-  // // MenuCard 테스트용 샘플 데이터
-  // const menuData = [
-  //   {
-  //     foodName: '맛있는 파스타 세트',
-  //     foodDescription: '신선한 재료로 만든 크림 파스타와 샐러드',
-  //     discountRate: 88,
-  //     discountedPrice: 800000,
-  //     originalPrice: 8000000,
-  //     rating: 4.7,
-  //     reviewCount: 8888,
-  //     storeName: '이탈리안 레스토랑',
-  //     remainingQuantity: 88,
-  //     foodImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=400&fit=crop',
-  //   },
-  //   {
-  //     foodName: '프리미엄 스테이크',
-  //     foodDescription: '한우 등심 스테이크와 사이드 디시',
-  //     discountRate: 75,
-  //     discountedPrice: 1200000,
-  //     originalPrice: 4800000,
-  //     rating: 4.9,
-  //     reviewCount: 1234,
-  //     storeName: '스테이크 하우스',
-  //     remainingQuantity: 15,
-  //     foodImage: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=400&fit=crop',
-  //   },
-  //   {
-  //     foodName: '신선한 샐러드 보울',
-  //     foodDescription: '다양한 신선한 채소와 과일이 들어간 샐러드',
-  //     discountRate: 50,
-  //     discountedPrice: 500000,
-  //     originalPrice: 1000000,
-  //     rating: 4.5,
-  //     reviewCount: 567,
-  //     storeName: '헬시 카페',
-  //     remainingQuantity: 32,
-  //     foodImage: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
-  //   },
-  // ];
 
   return (
     <>
       <HomeHeader />
       <div className="flex flex-col gap-9 px-4 ">
-        <Input placeholder="Search" className="mb-6" />
+        <Input 
+          placeholder="먹고 싶은 음식을 검색해보세요" 
+          className="mb-6" 
+          onClick={handleInputClick}
+          readOnly
+          icon={<MagnifyingGlassIcon />}
+        />
         <DiscountCategoryTab />
         {/* Foocketing*/}
         <div className="flex flex-col gap-3">
