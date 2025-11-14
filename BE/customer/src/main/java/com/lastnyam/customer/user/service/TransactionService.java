@@ -3,12 +3,12 @@ package com.lastnyam.customer.user.service;
 import com.lastnyam.customer.cart.repository.DiscountTransactionItemRepository;
 import com.lastnyam.customer.cart.repository.DiscountTransactionRepository;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.foocketing.repository.FoocketingTransactionRepository;
 import com.lastnyam.customer.user.dto.DiscountTransactionInfo;
 import com.lastnyam.customer.user.dto.FoocketingTransactionInfo;
 import com.lastnyam.customer.user.dto.MenuItemInfo;
 import com.lastnyam.customer.user.dto.ShopInfoInTransaction;
 import com.lastnyam.customer.user.dto.TransactionQrResponse;
-import com.lastnyam.customer.user.repository.FoocketingTransactionRepository;
 import com.lastnyam.database.entity.DiscountTransaction;
 import com.lastnyam.database.entity.DiscountTransactionItem;
 import com.lastnyam.database.entity.Foocketing;
@@ -27,11 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TransactionService {
 
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final DiscountTransactionRepository discountTransactionRepository;
     private final DiscountTransactionItemRepository discountTransactionItemRepository;
     private final FoocketingTransactionRepository foocketingTransactionRepository;
-
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     /**
      * 마감할인 내 주문 리스트 조회
@@ -102,7 +101,7 @@ public class TransactionService {
     public TransactionQrResponse getDiscountTransactionQr(Integer userId, Integer transactionId) {
         DiscountTransaction transaction = discountTransactionRepository
                 .findByIdAndUserId(transactionId, userId)
-                .orElseThrow(() -> ResourceNotFoundException.ofTransaction());
+                .orElseThrow(ResourceNotFoundException::ofTransaction);
 
         log.info("마감할인 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
@@ -173,7 +172,7 @@ public class TransactionService {
     public TransactionQrResponse getFoocketingTransactionQr(Integer userId, Integer transactionId) {
         FoocketingTransaction transaction = foocketingTransactionRepository
                 .findByIdAndUserId(transactionId, userId)
-                .orElseThrow(() -> ResourceNotFoundException.ofTransaction());
+                .orElseThrow(ResourceNotFoundException::ofTransaction);
 
         log.info("푸케팅 QR 조회: userId={}, transactionId={}", userId, transactionId);
 

@@ -185,7 +185,7 @@ public class FoocketingQueryRepository {
                         ST_Point(?,?)::geography,
                         1000
                      )
-                     AND f.foocketing_time <= ? AND f.foocketing_close_time > ?                     
+                     AND f.foocketing_close_time > ?                     
                     """);
 
             params.add(lon);
@@ -194,7 +194,6 @@ public class FoocketingQueryRepository {
             params.add(lat);
 
             LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-            params.add(now);
             params.add(now);
         }
 
