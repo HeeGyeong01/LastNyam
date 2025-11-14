@@ -237,12 +237,12 @@ export default function ManageCloseoutSalePage() {
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
               {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <p className="p1 text-secondary">로딩 중...</p>
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">마감세일 목록을 불러오는 중...</p>
                 </div>
               ) : discountMenus.length === 0 ? (
-                <div className="flex items-center justify-center py-20">
-                  <p className="p1 text-secondary">등록된 마감세일 메뉴가 없습니다</p>
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">등록된 마감세일 메뉴가 없습니다.</p>
                 </div>
               ) : (
                 <DndContext
