@@ -5,7 +5,7 @@ import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.authentication.service.JwtService;
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.common.enums.ApiStatus;
-import com.lastnyam.owner.owner.dto.TokenData;
+import com.lastnyam.owner.owner.dto.OwnerDetailResponse;
 import com.lastnyam.owner.security.entity.CustomUserDetails;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -40,7 +40,12 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
         Integer ownerId = userDetails.getOwnerId();
 
         issueToken(response, ownerId);
-        ApiResponse<TokenData> apiResponse = new ApiResponse<>(null, ApiStatus.SUCCESS, 200, "로그인 성공");
+
+        OwnerDetailResponse detail = OwnerDetailResponse.builder()
+                .ownerId(ownerId)
+                .build();
+
+        ApiResponse<?> apiResponse = new ApiResponse<>(detail, ApiStatus.SUCCESS, 200, "로그인 성공");
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
