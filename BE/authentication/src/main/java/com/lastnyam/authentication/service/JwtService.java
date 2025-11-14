@@ -8,18 +8,15 @@ import com.lastnyam.redis.service.RedisService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
     private final JwtProvider jwtProvider;
     private final RedisService redisService;
-
-    public JwtService(JwtProvider jwtProvider, RedisService redisService) {
-        this.jwtProvider = jwtProvider;
-        this.redisService = redisService;
-    }
 
     public String generateAccessToken(UserRole role, Integer id) {
         return jwtProvider.generateAccessToken(role, id, UUID.randomUUID().toString());
