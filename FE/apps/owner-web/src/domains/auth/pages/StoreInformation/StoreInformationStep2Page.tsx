@@ -243,7 +243,7 @@ export default function StoreInformationStep2Page() {
         setShops(nextShops);
 
         alert("가게 등록이 완료되었습니다.");
-        navigate("/owner/orders/list", { replace: true });
+        navigate("/orders/list", { replace: true });
       } catch (error) {
         console.error("⚠️ 가게 등록 실패:", error);
         const message =

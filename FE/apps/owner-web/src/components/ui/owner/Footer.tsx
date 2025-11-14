@@ -13,32 +13,32 @@ const footerItems: FooterItem[] = [
   {
     icon: Home,
     label: "주문리스트",
-    path: "/owner/orders/list",
-    activePaths: ["/owner/orders/list", "/owner/orders/qr-scan", "/owner/orders/receipt-confirm"],
+    path: "/orders/list",
+    activePaths: ["/orders/list", "/orders/qr-scan", "/orders/receipt-confirm"],
   },
   {
     icon: Clock,
     label: "마감세일",
-    path: "/owner/catalog/closeout-sale",
-    activePaths: ["/owner/catalog/closeout-sale"],
+    path: "/catalog/closeout-sale",
+    activePaths: ["/catalog/closeout-sale"],
   },
   {
     icon: Ticket,
     label: "푸켓팅",
-    path: "/owner/catalog/foocketing",
-    activePaths: ["/owner/catalog/foocketing"],
+    path: "/catalog/foocketing",
+    activePaths: ["/catalog/foocketing"],
   },
   {
     icon: FileText,
     label: "주간레포트",
-    path: "/owner/insights/report",
-    activePaths: ["/owner/insights/report"],
+    path: "/insights/report",
+    activePaths: ["/insights/report"],
   },
   {
     icon: Settings,
     label: "가게관리",
-    path: "/owner/settings",
-    activePaths: ["/owner/settings", "/owner/catalog/menu"],
+    path: "/settings",
+    activePaths: ["/settings", "/catalog/menu"],
   },
 ];
 

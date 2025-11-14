@@ -156,7 +156,7 @@ export default function StoreInformationStep1InputPage() {
     event.preventDefault();
 
     // TODO: Step2 페이지로 넘기기 전에 서버 저장 또는 상태 관리 로직 연결
-    navigate("/owner/store-information/step2", {
+    navigate("/store-information/step2", {
       state: {
         fromStep1: {
           storeName: formValues.storeName,

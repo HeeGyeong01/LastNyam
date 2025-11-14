@@ -109,7 +109,7 @@ export default function StoreInformationStep1DocumentPage() {
 
     try {
       const businessLicense = await storeInformationApi.uploadBusinessLicense(file, token);
-      navigate("/owner/store-information/step1-input", {
+      navigate("/store-information/step1-input", {
         replace: true,
         state: {
           businessLicense,
@@ -217,7 +217,7 @@ export default function StoreInformationStep1DocumentPage() {
 
         <div className="flex items-center gap-2">
           <p className="p2 text-secondary">업로드 없이 입력하고 싶으시다면?</p>
-          <a href="/owner/store-information/step1-input" className="p2-b text-brand hover:underline">
+          <a href="/store-information/step1-input" className="p2-b text-brand hover:underline">
               직접입력
           </a>
         </div>

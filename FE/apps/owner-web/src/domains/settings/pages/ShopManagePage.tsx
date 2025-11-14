@@ -52,7 +52,7 @@ export default function ShopManagePage() {
         <Button
           btnStyle="filled-red"
           btnShape="rounded"
-          onClick={() => navigate("/owner/settings")}
+          onClick={() => navigate("/settings")}
         >
           돌아가기
         </Button>
