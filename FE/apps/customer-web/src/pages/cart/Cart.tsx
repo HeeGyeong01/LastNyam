@@ -107,9 +107,11 @@ export default function Cart() {
 
   return (
     <>
-      <div className="bg-bg-1 min-h-screen">
-        <PageHeader title="장바구니" variant="light" />
-        <div className="px-4 py-5 pb-44 flex flex-col gap-3">
+      {/* 전체 화면 배경 레이어 (스크롤과 무관하게 항상 전체 화면 채움) */}
+      <div className="fixed inset-0 bg-bg-1 -z-10 max-w-[500px] mx-auto" />
+      
+      <PageHeader title="장바구니" variant="light" />
+      <div className="px-4 py-5 flex flex-col gap-3">
           {/* 가게 정보 */}
           {cartData.cartItems.length > 0 && (
             <div className="py-1 flex gap-1.5 items-center">
@@ -164,7 +166,7 @@ export default function Cart() {
             </div>
           )}
         </div>
-      </div>
+      {/* </div> */}
 
       {/* 하단 주문 정보 */}
       {cartData.cartItems.length > 0 && (
