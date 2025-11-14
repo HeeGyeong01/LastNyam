@@ -1,6 +1,7 @@
 package com.lastnyam.customer.exception;
 
-import org.springframework.http.HttpStatus;
+import com.lastnyam.common.exception.BusinessException;
+import com.lastnyam.common.exception.code.BaseErrorCode;
 
 import com.lastnyam.common.exception.BusinessException;
 import com.lastnyam.common.exception.code.BaseErrorCode;
@@ -10,11 +11,11 @@ public class BadRequestException extends BusinessException {
         super(code);
     }
 
-    private static BaseErrorCode badRequest(String message) {
-        return new BaseErrorCode() {
+    public static BadRequestException ofCategory(String message) {
+        return new BadRequestException(new BaseErrorCode() {
             @Override
-            public HttpStatus getStatus() {
-                return HttpStatus.BAD_REQUEST;
+            public org.springframework.http.HttpStatus getStatus() {
+                return org.springframework.http.HttpStatus.BAD_REQUEST;
             }
 
             @Override
@@ -26,26 +27,56 @@ public class BadRequestException extends BusinessException {
             public String getMessage() {
                 return message;
             }
-        };
-    }
-
-    public static BadRequestException ofCategory(String message) {
-        return new BadRequestException(badRequest(message));
+        });
     }
 
     public static BadRequestException ofQuery() {
-        return new BadRequestException(badRequest("잘못된 쿼리입니다"));
+        return new BadRequestException(CustomerErrorCode.INVALID_QUERY);
     }
 
     public static BadRequestException ofQuery(String message) {
-        return new BadRequestException(badRequest(message));
+        return new BadRequestException(new BaseErrorCode() {
+            @Override
+            public org.springframework.http.HttpStatus getStatus() {
+                return org.springframework.http.HttpStatus.BAD_REQUEST;
+            }
+
+            @Override
+            public int getCode() {
+                return 400;
+            }
+
+            @Override
+            public String getMessage() {
+                return message;
+            }
+        });
     }
 
     public static BadRequestException ofInput() {
-        return new BadRequestException(badRequest("잘못된 입력값입니다"));
+        return new BadRequestException(CustomerErrorCode.INVALID_INPUT);
     }
 
     public static BadRequestException ofInput(String message) {
-        return new BadRequestException(badRequest(message));
+        return new BadRequestException(new BaseErrorCode() {
+            @Override
+            public org.springframework.http.HttpStatus getStatus() {
+                return org.springframework.http.HttpStatus.BAD_REQUEST;
+            }
+
+            @Override
+            public int getCode() {
+                return 400;
+            }
+
+            @Override
+            public String getMessage() {
+                return message;
+            }
+        });
+    }
+
+    public static BadRequestException ofCategory() {
+        return new BadRequestException(CustomerErrorCode.INVALID_CATEGORY);
     }
 }

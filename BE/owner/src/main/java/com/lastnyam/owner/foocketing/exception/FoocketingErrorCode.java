@@ -9,10 +9,10 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum FoocketingErrorCode implements BaseErrorCode {
 
-    SHOP_NOT_FOUND(HttpStatus.BAD_REQUEST, 400, "가게를 찾을 수 없습니다."),
-    NOT_SHOP_OWNER(HttpStatus.BAD_REQUEST, 400, "해당 가게의 점주가 아닙니다."),
-    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, 404, "메뉴를 찾을 수 없습니다."),
-    MENU_NOT_IN_SHOP(HttpStatus.BAD_REQUEST, 400, "해당 가게의 메뉴가 아닙니다.");
+    FOOCKETING_NOT_FOUND(HttpStatus.NOT_FOUND, 404, "해당 푸켓팅을 찾을 수 없습니다."),
+    PICKUP_TIME_PASSED(HttpStatus.BAD_REQUEST, 400, "픽업 마감 시간이 지나 푸켓팅을 등록할 수 없습니다."),
+    INVALID_FOOCKETING_TIME(HttpStatus.BAD_REQUEST, 400, "푸켓팅 시간은 현재 시간 이후여야 합니다."),
+    FOOCKETING_TIME_AFTER_PICKUP_END(HttpStatus.BAD_REQUEST, 400, "푸켓팅 시간은 픽업 마감 시간 이전이어야 합니다.");
 
     private final HttpStatus status;
     private final int code;

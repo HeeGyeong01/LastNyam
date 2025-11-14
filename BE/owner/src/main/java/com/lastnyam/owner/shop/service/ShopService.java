@@ -1,5 +1,7 @@
 package com.lastnyam.owner.shop.service;
 
+import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import com.lastnyam.owner.shop.exception.ShopException;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +37,9 @@ public class ShopService {
 	private final FoodCategoryRepository foodCategoryRepository;
 
 	@Transactional
-	public ShopCreateResponse createShop(Integer ownerId, ShopCreateRequest request) {
+	public ShopCreateResponse createShop(Integer userId, Integer ownerId, ShopCreateRequest request) {
+		checkPermission(userId, ownerId);
+		
 		// 점주 확인
 		Owner owner = ownerRepository.findById(ownerId)
 			.orElseThrow(() -> new ShopException(ShopErrorCode.OWNER_NOT_FOUND));
@@ -47,6 +52,7 @@ public class ShopService {
 			.shopName(request.getShopName())
 			.shopLat(request.getShopLat())
 			.shopLng(request.getShopLng())
+			.shopAddress(request.getShopAddress())
 			.shopDescription(request.getShopDescription())
 			.shopBanner(request.getShopBanner())
 			.shopCloses(request.getShopCloses())
@@ -63,7 +69,9 @@ public class ShopService {
 	}
 
 	@Transactional
-	public MenuCreateResponse createMenu(Integer ownerId, Integer shopId, MenuCreateRequest request) {
+	public MenuCreateResponse createMenu(Integer userId, Integer ownerId, Integer shopId, MenuCreateRequest request) {
+		checkPermission(userId, ownerId);
+		
 		// 가게 확인 및 점주 권한 확인
 		Shop shop = shopRepository.findById(shopId)
 			.orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
@@ -93,7 +101,9 @@ public class ShopService {
 	}
 
 	@Transactional(readOnly = true)
-	public MenuListResponse getShopMenus(Integer ownerId, Integer shopId) {
+	public MenuListResponse getShopMenus(Integer userId, Integer ownerId, Integer shopId) {
+		checkPermission(userId, ownerId);
+		
 		// 가게 확인 및 점주 권한 확인
 		Shop shop = shopRepository.findById(shopId)
 			.orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
@@ -120,5 +130,11 @@ public class ShopService {
 		return MenuListResponse.builder()
 			.menus(menuList)
 			.build();
+	}
+
+	private static void checkPermission(Integer userId, Integer ownerId) {
+		if (!Objects.equals(userId, ownerId)) {
+			throw new ShopException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+		}
 	}
 }

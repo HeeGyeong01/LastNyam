@@ -38,7 +38,7 @@ pipeline {
             def isCommonChanged = commonModules.any { changes.contains("BE/${it}/") }
             def isMessagingChanged = changes.contains('BE/messaging/')
             
-            env.BUILD_USER = (changes.contains('BE/user/') || isCommonChanged).toString()
+            env.BUILD_CUSTOMER = (changes.contains('BE/customer/') || isCommonChanged).toString()
             env.BUILD_OWNER = (changes.contains('BE/owner/') || isCommonChanged).toString()
             env.BUILD_FS = (changes.contains('BE/foocketing-subscriber/') || isCommonChanged || isMessagingChanged).toString()
             env.BUILD_FP = (changes.contains('BE/foocketing-publisher/') || isCommonChanged || isMessagingChanged).toString()
@@ -50,7 +50,7 @@ pipeline {
 ┌─────────────────────────────────────────┐
 │      BE BUILD PLAN                      │
 ├─────────────────────────────────────────┤
-│ 👤 User              : ${env.BUILD_USER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
+│ 👤 Customer              : ${env.BUILD_CUSTOMER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
 │ 🏪 Owner             : ${env.BUILD_OWNER == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
 │ 📥 Foocketing-Sub    : ${env.BUILD_FS == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
 │ 📤 Foocketing-Pub    : ${env.BUILD_FP == 'true' ? '✅ BUILD' : '⏭️  SKIP '} │
@@ -104,17 +104,17 @@ pipeline {
     stage('BE - Build & Push Images') {
       when { expression { return env.IS_BE == 'true' } }
       parallel {
-        stage('Build User') {
-          when { expression { return env.BUILD_USER == 'true' } }
+        stage('Build Customer') {
+          when { expression { return env.BUILD_CUSTOMER == 'true' } }
           steps {
             dir('BE') {
-              echo '🔨 Building User Service...'
-              sh './gradlew :user:clean :user:bootJar --parallel --build-cache'
+              echo '🔨 Building Customer Service...'
+              sh './gradlew :customer:clean :customer:bootJar --parallel --build-cache'
               sh """
                 docker build \
-                  --cache-from ${REGISTRY}/user:latest \
-                  -t ${REGISTRY}/user:${TAG} \
-                  -f user/Dockerfile .
+                  --cache-from ${REGISTRY}/customer:latest \
+                  -t ${REGISTRY}/customer:${TAG} \
+                  -f customer/Dockerfile .
               """
             }
           }
@@ -173,20 +173,20 @@ pipeline {
     stage('BE - Deploy Services') {
       when { expression { return env.IS_BE == 'true' } }
       parallel {
-        stage('Deploy User') {
-          when { expression { return env.BUILD_USER == 'true' } }
+        stage('Deploy Customer') {
+          when { expression { return env.BUILD_CUSTOMER == 'true' } }
           steps {
             script {
-              echo '🚀 Deploying User Service...'
+              echo '🚀 Deploying Customer Service...'
               sh """
                 set -e
                 cd /var/scripts
-                docker-compose -f user.yml up -d
+                docker-compose -f customer.yml up -d
                 
                 echo "⏳ Waiting for service..."
                 for i in {1..30}; do
-                  if docker-compose ps user | grep -q "Up"; then
-                    echo "✅ User service deployed"
+                  if docker-compose ps customer | grep -q "Up"; then
+                    echo "✅ Customer service deployed"
                     exit 0
                   fi
                   sleep 1
@@ -321,7 +321,7 @@ pipeline {
       script {
         def deployed = []
         if (env.IS_BE == 'true') {
-          if (env.BUILD_USER == 'true') deployed << 'BE-User'
+          if (env.BUILD_CUSTOMER == 'true') deployed << 'BE-Customer'
           if (env.BUILD_OWNER == 'true') deployed << 'BE-Owner'
           if (env.BUILD_FS == 'true') deployed << 'BE-FS'
           if (env.BUILD_FP == 'true') deployed << 'BE-FP'

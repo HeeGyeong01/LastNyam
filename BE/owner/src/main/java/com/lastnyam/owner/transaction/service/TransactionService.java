@@ -2,6 +2,9 @@ package com.lastnyam.owner.transaction.service;
 
 import com.lastnyam.database.entity.*;
 import com.lastnyam.database.entity.enums.TransactionStatus;
+import com.lastnyam.owner.owner.exception.OwnerErrorCode;
+import com.lastnyam.owner.owner.exception.OwnerException;
+import com.lastnyam.owner.shop.exception.ShopErrorCode;
 import com.lastnyam.owner.shop.repository.ShopRepository;
 import com.lastnyam.owner.transaction.dto.TransactionDetailResponse;
 import com.lastnyam.owner.transaction.dto.TransactionListResponse;
@@ -30,7 +33,8 @@ public class TransactionService {
     private final ShopRepository shopRepository;
 
     @Transactional
-    public TransactionStatusUpdateResponse updateTransactionStatus(Integer ownerId, Integer transactionId, TransactionStatusUpdateRequest request) {
+    public TransactionStatusUpdateResponse updateTransactionStatus(Integer userId, Integer ownerId, Integer transactionId, TransactionStatusUpdateRequest request) {
+        checkPermission(userId, ownerId);
         return switch (request.getTransactionType()) {
             case TransactionType.DISCOUNT -> updateDiscountStatus(ownerId, transactionId, request.getStatus());
             case TransactionType.FOOCKETING -> updateFoocketingStatus(ownerId, transactionId, request.getStatus());
@@ -44,16 +48,16 @@ public class TransactionService {
 
         Shop shop = transaction.getShop();
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new TransactionException(TransactionErrorCode.NOT_SHOP_OWNER);
+            throw new TransactionException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
         transaction.setTransactionStatus(newStatus);
 
-        return TransactionStatusUpdateResponse.builder()
-                .transactionId(transaction.getTransactionId())
-                .status(transaction.getTransactionStatus())
-                .TransactionType(TransactionType.DISCOUNT.name())
-                .build();
+        return TransactionStatusUpdateResponse.of(
+                transaction.getTransactionId(),
+                transaction.getTransactionStatus(),
+                TransactionType.DISCOUNT
+        );
     }
 
     private TransactionStatusUpdateResponse updateFoocketingStatus(Integer ownerId, Integer orderId, TransactionStatus newStatus) {
@@ -62,20 +66,21 @@ public class TransactionService {
 
         Shop shop = transaction.getFoocketing().getMenu().getShop();
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new TransactionException(TransactionErrorCode.NOT_SHOP_OWNER);
+            throw new TransactionException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
         transaction.setTransactionStatus(newStatus);
 
-        return TransactionStatusUpdateResponse.builder()
-                .transactionId(transaction.getTransactionId())
-                .status(transaction.getTransactionStatus())
-                .TransactionType(TransactionType.FOOCKETING.name())
-                .build();
+        return TransactionStatusUpdateResponse.of(
+                transaction.getTransactionId(),
+                transaction.getTransactionStatus(),
+                TransactionType.FOOCKETING
+        );
     }
 
     @Transactional(readOnly = true)
-    public TransactionDetailResponse getTransactionDetail(Integer ownerId, Integer transactionId, TransactionType transactionType) {
+    public TransactionDetailResponse getTransactionDetail(Integer userId, Integer ownerId, Integer transactionId, TransactionType transactionType) {
+        checkPermission(userId, ownerId);
         return switch (transactionType) {
             case TransactionType.DISCOUNT -> getDiscountTransactionDetail(ownerId, transactionId);
             case TransactionType.FOOCKETING -> getFoocketingTransactionDetail(ownerId, transactionId);
@@ -91,46 +96,14 @@ public class TransactionService {
         // 점주 권한 확인
         Shop shop = transaction.getShop();
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new TransactionException(TransactionErrorCode.NOT_SHOP_OWNER);
+            throw new TransactionException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
         // 트랜잭션 아이템 조회
         List<DiscountTransactionItem> items = discountTransactionItemRepository.findByTransactionId(transactionId);
 
         // DTO로 변환
-        List<TransactionDetailResponse.DiscountTransactionItemDto> itemDtos = items.stream()
-                .map(item -> {
-                    Discount discount = item.getDiscount();
-                    Menu menu = discount.getMenu();
-                    return TransactionDetailResponse.DiscountTransactionItemDto.builder()
-                            .transactionItemId(item.getTransactionItemId())
-                            .transactionAmount(item.getTransactionAmount())
-                            .discountId(discount.getDiscountId())
-                            .discountRate(discount.getDiscountRate())
-                            .discountPrice(discount.getDiscountPrice())
-                            .menuId(menu.getMenuId())
-                            .menuName(menu.getMenuName())
-                            .menuPrice(menu.getMenuPrice())
-                            .menuImage(menu.getMenuImage())
-                            .build();
-                })
-                .collect(Collectors.toList());
-
-        User user = transaction.getUser();
-
-        return TransactionDetailResponse.builder()
-                .transactionId(transaction.getTransactionId())
-                .transactionStatus(transaction.getTransactionStatus())
-                .transactionQrImage(transaction.getTransactionQrImage())
-                .createdAt(transaction.getCreatedAt())
-                .transactionType(TransactionType.DISCOUNT.name())
-                .userId(user.getUserId())
-                .userNickname(user.getUserNickname())
-                .userProfile(user.getUserProfile())
-                .shopId(shop.getShopId())
-                .shopName(shop.getShopName())
-                .discountItems(itemDtos)
-                .build();
+        return TransactionDetailResponse.ofDiscount(transaction, items);
     }
 
     private TransactionDetailResponse getFoocketingTransactionDetail(Integer ownerId, Integer transactionId) {
@@ -141,48 +114,22 @@ public class TransactionService {
         // 점주 권한 확인
         Shop shop = transaction.getShop();
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new TransactionException(TransactionErrorCode.NOT_SHOP_OWNER);
+            throw new TransactionException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
-        Foocketing foocketing = transaction.getFoocketing();
-        Menu menu = foocketing.getMenu();
-        User user = transaction.getUser();
-
-        // 푸켓팅 상세 정보
-        TransactionDetailResponse.FoocketingDetailDto foocketingDetail =
-                TransactionDetailResponse.FoocketingDetailDto.builder()
-                        .foocketingId(foocketing.getFoocketingId())
-                        .foocketingTime(foocketing.getFoocketingTime())
-                        .foocketingAmount(foocketing.getFoocketingAmount())
-                        .menuId(menu.getMenuId())
-                        .menuName(menu.getMenuName())
-                        .menuPrice(menu.getMenuPrice())
-                        .menuImage(menu.getMenuImage())
-                        .build();
-
-        return TransactionDetailResponse.builder()
-                .transactionId(transaction.getTransactionId())
-                .transactionStatus(transaction.getTransactionStatus())
-                .transactionQrImage(transaction.getTransactionQrImage())
-                .createdAt(transaction.getCreatedAt())
-                .transactionType(TransactionType.FOOCKETING.name())
-                .userId(user.getUserId())
-                .userNickname(user.getUserNickname())
-                .userProfile(user.getUserProfile())
-                .shopId(shop.getShopId())
-                .shopName(shop.getShopName())
-                .foocketingDetail(foocketingDetail)
-                .build();
+        // DTO로 변환
+        return TransactionDetailResponse.ofFoocketing(transaction);
     }
 
     @Transactional(readOnly = true)
-    public TransactionListResponse getActiveTransactions(Integer ownerId, Integer shopId) {
+    public TransactionListResponse getActiveTransactions(Integer userId, Integer ownerId, Integer shopId) {
+        checkPermission(userId, ownerId);
         // 가게 확인 및 점주 권한 확인
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new TransactionException(TransactionErrorCode.TRANSACTION_NOT_FOUND));
         
         if (!shop.getOwner().getOwnerId().equals(ownerId)) {
-            throw new TransactionException(TransactionErrorCode.NOT_SHOP_OWNER);
+            throw new TransactionException(ShopErrorCode.NOT_SHOP_OWNER);
         }
 
         // 제외할 상태 목록 (노쇼, 픽업 완료)
@@ -218,72 +165,18 @@ public class TransactionService {
             
             // 마감세일 트랜잭션을 DTO로 변환
             discountDtos = discountTransactions.stream()
-                    .map(dt -> {
+                    .map(transaction -> {
                         // 그룹핑된 아이템 가져오기
                         List<DiscountTransactionItem> items = 
-                                itemsByTransactionId.getOrDefault(dt.getTransactionId(), List.of());
-                        
-                        List<TransactionListResponse.ItemDto> itemDtos = items.stream()
-                                .map(item -> {
-                                    Integer menuPrice = item.getDiscount().getDiscountPrice();
-                                    Integer amount = item.getTransactionAmount();
-                                    Integer subtotal = menuPrice * amount;
-                                    
-                                    return TransactionListResponse.ItemDto.builder()
-                                            .menuName(item.getDiscount().getMenu().getMenuName())
-                                            .menuPrice(menuPrice)
-                                            .amount(amount)
-                                            .subtotal(subtotal)
-                                            .build();
-                                })
-                                .toList();
-                        
-                        // 전체 합산금액 계산
-                        Integer totalAmount = itemDtos.stream()
-                                .mapToInt(TransactionListResponse.ItemDto::getSubtotal)
-                                .sum();
-                        
-                        return TransactionListResponse.TransactionDto.builder()
-                                .transactionId(dt.getTransactionId())
-                                .transactionStatus(dt.getTransactionStatus())
-                                .createdAt(dt.getCreatedAt())
-                                .transactionType(TransactionType.DISCOUNT.name())
-                                .itemDtos(itemDtos)
-                                .totalAmount(totalAmount)
-                                .build();
+                                itemsByTransactionId.getOrDefault(transaction.getTransactionId(), List.of());
+                        return TransactionListResponse.TransactionDto.ofDiscount(transaction, items);
                     })
                     .toList();
         }
 
         // 푸켓팅 트랜잭션을 DTO로 변환
         List<TransactionListResponse.TransactionDto> foocketingDtos = foocketingTransactions.stream()
-                .map(ft -> {
-                    Foocketing foocketing = ft.getFoocketing();
-                    Menu menu = foocketing.getMenu();
-                    
-                    Integer menuPrice = menu.getMenuPrice();
-                    Integer amount = 1;
-                    Integer subtotal = menuPrice * amount;
-                    
-                    // 푸켓팅은 단일 메뉴이므로 1개짜리 리스트
-                    List<TransactionListResponse.ItemDto> itemDtos = List.of(
-                            TransactionListResponse.ItemDto.builder()
-                                    .menuName(menu.getMenuName())
-                                    .menuPrice(menuPrice)
-                                    .amount(amount)
-                                    .subtotal(subtotal)
-                                    .build()
-                    );
-                    
-                    return TransactionListResponse.TransactionDto.builder()
-                            .transactionId(ft.getTransactionId())
-                            .transactionStatus(ft.getTransactionStatus())
-                            .createdAt(ft.getCreatedAt())
-                            .transactionType(TransactionType.FOOCKETING.name())
-                            .itemDtos(itemDtos)
-                            .totalAmount(subtotal)  // 푸켓팅은 단일 메뉴이므로 subtotal과 동일
-                            .build();
-                })
+                .map(TransactionListResponse.TransactionDto::ofFoocketing)
                 .toList();
 
         // 두 리스트를 합치고 생성일자 기준 내림차순 정렬
@@ -295,5 +188,11 @@ public class TransactionService {
         return TransactionListResponse.builder()
                 .transactions(allTransactions)
                 .build();
+    }
+
+    private static void checkPermission(Integer userId, Integer ownerId) {
+        if (!Objects.equals(userId, ownerId)) {
+            throw new TransactionException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
+        }
     }
 }

@@ -1,20 +1,23 @@
 package com.lastnyam.customer.exception;
 
-import org.springframework.http.HttpStatus;
-
 import com.lastnyam.common.exception.BusinessException;
 import com.lastnyam.common.exception.code.BaseErrorCode;
 
 public class InternalServerException extends BusinessException {
+
     public InternalServerException(BaseErrorCode code) {
         super(code);
     }
 
-    private static BaseErrorCode internal(String message) {
-        return new BaseErrorCode() {
+    public static InternalServerException ofTransaction() {
+        return new InternalServerException(CustomerErrorCode.TRANSACTION_ERROR);
+    }
+
+    public static InternalServerException ofTransaction(String message) {
+        return new InternalServerException(new BaseErrorCode() {
             @Override
-            public HttpStatus getStatus() {
-                return HttpStatus.INTERNAL_SERVER_ERROR;
+            public org.springframework.http.HttpStatus getStatus() {
+                return org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
             }
 
             @Override
@@ -26,34 +29,26 @@ public class InternalServerException extends BusinessException {
             public String getMessage() {
                 return message;
             }
-        };
-    }
-
-    public static InternalServerException ofTransaction() {
-        return new InternalServerException(internal("거래 처리중 오류가 발생하였습니다."));
-    }
-
-    public static InternalServerException ofTransaction(String message) {
-        return new InternalServerException(internal(message));
+        });
     }
 
     public static InternalServerException ofDiscount() {
-        return new InternalServerException(internal("할인 처리중 오류가 발생하였습니다."));
+        return new InternalServerException(CustomerErrorCode.DISCOUNT_ERROR);
     }
 
     public static InternalServerException ofFoocketing() {
-        return new InternalServerException(internal("푸켓팅 처리중 오류가 발생하였습니다."));
+        return new InternalServerException(CustomerErrorCode.FOOCKETING_ERROR);
     }
 
     public static InternalServerException ofShop() {
-        return new InternalServerException(internal("상점 처리중 오류가 발생하였습니다."));
+        return new InternalServerException(CustomerErrorCode.SHOP_ERROR);
     }
 
     public static InternalServerException ofStatistics() {
-        return new InternalServerException(internal("통계 처리중 오류가 발생하였습니다."));
+        return new InternalServerException(CustomerErrorCode.STATISTICS_ERROR);
     }
 
     public static InternalServerException ofUnknown() {
-        return new InternalServerException(internal("알 수 없는 오류가 발생하였습니다."));
+        return new InternalServerException(CustomerErrorCode.UNKNOWN_ERROR);
     }
 }

@@ -8,6 +8,7 @@ import com.lastnyam.owner.discount.service.DiscountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,19 +21,21 @@ public class DiscountController {
     // 마감세일 등록
     @PostMapping("/{ownerId}/shops/{shopId}/discounts")
     public ResponseEntity<ApiResponse<DiscountCreateResponse>> createDiscount(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
             @PathVariable("shopId") Integer shopId,
             @RequestBody DiscountCreateRequest request) {
-        DiscountCreateResponse result = discountService.createDiscount(ownerId, shopId, request);
+        DiscountCreateResponse result = discountService.createDiscount(userId, ownerId, shopId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ofSuccess(result));
     }
     
     // 현재 진행중인 마감세일 조회
     @GetMapping("/{ownerId}/shops/{shopId}/discounts")
     public ResponseEntity<ApiResponse<DiscountListResponse>> getActiveDiscounts(
+            @AuthenticationPrincipal Integer userId,
             @PathVariable("ownerId") Integer ownerId,
             @PathVariable("shopId") Integer shopId) {
-        DiscountListResponse result = discountService.getActiveDiscounts(ownerId, shopId);
+        DiscountListResponse result = discountService.getActiveDiscounts(userId, ownerId, shopId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 }

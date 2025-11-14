@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface DiscountRepository extends JpaRepository<Discount, Integer> {
@@ -16,6 +17,13 @@ public interface DiscountRepository extends JpaRepository<Discount, Integer> {
            "AND d.discountDate = :discountDate " +
            "ORDER BY d.discountId ASC")
     List<Discount> findByShopIdAndDiscountDate(@Param("shopId") Integer shopId, @Param("discountDate") LocalDate discountDate);
+    
+    @Query("SELECT d FROM Discount d " +
+           "JOIN FETCH d.menu m " +
+           "WHERE m.shop.shopId = :shopId " +
+           "AND d.discountPickupEndTime > :currentTime " +
+           "ORDER BY d.discountPickupEndTime ASC")
+    List<Discount> findActiveByShopId(@Param("shopId") Integer shopId, @Param("currentTime") LocalDateTime currentTime);
 }
 
 
