@@ -126,8 +126,8 @@ pipeline {
           }
           else if (branchName == 'FE/master' || branchName == 'origin/FE/master') {
             def isSharedChanged = changes.contains('FE/shared/')
-            def isOwnerChanged = changes.contains('FE/owner/')
-            def isCustomerChanged = changes.contains('FE/customer/')
+            def isOwnerChanged = changes.contains('FE/apps/owner-web/')
+            def isCustomerChanged = changes.contains('FE/apps/customer-web/')
             
             env.BUILD_FE_OWNER = (
               params.FORCE_BUILD_ALL || 
