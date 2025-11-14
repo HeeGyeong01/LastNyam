@@ -102,6 +102,7 @@ public class DiscountQueryRepository {
 
         Integer shopId = rs.getInt("shop_id");
         String shopName = rs.getString("shop_name");
+        String shopBanner = rs.getString("shop_banner");
         double shopLat = rs.getDouble("shop_lat");
         double shopLng = rs.getDouble("shop_lng");
 
@@ -109,7 +110,7 @@ public class DiscountQueryRepository {
         double distanceM = rs.getDouble("distance");
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
-        double shopRating = rs.getInt("shop_rating_avg");
+        double shopRating = rs.getDouble("shop_rating_avg");
         int shopRatingCount = rs.getInt("shop_rating_count");
 
         int discountId = rs.getInt("discount_id");
@@ -127,6 +128,7 @@ public class DiscountQueryRepository {
         ShopInfo shopInfo = ShopInfo.builder()
                 .shopId(shopId)
                 .name(shopName)
+                .bannerUrl(shopBanner)
                 .lat(shopLat)
                 .lng(shopLng)
                 .distance(distanceKm)
