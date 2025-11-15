@@ -19,6 +19,10 @@ public class RedisService {
         redisTemplate.opsForValue().set(key, value);
     }
 
+    public Long incr(String key) {
+        return redisTemplate.opsForValue().increment(key);
+    }
+
     public void add(String key, Object value, Duration timeout) {
         redisTemplate.opsForValue().set(key, value, timeout);
     }

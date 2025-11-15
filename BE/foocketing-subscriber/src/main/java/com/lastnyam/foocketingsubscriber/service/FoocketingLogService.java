@@ -10,6 +10,7 @@ import com.lastnyam.foocketingsubscriber.repository.FoocketingRepository;
 import com.lastnyam.foocketingsubscriber.repository.UserRepository;
 import com.lastnyam.messaging.dto.FoocketingEntryPayload;
 import com.lastnyam.redis.service.RedisService;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,24 +43,22 @@ public class FoocketingLogService {
             throw new FoocketingEntryException(FoocketingEntryErrorCode.USER_NOT_FOUND);
         }
 
-        Integer currentRank = getCurrentRank(entry.getFoocketingId());
-
-        if (currentRank == null) {
-            currentRank = 1;
-        }
+        Integer currentRank = increaseRank(entry.getFoocketingId());
 
         FoocketingLog log = FoocketingLog.builder()
                 .foocketing(foocketing)
                 .logUserRank(currentRank)
                 .user(user)
+                .createdAt(LocalDateTime.now())
                 .build();
 
-        saveRank(entry.getFoocketingId(), currentRank + 1);
         logRepository.save(log);
     }
 
-    private void saveRank(Integer foocketingId, Integer nextRank) {
-        redisService.add(ID_PREFIX + foocketingId, nextRank);
+    private Integer increaseRank(Integer foocketingId) {
+        String key = ID_PREFIX + foocketingId;
+        Long rank = redisService.incr(key);
+        return Math.toIntExact(rank);
     }
 
     private Integer getCurrentRank(Integer foocketingId) {

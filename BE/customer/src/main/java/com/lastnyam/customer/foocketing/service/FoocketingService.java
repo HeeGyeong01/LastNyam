@@ -1,11 +1,15 @@
 package com.lastnyam.customer.foocketing.service;
 
-import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.exception.BadRequestException;
+import com.lastnyam.customer.exception.CustomerErrorCode;
 import com.lastnyam.customer.foocketing.dto.FoocketingDetail;
 import com.lastnyam.customer.foocketing.dto.FoocketingResult;
 import com.lastnyam.customer.foocketing.repository.FoocketingDetailRepository;
+import com.lastnyam.customer.foocketing.repository.FoocketingRankRepository;
 import com.lastnyam.customer.foocketing.repository.FoocketingRepository;
+import com.lastnyam.customer.user.repository.UserRepository;
 import com.lastnyam.database.entity.Foocketing;
+import com.lastnyam.database.entity.Shop;
 import com.lastnyam.redis.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,8 @@ public class FoocketingService {
     private final RedisService redisService;
 
     private final FoocketingRepository foocketingRepository;
+    private final FoocketingRankRepository foocketingRankRepository;
+    private final UserRepository userRepository;
     private final FoocketingDetailRepository detailRepository;
 
 
@@ -35,10 +41,22 @@ public class FoocketingService {
 
     @Transactional
     public FoocketingResult getFoocketingResult(Integer userId, Integer foocketingId) {
-        Foocketing foocketing = foocketingRepository.findById(foocketingId)
-                .orElseThrow(ResourceNotFoundException::ofFoocketing);
 
-        //?? QR 이미지는 어디로 들어감?
-        return null;
+        Foocketing foocketing = foocketingRepository.findById(foocketingId).orElse(null);
+
+        if (foocketing == null || userRepository.existsById(userId)) {
+            throw new BadRequestException(CustomerErrorCode.INVALID_QUERY);
+        }
+
+        Integer rank = foocketingRankRepository.getRankOf(userId, foocketingId);
+
+        FoocketingResult result = new FoocketingResult();
+
+        result.setRank(rank);
+        if (rank <= foocketing.getFoocketingAmount()) {
+            Shop shop = foocketing.getMenu().getShop();
+            result.setShopId(shop.getShopId());
+        }
+        return result;
     }
 }
