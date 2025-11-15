@@ -28,6 +28,8 @@ public class FoocketingLogService {
     private final FoocketingRepository foocketingRepository;
     private final UserRepository userRepository;
 
+    private final MetricService metricService;
+
     @Transactional
     public void processFoocketingEntry(FoocketingEntryPayload entry) {
         Foocketing foocketing = foocketingRepository.findById(entry.getFoocketingId())
@@ -53,6 +55,7 @@ public class FoocketingLogService {
                 .build();
 
         logRepository.save(log);
+        metricService.incrementParticipantOf(entry.getFoocketingId());
     }
 
     private Integer increaseRank(Integer foocketingId) {
