@@ -29,6 +29,8 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
 
         log.error("OAuth2 인증 실패: {}", exception.getMessage());
 
+        exception.printStackTrace();
+
         String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
                 .queryParam("error", "true")
                 .queryParam("message", exception.getMessage())
