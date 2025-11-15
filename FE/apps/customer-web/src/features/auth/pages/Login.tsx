@@ -3,9 +3,12 @@ import TypoLogo from '@/shared/assets/typo-logo.svg?react'
 
 export default function Login() {
 	const handleKakaoLogin = () => {
-		const kakaoAuthUrl = `${import.meta.env.VITE_API_BASE_URL}/api/auth/social/kakao`
+		const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID
+		// Spring Security OAuth2 기본 경로
+		const KAKAO_REDIRECT_URI = `${import.meta.env.VITE_API_BASE_URL}/api/login/oauth2/code/kakao`
+		const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`
 
-		// 현재 창에서 카카오 로그인 페이지로 이동
+		// 카카오 로그인 페이지로 직접 이동
 		window.location.href = kakaoAuthUrl
 	}
 

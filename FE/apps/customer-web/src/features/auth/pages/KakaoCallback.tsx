@@ -16,36 +16,28 @@ export default function KakaoCallback() {
 		if (error) {
 			// 카카오 로그인 에러 처리
 			console.error('카카오 로그인 에러:', error)
-			// 부모 창에 에러 메시지 전송
-			if (window.opener) {
-				window.opener.postMessage({ type: 'KAKAO_LOGIN_ERROR', error }, window.location.origin)
-				window.close()
-			} else {
-				// 팝업이 아닌 경우 로그인 페이지로 리디렉트
-				navigate('/login')
-			}
+			alert('카카오 로그인에 실패했습니다.')
+			navigate('/login')
 			return
 		}
 
-		// 백엔드에서 직접 토큰을 전달
+		// 백엔드에서 토큰을 전달받은 경우
 		if (accessToken && refreshToken && userId) {
+			console.log('✅ 백엔드로부터 토큰 수신')
+
 			// Store에 로그인 정보 저장 (내부적으로 localStorage도 함께 저장)
 			const userIdNum = parseInt(userId, 10)
 			login(accessToken, refreshToken, userIdNum)
 
-			// 부모 창에 성공 메시지 전송 (팝업인 경우)
-			if (window.opener) {
-				window.opener.postMessage(
-					{ type: 'KAKAO_LOGIN_SUCCESS', accessToken, refreshToken, userId },
-					window.location.origin
-				)
-				window.close()
-			} else {
-				// 팝업이 아닌 경우 홈으로 리디렉트
-				navigate('/')
-			}
+			// 홈으로 이동
+			navigate('/')
 			return
 		}
+
+		// 토큰이 없는 경우
+		console.error('❌ 인증 정보가 없습니다.')
+		alert('인증 정보가 없습니다.')
+		navigate('/login')
 	}, [searchParams, navigate, login])
 
 	return (
