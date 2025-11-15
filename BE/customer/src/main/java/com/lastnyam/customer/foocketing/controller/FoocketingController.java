@@ -2,10 +2,10 @@ package com.lastnyam.customer.foocketing.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.customer.foocketing.dto.FoocketingDetail;
-import com.lastnyam.customer.foocketing.dto.FoocketingResult;
 import com.lastnyam.customer.foocketing.dto.FoocketingRecommendationInfo;
-import com.lastnyam.customer.foocketing.service.FoocketingService;
+import com.lastnyam.customer.foocketing.dto.FoocketingResult;
 import com.lastnyam.customer.foocketing.service.FoocketingRecommendationService;
+import com.lastnyam.customer.foocketing.service.FoocketingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
