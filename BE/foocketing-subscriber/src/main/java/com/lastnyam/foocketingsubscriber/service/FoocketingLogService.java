@@ -3,12 +3,12 @@ package com.lastnyam.foocketingsubscriber.service;
 import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingLog;
 import com.lastnyam.database.entity.User;
-import com.lastnyam.foocketingsubscriber.dto.FoocketingEntryPayload;
 import com.lastnyam.foocketingsubscriber.exception.FoocketingEntryErrorCode;
 import com.lastnyam.foocketingsubscriber.exception.FoocketingEntryException;
 import com.lastnyam.foocketingsubscriber.repository.FoocketingLogRepository;
 import com.lastnyam.foocketingsubscriber.repository.FoocketingRepository;
 import com.lastnyam.foocketingsubscriber.repository.UserRepository;
+import com.lastnyam.messaging.dto.FoocketingEntryPayload;
 import com.lastnyam.redis.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,19 +32,19 @@ public class FoocketingLogService {
         Foocketing foocketing = foocketingRepository.findById(entry.getFoocketingId())
                 .orElse(null);
 
-        if(foocketing == null){
+        if (foocketing == null) {
             throw new FoocketingEntryException(FoocketingEntryErrorCode.FOOCKETING_NOT_FOUND);
         }
 
         User user = userRepository.findById(entry.getUserId()).orElse(null);
 
-        if(user == null){
+        if (user == null) {
             throw new FoocketingEntryException(FoocketingEntryErrorCode.USER_NOT_FOUND);
         }
 
         Integer currentRank = getCurrentRank(entry.getFoocketingId());
 
-        if(currentRank == null){
+        if (currentRank == null) {
             currentRank = 1;
         }
 
@@ -54,15 +54,15 @@ public class FoocketingLogService {
                 .user(user)
                 .build();
 
-        saveRank(entry.getFoocketingId(),currentRank + 1);
+        saveRank(entry.getFoocketingId(), currentRank + 1);
         logRepository.save(log);
     }
 
-    private void saveRank(Integer foocketingId,Integer nextRank){
-        redisService.add(ID_PREFIX + foocketingId , nextRank);
+    private void saveRank(Integer foocketingId, Integer nextRank) {
+        redisService.add(ID_PREFIX + foocketingId, nextRank);
     }
 
-    private Integer getCurrentRank(Integer foocketingId){
+    private Integer getCurrentRank(Integer foocketingId) {
         return (Integer) redisService.get(ID_PREFIX + foocketingId);
     }
 }
