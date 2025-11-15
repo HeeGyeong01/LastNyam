@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FoocketingPredictionScheduler {
 
-    private final AtomicInteger predictedReplicas = new AtomicInteger(0);
+    private final AtomicInteger predictedReplicas = new AtomicInteger(2);
     private final FoocketingService foocketingService; // 푸켓팅 수를 조회하는 서비스
 
     // MeterRegistry를 주입받아 Gauge 메트릭을 생성
