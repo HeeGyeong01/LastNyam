@@ -44,7 +44,7 @@ public class FoocketingService {
 
         Foocketing foocketing = foocketingRepository.findById(foocketingId).orElse(null);
 
-        if (foocketing == null || userRepository.existsById(userId)) {
+        if (foocketing == null || !userRepository.existsById(userId)) {
             throw new BadRequestException(CustomerErrorCode.INVALID_QUERY);
         }
 
