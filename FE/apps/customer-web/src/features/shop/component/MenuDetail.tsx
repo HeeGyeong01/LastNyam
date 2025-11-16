@@ -3,6 +3,7 @@ import { Badge } from '@shared/components/Badge';
 import type { ShopDetailDiscount } from '@/features/shop/type';
 import { Stepper } from '@/shared/components';
 import { Button } from '@shared/components/Button';
+import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 
 interface MenuDetailProps {
   detail: ShopDetailDiscount;
@@ -10,9 +11,17 @@ interface MenuDetailProps {
 
 export default function MenuDetail({ detail }: MenuDetailProps) {
   const [quantity, setQuantity] = useState(1);
+  const requireAuth = useRequireAuth();
   const formattedPrice = detail.price.toLocaleString('ko-KR');
   const formattedOriginalPrice = detail.originalPrice.toLocaleString('ko-KR');
   const totalPrice = (detail.price * quantity).toLocaleString('ko-KR');
+
+  const handleAddToCart = () => {
+    requireAuth(() => {
+      // TODO: 장바구니에 담기 로직
+      console.log('장바구니에 담기', { discountId: detail.discountId, quantity });
+    });
+  };
 
   return (
     <div className="flex flex-col gap-7 pt-1">
@@ -55,7 +64,12 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
           max={detail.stock}
           width="w-52"
         />
-        <Button className="w-full" btnStyle="filled-yellow" size="lg">
+        <Button 
+          className="w-full" 
+          btnStyle="filled-yellow" 
+          size="lg"
+          onClick={handleAddToCart}
+        >
           {totalPrice}원 담기
         </Button>
       </div>

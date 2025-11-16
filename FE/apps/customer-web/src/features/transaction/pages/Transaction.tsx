@@ -4,15 +4,14 @@ import { PageHeader } from '@/shared/components';
 import { Tab } from '@shared/components/Tab';
 import { TransactionCard } from '../component';
 import { getDiscountTransactions, getFoocketingTransactions } from '../api';
+import { useAuthStore } from '@/store/useAuthStore';
 import type { DiscountTransaction } from '../type/discountTransaction';
 import type { FoocketingTransaction } from '../type/foocketingTransaction';
 
 type TransactionTab = 'discount' | 'foocketing';
 
-// TODO: 인증 시스템 구현 후 실제 userId로 교체
-const USER_ID = 2;
-
 export default function Transaction() {
+  const userId = useAuthStore((state) => state.userId);
   const [activeTab, setActiveTab] = useState<TransactionTab>('discount');
 
   // 마감세일 거래 내역 조회
@@ -21,9 +20,14 @@ export default function Transaction() {
     isLoading: isLoadingDiscount,
     error: discountError,
   } = useQuery({
-    queryKey: ['transaction', 'discount', USER_ID],
-    queryFn: () => getDiscountTransactions(USER_ID),
-    enabled: activeTab === 'discount',
+    queryKey: ['transaction', 'discount', userId],
+    queryFn: () => {
+      if (!userId) {
+        throw new Error('로그인이 필요합니다.');
+      }
+      return getDiscountTransactions(userId);
+    },
+    enabled: activeTab === 'discount' && !!userId,
   });
 
   // 푸켓팅 거래 내역 조회
@@ -32,9 +36,14 @@ export default function Transaction() {
     isLoading: isLoadingFoocketing,
     error: foocketingError,
   } = useQuery({
-    queryKey: ['transaction', 'foocketing', USER_ID],
-    queryFn: () => getFoocketingTransactions(USER_ID),
-    enabled: activeTab === 'foocketing',
+    queryKey: ['transaction', 'foocketing', userId],
+    queryFn: () => {
+      if (!userId) {
+        throw new Error('로그인이 필요합니다.');
+      }
+      return getFoocketingTransactions(userId);
+    },
+    enabled: activeTab === 'foocketing' && !!userId,
   });
 
   const handleTabChange = (index: number) => {

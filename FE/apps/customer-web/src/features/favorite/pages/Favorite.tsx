@@ -4,12 +4,11 @@ import { PageHeader } from '@/shared/components';
 import { ShopList } from '@/features/shop/component';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import { getFavoriteShops } from '@/features/favorite/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import type { FavoriteShop } from '@/features/favorite/type';
 
-// TODO: 인증 시스템 구현 후 실제 userId로 교체
-const USER_ID = 2;
-
 export default function Favorite() {
+  const userId = useAuthStore((state) => state.userId);
   const [shops, setShops] = useState<FavoriteShop[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -21,9 +20,9 @@ export default function Favorite() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['favorite', 'shops', USER_ID],
-    queryFn: () => getFavoriteShops(USER_ID),
-    enabled: true,
+    queryKey: ['favorite', 'shops', userId],
+    queryFn: () => getFavoriteShops(),
+    enabled: !!userId, // userId가 있을 때만 쿼리 실행
   });
 
   // 초기 데이터 설정
@@ -37,11 +36,11 @@ export default function Favorite() {
 
   // 다음 페이지 데이터 가져오기
   const loadMore = useCallback(async () => {
-    if (!nextCursor || !hasNextPage || isLoadingMore) return;
+    if (!nextCursor || !hasNextPage || isLoadingMore || !userId) return;
 
     setIsLoadingMore(true);
     try {
-      const data = await getFavoriteShops(USER_ID, { cursor: nextCursor });
+      const data = await getFavoriteShops(undefined, { cursor: nextCursor });
       setShops((prev) => [...prev, ...data.content]);
       setNextCursor(data.nextCursor);
       setHasNextPage(data.hasNextPage);
@@ -50,7 +49,7 @@ export default function Favorite() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextCursor, hasNextPage, isLoadingMore]);
+  }, [nextCursor, hasNextPage, isLoadingMore, userId]);
 
   // 무한 스크롤
   const observerTarget = useInfiniteScroll({

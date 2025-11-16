@@ -95,7 +95,11 @@ export const getRecommendedDiscountList = async (
     lng?: number;
   } = {}
 ): Promise<RecommendedDiscountListData> => {
-  const userId = params.userId ?? useAuthStore.getState().userId ?? 2; // null이면 2로 고정
+  // const userId = params.userId ?? useAuthStore.getState().userId ?? 2; // null이면 2로 고정
+  const userId = params.userId ?? useAuthStore.getState().userId;
+  if (!userId) {
+    throw new Error('로그인이 필요합니다.');
+  }
   
   // 위치 정보가 없으면 자동으로 가져오기
   const location = params.lat && params.lng 

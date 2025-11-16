@@ -15,6 +15,7 @@ import NaverMap from '@/shared/components/NaverMap';
 import { formatTimeToKorean, formatISOStringToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
 import { useNavigate } from 'react-router-dom';
+import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function FoocketingDetail() {
   const [isWaitingEntry, setIsWaitingEntry] = useState(false);
   const [isWaitingResult, setIsWaitingResult] = useState(false);
   const navigate = useNavigate();
+  const requireAuth = useRequireAuth();
 
   const {
     data: detail,
@@ -79,37 +81,39 @@ export default function FoocketingDetail() {
   }, []);
 
   // 푸켓팅 참여하기 핸들러
-  const handleEnterFoocketing = async () => {
-    if (!id) {
-      return;
-    }
-    
-    try {
-      setIsWaitingEntry(true);
-      const entryResponse = await enterFoocketing(Number(id));
-      setIsWaitingEntry(false);
-
-      // success가 true이면 결과 조회 API 호출
-      if (entryResponse.success) {
-        setIsWaitingResult(true);
-        const result = await getFoocketingResult(Number(id));
-        setIsWaitingResult(false);
-
-        // 결과에 따라 성공/실패 페이지로 이동
-        if (result.success) {
-          navigate(`/foocketing-success/${id}`);
-        } else {
-          navigate(`/foocketing-fail/${id}`);
-        }
-      } else {
-        alert('푸켓팅 참여에 실패했습니다.');
+  const handleEnterFoocketing = () => {
+    requireAuth(async () => {
+      if (!id) {
+        return;
       }
-    } catch (error) {
-      console.error('푸켓팅 참여 실패:', error);
-      alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
-      setIsWaitingEntry(false);
-      setIsWaitingResult(false);
-    }
+      
+      try {
+        setIsWaitingEntry(true);
+        const entryResponse = await enterFoocketing(Number(id));
+        setIsWaitingEntry(false);
+
+        // success가 true이면 결과 조회 API 호출
+        if (entryResponse.success) {
+          setIsWaitingResult(true);
+          const result = await getFoocketingResult(Number(id));
+          setIsWaitingResult(false);
+
+          // 결과에 따라 성공/실패 페이지로 이동
+          if (result.success) {
+            navigate(`/foocketing-success/${id}`);
+          } else {
+            navigate(`/foocketing-fail/${id}`);
+          }
+        } else {
+          alert('푸켓팅 참여에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('푸켓팅 참여 실패:', error);
+        alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
+        setIsWaitingEntry(false);
+        setIsWaitingResult(false);
+      }
+    });
   };
 
   return (
