@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
+import { queryClient } from '@/lib/queryClient';
 
 export default function KakaoCallback() {
   const [searchParams] = useSearchParams();
@@ -28,6 +29,9 @@ export default function KakaoCallback() {
       // Store에 로그인 정보 저장 (내부적으로 localStorage도 함께 저장)
       const userIdNum = parseInt(userId, 10);
       login(accessToken, refreshToken, userIdNum);
+
+      // 로그인 후 React Query 캐시 무효화하여 새로운 데이터 가져오기
+      queryClient.invalidateQueries();
 
       // 홈으로 이동
       navigate('/');

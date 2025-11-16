@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useFoocketingList } from '@/features/foocketing/hook';
 import { Input } from '@shared/components/Input';
 import { HomeHeader } from '@/shared/components';
@@ -16,6 +17,13 @@ export default function Home() {
     initialCategory: 1,
     sort: 'IMMINENT',
   });
+
+  // 에러 로깅
+  useEffect(() => {
+    if (error) {
+      console.error('푸켓팅 목록 조회 에러:', error);
+    }
+  }, [error]);
 
   // 6개만 노출
   const displayedFoocketings = foocketings.slice(0, 6);
@@ -38,9 +46,9 @@ export default function Home() {
       </div>
       <div className="flex flex-col gap-9 px-4 ">
         <div className="flex flex-col gap-6">
-          <Input 
-            className="mt-12" 
-            placeholder="먹고 싶은 음식을 검색해보세요" 
+          <Input
+            className="mt-12"
+            placeholder="먹고 싶은 음식을 검색해보세요"
             onClick={handleInputClick}
             readOnly
             icon={<MagnifyingGlassIcon />}
@@ -89,4 +97,3 @@ export default function Home() {
     </>
   );
 }
-
