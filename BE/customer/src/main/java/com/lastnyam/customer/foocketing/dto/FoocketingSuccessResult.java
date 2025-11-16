@@ -2,14 +2,14 @@ package com.lastnyam.customer.foocketing.dto;
 
 import com.lastnyam.customer.global.dto.ShopInfoWithMenu;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class FoocketingSuccessResult extends FoocketingResult {
