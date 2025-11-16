@@ -37,14 +37,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // OAuth2UserInfo 생성
         OAuth2UserInfo oAuth2UserInfo = getOAuth2UserInfo(registrationId, oAuth2User.getAttributes());
 
-        User user = saveOrUpdate(oAuth2UserInfo);
+        // 사용자 저장/업데이트 및 신규 사용자 여부 확인
+        SaveOrUpdateResult result = saveOrUpdateWithResult(oAuth2UserInfo);
+        User user = result.getUser();
+        boolean isNewUser = result.isNewUser();
 
-        log.info("OAuth2 사용자 로그인 완료: userId={}, email={}", user.getUserId(), user.getUserEmail());
+        log.info("OAuth2 사용자 로그인 완료: userId={}, email={}, isNewUser={}",
+                user.getUserId(), user.getUserEmail(), isNewUser);
 
         // CustomOAuth2User 반환
         return new CustomOAuth2User(
                 user.getUserId(),
                 user.getUserRole(),
+                isNewUser,
                 oAuth2User.getAttributes(),
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getUserRole())));
     }
@@ -60,17 +65,45 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     /**
-     * 사용자 정보 저장 또는 업데이트
+     * 사용자 정보 저장 또는 업데이트 결과를 담는 내부 클래스
      */
-    private User saveOrUpdate(OAuth2UserInfo oAuth2UserInfo) {
+    private static class SaveOrUpdateResult {
+        private final User user;
+        private final boolean isNewUser;
+
+        public SaveOrUpdateResult(User user, boolean isNewUser) {
+            this.user = user;
+            this.isNewUser = isNewUser;
+        }
+
+        public User getUser() {
+            return user;
+        }
+
+        public boolean isNewUser() {
+            return isNewUser;
+        }
+    }
+
+    /**
+     * 사용자 정보 저장 또는 업데이트 (신규 사용자 여부 포함)
+     * 신규 사용자 판단 기준: socialId가 없거나, socialId가 있어도 role이 USER가 아닌 경우
+     */
+    private SaveOrUpdateResult saveOrUpdateWithResult(OAuth2UserInfo oAuth2UserInfo) {
         String socialId = oAuth2UserInfo.getProvider() + "_" + oAuth2UserInfo.getProviderId();
 
         Optional<User> existingUser = userRepository.findByUserSocialId(socialId);
 
         if (existingUser.isPresent()) {
-            // 기존 사용자 정보 업데이트
             User user = existingUser.get();
-            return userRepository.save(User.builder()
+
+            // socialId가 존재하고 role이 USER인 경우에만 기존 회원으로 판단
+            String dbUserRole = user.getUserRole();
+            String expectedUserRole = UserRole.USER.name();
+            boolean isExistingUser = expectedUserRole.equals(dbUserRole);
+
+            // 기존 사용자 정보 업데이트
+            User updatedUser = userRepository.save(User.builder()
                     .userId(user.getUserId())
                     .userEmail(oAuth2UserInfo.getEmail() != null ? oAuth2UserInfo.getEmail() : user.getUserEmail())
                     .userPassword("OAUTH2_USER") // OAuth2 사용자는 비밀번호 불필요
@@ -79,8 +112,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .userNickname(oAuth2UserInfo.getNickname() != null ? oAuth2UserInfo.getNickname()
                             : user.getUserNickname())
                     .userSocialId(socialId)
-                    .userRole(user.getUserRole())
+                    .userRole(user.getUserRole()) // 기존 role 유지
                     .build());
+
+            return new SaveOrUpdateResult(updatedUser, !isExistingUser);
         } else {
             // 신규 사용자 생성 - ANONYMOUS 역할로 시작
             User newUser = User.builder()
@@ -93,7 +128,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .build();
 
             log.info("신규 사용자 생성: socialId={}, role={}", socialId, UserRole.ANONYMOUS);
-            return userRepository.save(newUser);
+            User savedUser = userRepository.save(newUser);
+            return new SaveOrUpdateResult(savedUser, true);
         }
     }
 }

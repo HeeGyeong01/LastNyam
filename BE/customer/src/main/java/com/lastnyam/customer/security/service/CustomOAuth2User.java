@@ -16,6 +16,7 @@ public class CustomOAuth2User implements OAuth2User {
 
     private final Integer userId;
     private final String role;
+    private final boolean isNewUser; // 최초 로그인 여부
     private final Map<String, Object> attributes;
     private final Collection<? extends GrantedAuthority> authorities;
 
@@ -34,4 +35,3 @@ public class CustomOAuth2User implements OAuth2User {
         return userId.toString();
     }
 }
-

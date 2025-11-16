@@ -1,6 +1,7 @@
 package com.lastnyam.customer.user.service;
 
 import com.lastnyam.authentication.enums.UserRole;
+import com.lastnyam.authentication.provider.JwtProvider;
 import com.lastnyam.customer.exception.BadRequestException;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
 import com.lastnyam.customer.user.dto.CursorResponse;
@@ -13,6 +14,7 @@ import com.lastnyam.customer.user.repository.UserRepository;
 import com.lastnyam.database.entity.FoodCategory;
 import com.lastnyam.database.entity.User;
 import com.lastnyam.database.entity.UserFavorite;
+import com.lastnyam.redis.service.RedisService;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,10 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String VERSION_KEY_PREFIX = "token_version:customer:";
+
     private final UserRepository userRepository;
     private final UserFavoriteRepository userFavoriteRepository;
     private final EntityManager entityManager;
     private final FavoriteQueryRepository queryRepository;
+    private final JwtProvider jwtProvider;
+    private final RedisService redisService;
 
     @Transactional
     public UserOnboardingResponseDto updateOnboardingProfile(Integer userId, UserOnboardingRequestDto request) {
@@ -45,11 +51,15 @@ public class UserService {
             throw BadRequestException.ofCategory("최대 5개의 카테고리만 선택할 수 있습니다.");
         }
 
-        // 새로운 선호 카테고리 저장
+        // 카테고리 존재 여부 검증 및 새로운 선호 카테고리 저장
         List<UserFavorite> userFavorites = request.getCategoryIds().stream()
                 .map(categoryId -> {
-                    // FoodCategory 프록시 참조 (실제 조회 없이 외래키만 설정)
-                    FoodCategory foodCategory = entityManager.getReference(FoodCategory.class, categoryId);
+                    // FoodCategory 실제 조회 (존재 여부 확인)
+                    FoodCategory foodCategory = entityManager.find(FoodCategory.class, categoryId);
+                    if (foodCategory == null) {
+                        throw BadRequestException.ofCategory(
+                                String.format("존재하지 않는 카테고리 ID입니다: %d", categoryId));
+                    }
 
                     return UserFavorite.builder()
                             .user(user)
@@ -77,10 +87,56 @@ public class UserService {
         // 저장된 카테고리 ID 조회
         List<Integer> savedCategoryIds = userFavoriteRepository.findCategoryIdsByUserId(userId);
 
+        // 업데이트된 사용자 정보 조회 (역할이 USER로 업그레이드되었을 수 있음)
+        User updatedUser = userRepository.findById(userId)
+                .orElseThrow(() -> ResourceNotFoundException.ofUser());
+
+        // JWT 토큰 생성
+        UserRole userRole = UserRole.valueOf(updatedUser.getUserRole());
+        Long tokenVersion = initializeTokenVersion(userId);
+
+        String accessToken = jwtProvider.generateAccessToken(
+                userRole,
+                userId,
+                tokenVersion.toString());
+        String refreshToken = jwtProvider.generateRefreshToken(
+                userRole,
+                userId,
+                tokenVersion.toString());
+
+        log.info("온보딩 완료 및 토큰 생성: userId={}, role={}, version={}", userId, userRole, tokenVersion);
+
         return UserOnboardingResponseDto.builder()
                 .userId(userId)
                 .savedCategoryIds(savedCategoryIds)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     * 사용자별 토큰 버전 초기화
+     * Redis에 버전이 없으면 1로 초기화, 있으면 기존 값 유지
+     */
+    private Long initializeTokenVersion(Integer userId) {
+        String versionKey = VERSION_KEY_PREFIX + userId;
+        Object storedVersion = redisService.get(versionKey);
+
+        if (storedVersion == null) {
+            // 첫 로그인: 버전 1로 초기화
+            redisService.add(versionKey, 1L);
+            log.debug("토큰 버전 초기화: userId={}, version=1", userId);
+            return 1L;
+        } else {
+            // 이미 버전이 있으면 기존 값 사용 (재발급된 경우)
+            try {
+                return Long.parseLong(storedVersion.toString());
+            } catch (NumberFormatException e) {
+                log.error("버전 파싱 실패, 1로 초기화: userId={}", userId);
+                redisService.add(versionKey, 1L);
+                return 1L;
+            }
+        }
     }
 
     /**
@@ -94,7 +150,7 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public CursorResponse<FavoriteShopInfo> getFavoriteShops(Integer userId, Double lat, Double lng,
-                                                             String cursor) {
+            String cursor) {
         // 사용자 존재 확인
         userRepository.findById(userId)
                 .orElseThrow(ResourceNotFoundException::ofUser);

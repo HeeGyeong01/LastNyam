@@ -13,4 +13,6 @@ import lombok.NoArgsConstructor;
 public class UserOnboardingResponseDto {
     private Integer userId;
     private List<Integer> savedCategoryIds; // 저장된 카테고리 ID 리스트
+    private String accessToken;
+    private String refreshToken;
 }
