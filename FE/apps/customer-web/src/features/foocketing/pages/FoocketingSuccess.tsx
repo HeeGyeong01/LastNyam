@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { getFoocketingResult } from '@/features/foocketing/api';
 import { PageHeader } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
 import NaverMap from '@/shared/components/NaverMap';
 import lastnyamCatImage from '@/shared/assets/lastnyam-cat.png';
 import { Badge } from '@shared/components/Badge';
+import ConfettiFireworks from '@/shared/components/ConfettiFireworks';
 
 export default function FoocketingSuccess() {
   const { id } = useParams();
@@ -27,6 +29,14 @@ export default function FoocketingSuccess() {
     enabled: !!id,
   });
 
+
+  // 성공하지 않은 경우 (실패 응답) - 실패 페이지로 리다이렉트
+  useEffect(() => {
+    if (result && !result.success) {
+      navigate(`/foocketing-fail/${id}`, { replace: true });
+    }
+  }, [result, id, navigate]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -43,9 +53,8 @@ export default function FoocketingSuccess() {
     );
   }
 
-  // 성공하지 않은 경우 (실패 응답) - 실패 페이지로 리다이렉트
+  // 성공하지 않은 경우 (실패 응답) - 리다이렉트 중
   if (!result.success) {
-    navigate(`/foocketing-fail/${id}`, { replace: true });
     return null;
   }
 
@@ -54,6 +63,9 @@ export default function FoocketingSuccess() {
 
   return (
     <>
+      {/* 폭죽 애니메이션 - 페이지 진입 시 한 번만 재생 */}
+      {result?.success && <ConfettiFireworks fireOnMount={true} />}
+
       <PageHeader title="푸켓팅"/>
       
       <div className="flex flex-col gap-10 p-4">

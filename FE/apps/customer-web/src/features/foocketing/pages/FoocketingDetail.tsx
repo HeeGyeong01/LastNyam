@@ -8,22 +8,21 @@ import {
   getFoocketingResult,
 } from '@/features/foocketing/api';
 import { Badge } from '@shared/components/Badge';
-import { PageHeader } from '@/shared/components';
+import { PageHeader, LoadingModal } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
 import { BottomSheet } from '@/shared/components';
 import NaverMap from '@/shared/components/NaverMap';
 import { formatTimeToKorean, formatISOStringToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
 import { useNavigate } from 'react-router-dom';
-import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isWaitingEntry, setIsWaitingEntry] = useState(false);
+  const [isWaitingResult, setIsWaitingResult] = useState(false);
   const navigate = useNavigate();
-  const requireAuth = useRequireAuth();
 
   const {
     data: detail,
@@ -81,39 +80,54 @@ export default function FoocketingDetail() {
 
   // 푸켓팅 참여하기 핸들러
   const handleEnterFoocketing = async () => {
-    requireAuth(async () => {
-      if (!id) {
-        return;
-      }
+    if (!id) {
+      return;
+    }
+    
+    try {
+      setIsWaitingEntry(true);
+      const entryResponse = await enterFoocketing(Number(id));
+      setIsWaitingEntry(false);
 
-      try {
-        setIsSubmitting(true);
-        const entryResponse = await enterFoocketing(Number(id));
+      // success가 true이면 결과 조회 API 호출
+      if (entryResponse.success) {
+        setIsWaitingResult(true);
+        const result = await getFoocketingResult(Number(id));
+        setIsWaitingResult(false);
 
-        // success가 true이면 결과 조회 API 호출
-        if (entryResponse.success) {
-          const result = await getFoocketingResult(Number(id));
-
-          // 결과에 따라 성공/실패 페이지로 이동
-          if (result.success) {
-            navigate(`/foocketing-success/${id}`);
-          } else {
-            navigate(`/foocketing-fail/${id}`);
-          }
+        // 결과에 따라 성공/실패 페이지로 이동
+        if (result.success) {
+          navigate(`/foocketing-success/${id}`);
         } else {
-          alert('푸켓팅 참여에 실패했습니다.');
+          navigate(`/foocketing-fail/${id}`);
         }
-      } catch (error) {
-        console.error('푸켓팅 참여 실패:', error);
-        alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
-      } finally {
-        setIsSubmitting(false);
+      } else {
+        alert('푸켓팅 참여에 실패했습니다.');
       }
-    });
+    } catch (error) {
+      console.error('푸켓팅 참여 실패:', error);
+      alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
+      setIsWaitingEntry(false);
+      setIsWaitingResult(false);
+    }
   };
 
   return (
     <>
+      {/* 로딩 모달 - entryResponse 응답 대기 중 */}
+      <LoadingModal
+        isOpen={isWaitingEntry}
+        title="푸켓팅 참여 중입니다"
+        message="잠시만 기다려주세요"
+      />
+
+      {/* 로딩 모달 - result 응답 대기 중 */}
+      <LoadingModal
+        isOpen={isWaitingResult}
+        title="결과 확인 중입니다"
+        message="잠시만 기다려주세요"
+      />
+
       {/* Header - 화면 최상단에 고정, 이미지 위에 겹쳐서 표시 */}
       <div className="fixed top-0 left-0 right-0 max-w-[500px] mx-auto z-50">
         <PageHeader
@@ -233,9 +247,9 @@ export default function FoocketingDetail() {
             btnStyle="filled-red"
             size="lg"
             onClick={handleEnterFoocketing}
-            disabled={isSubmitting}
+            disabled={isWaitingEntry || isWaitingResult}
           >
-            {isSubmitting ? '참여 중...' : '푸켓팅 참여하기'}
+            {isWaitingEntry || isWaitingResult ? '참여 중...' : '푸켓팅 참여하기'}
           </Button>
         </div>
       </BottomSheet>

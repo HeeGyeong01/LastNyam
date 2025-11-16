@@ -79,7 +79,7 @@ export const getFoocketingDetail = async (
 export const enterFoocketing = async (
   foocketingId: number
 ): Promise<FoocketingEntryResponse> => {
-  const userId = useAuthStore.getState().userId ?? 3; // null이면 3로 고정
+  const userId = 3; // userId를 3으로 고정
   const response = await apiClient.post<ApiResponseWrapper<FoocketingEntryResponse>>(
     `/api/entry/foocketing/${foocketingId}`,
     { userId }
@@ -99,7 +99,7 @@ export const getFoocketingResult = async (
     lng?: number;
   }
 ): Promise<FoocketingResult> => {
-  const finalUserId = params?.userId ?? useAuthStore.getState().userId ?? 3; // null이면 2로 고정
+  const finalUserId = 3; // userId를 3으로 고정
   
   // 위치 정보가 없으면 자동으로 가져오기
   const location = params?.lat && params?.lng 
