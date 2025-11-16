@@ -1,6 +1,7 @@
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import Stepper from '@/shared/components/Stepper';
+import { getMenuImageUrl } from '@/shared/lib/image';
 
 interface CartMenuCardProps {
   menuName: string;
@@ -13,9 +14,6 @@ interface CartMenuCardProps {
   imageUrl?: string;
   className?: string;
 }
-
-// 임시 기본 이미지 (나중에 교체 예정)
-const DEFAULT_IMAGE = 'https://via.placeholder.com/150x100/e6e6e6/666666?text=No+Image';
 
 export default function CartMenuCard({
   menuName,
@@ -41,7 +39,7 @@ export default function CartMenuCard({
       {/* 이미지 영역 */}
       <div className="bg-bg-3 rounded-lg w-14 h-14 flex-shrink-0 overflow-hidden relative">
         <img
-          src={imageUrl || DEFAULT_IMAGE}
+          src={getMenuImageUrl(imageUrl)}
           alt={menuName}
           className="w-[150px] h-[100px] absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-cover aspect-[3/2]"
         />

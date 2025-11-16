@@ -1,13 +1,14 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { formatTimeToHHmm } from '@/shared/lib/time';
+import { getMenuImageUrl } from '@/shared/lib/image';
 
 interface FoocketingCardProps {
   openTime: string;
   menuName: string;
   originalPrice: number;
   shopName: string;
-  menuProfileImage: string;
+  menuProfileImage: string | null;
   distance: number;
   rating: number;
   reviewCount: number;
@@ -45,7 +46,7 @@ export default function FoocketingCard({
         <img
           className="w-full h-full object-cover"
           alt={menuName}
-          src={menuProfileImage}
+          src={getMenuImageUrl(menuProfileImage)}
         />
 
         {/* 오픈시간 배지 */}

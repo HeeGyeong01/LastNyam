@@ -1,9 +1,10 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
+import { getShopBannerUrl } from '@/shared/lib/image';
 
 interface ShopCardHorizontalProps {
   storeName: string;
-  storeProfileImage: string;
+  storeProfileImage: string | null;
   rating: number;
   reviewCount: number;
   saleMenu: string;
@@ -30,11 +31,11 @@ export default function ShopCardHorizontal({
       onClick={onClick}
     >
       {/* 이미지 영역 */}
-      <div className="relative w-[88px] h-[88px] rounded-lg overflow-hidden flex-shrink-0">
+      <div className="relative w-[88px] h-[88px] rounded-lg overflow-hidden flex-shrink-0 bg-bg-2">
         <img
           className="h-full w-full object-cover object-center"
           alt={storeName}
-          src={storeProfileImage}
+          src={getShopBannerUrl(storeProfileImage)}
         />
       </div>
 

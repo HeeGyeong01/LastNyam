@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@shared/components/Button';
+import { getShopBannerUrl } from '@/shared/lib/image';
 import type { TransactionMenu } from '../type/transaction';
 
 export type TransactionType = 'discount' | 'foocketing';
@@ -37,13 +38,11 @@ export default function TransactionCard({
       {/* 가게 정보 */}
       <div className="w-full py-1 flex justify-start items-start gap-1.5">
         <div className="w-7 h-7 relative bg-bg-2 rounded-lg overflow-hidden flex-shrink-0">
-          {shopImageUrl && (
-            <img
-              className="w-full h-full object-cover"
-              src={shopImageUrl}
-              alt={shopName}
-            />
-          )}
+          <img
+            className="w-full h-full object-cover"
+            src={getShopBannerUrl(shopImageUrl)}
+            alt={shopName}
+          />
         </div>
         <div className="text-primary text-lg font-bold leading-7 line-clamp-1">
           {shopName}

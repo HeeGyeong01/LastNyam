@@ -1,6 +1,7 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { Badge } from '@shared/components/Badge';
 import { cn } from '@/lib/utils';
+import { getMenuImageUrl } from '@/shared/lib/image';
 
 interface MenuCardProps {
   foodName: string;
@@ -12,7 +13,7 @@ interface MenuCardProps {
   reviewCount?: number;
   storeName?: string;
   remainingQuantity: number;
-  foodImage?: string;
+  foodImage?: string | null;
   onClick?: () => void;
   className?: string;
 }
@@ -94,13 +95,11 @@ export default function MenuCard({
 
       {/* 이미지 영역 (오른쪽) */}
       <div className="w-[88px] h-[88px] relative rounded-lg overflow-hidden flex-shrink-0">
-        {foodImage && (
-          <img
-            className="h-full w-full object-cover object-center"
-            alt={foodName}
-            src={foodImage}
-          />
-        )}
+        <img
+          className="h-full w-full object-cover object-center"
+          alt={foodName}
+          src={getMenuImageUrl(foodImage)}
+        />
       </div>
     </div>
   );

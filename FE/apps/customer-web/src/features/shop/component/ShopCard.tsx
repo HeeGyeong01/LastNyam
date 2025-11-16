@@ -1,9 +1,10 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
+import { getShopBannerUrl } from '@/shared/lib/image';
 
 interface ShopCardProps {
   storeName: string;
-  storeProfileImage: string;
+  storeProfileImage: string | null;
   rating: number;
   reviewCount: number;
   saleMenu: string;
@@ -34,7 +35,7 @@ export default function ShopCard({
         <img
           className="h-full w-full object-cover object-center"
           alt={storeName}
-          src={storeProfileImage}
+          src={getShopBannerUrl(storeProfileImage)}
         />
       </div>
 
