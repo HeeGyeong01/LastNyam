@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ClockIcon } from '@heroicons/react/24/outline';
-import { getFoocketingDetail, enterFoocketing } from '@/features/foocketing/api';
+import { getFoocketingDetail, enterFoocketing, getFoocketingResult } from '@/features/foocketing/api';
 import { Badge } from '@shared/components/Badge';
 import { PageHeader } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
@@ -81,9 +81,21 @@ export default function FoocketingDetail() {
 
     try {
       setIsSubmitting(true);
-      await enterFoocketing(Number(id));
-      // 성공 시 성공 페이지로 이동
-      navigate(`/foocketing-success/${id}`);
+      const entryResponse = await enterFoocketing(Number(id));
+      
+      // success가 true이면 결과 조회 API 호출
+      if (entryResponse.success) {
+        const result = await getFoocketingResult(Number(id));
+        
+        // 결과에 따라 성공/실패 페이지로 이동
+        if (result.success) {
+          navigate(`/foocketing-success/${id}`);
+        } else {
+          navigate(`/foocketing-fail/${id}`);
+        }
+      } else {
+        alert('푸켓팅 참여에 실패했습니다.');
+      }
     } catch (error) {
       console.error('푸켓팅 참여 실패:', error);
       alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');

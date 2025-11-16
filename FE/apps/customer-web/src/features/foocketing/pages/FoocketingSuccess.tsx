@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getFoocketingDetail } from '@/features/foocketing/api';
+import { getFoocketingResult } from '@/features/foocketing/api';
 import { PageHeader } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
 import NaverMap from '@/shared/components/NaverMap';
@@ -11,23 +11,21 @@ export default function FoocketingSuccess() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // 푸켓팅 상세 정보 조회
+  // 푸켓팅 결과 조회
   const {
-    data: detail,
+    data: result,
     isLoading: loading,
+    error,
   } = useQuery({
-    queryKey: ['foocketing', 'detail', id],
+    queryKey: ['foocketing', 'result', id],
     queryFn: () => {
       if (!id) {
         throw new Error('푸켓팅 ID가 없습니다.');
       }
-      return getFoocketingDetail(Number(id));
+      return getFoocketingResult(Number(id));
     },
     enabled: !!id,
   });
-
-  // TODO: API에서 실제 당첨 순위 정보를 받아와야 함
-  const winnerRank = 3; // 임시 값
 
   if (loading) {
     return (
@@ -37,7 +35,7 @@ export default function FoocketingSuccess() {
     );
   }
 
-  if (!detail) {
+  if (error || !result) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>데이터를 불러올 수 없습니다.</p>
@@ -45,13 +43,22 @@ export default function FoocketingSuccess() {
     );
   }
 
+  // 성공하지 않은 경우 (실패 응답) - 실패 페이지로 리다이렉트
+  if (!result.success) {
+    navigate(`/foocketing-fail/${id}`, { replace: true });
+    return null;
+  }
+
+  // 성공 응답인 경우
+  const { rank, shopInfo } = result;
+
   return (
     <>
       <PageHeader title="푸켓팅"/>
       
       <div className="flex flex-col gap-10 p-4">
         {/* 성공 메시지 카드 */}
-        <div className="w-80 p-7 bg-brand-bg-1 rounded-3xl flex flex-col items-center gap-4 mx-auto">
+        <div className="w-80 p-7 bg-brand-bg-1 rounded-3xl flex flex-col items-center gap-5 mx-auto">
           {/* 제목 */}
           <div className="self-stretch py-2 bg-white rounded-full flex justify-center items-center">
             <div className="text-brand font-kr-h4 text-kr-h4">
@@ -60,22 +67,20 @@ export default function FoocketingSuccess() {
           </div>
           
           {/* 이미지 및 순위 영역 */}
-          <div className="self-stretch rounded-2xl flex flex-col items-center gap-4">
             {/* 고양이 캐릭터 이미지 */}
-            <img 
-              className="w-28 h-28" 
-              src={lastnyamCatImage} 
-              alt="성공한 고양이"
-              />
-            
-            {/* 순위 및 메시지 */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="text-brand font-kr-h1 text-kr-h1">
-                {winnerRank}번
-              </div>
-              <div className="text-brand text-p2-b">
-                🔥 째로 득템했어요!🔥
-              </div>
+          <img 
+            className="w-28 h-28" 
+            src={lastnyamCatImage} 
+            alt="성공한 고양이"
+          />
+          
+          {/* 순위 및 메시지 */}
+          <div className="flex flex-col items-center gap-1">
+            <div className="text-brand font-kr-h1 text-kr-h1">
+              {rank}번
+            </div>
+            <div className="text-brand text-p2-b">
+              🔥 째로 득템했어요!🔥
             </div>
           </div>
         </div>
@@ -102,22 +107,22 @@ export default function FoocketingSuccess() {
         <div className="w-full p-5 rounded-2xl border border-stroke-subtle flex flex-col gap-4">
           {/* 가게 정보 */}
           <ShopCardHorizontal
-            storeName={detail.shop.name}
-            storeProfileImage={detail.shop.bannerUrl}
-            rating={detail.shop.rating}
-            reviewCount={detail.shop.ratingCount}
-            saleMenu={detail.menu.name}
-            distance={`${detail.shop.distance.toFixed(1)} km`}
+            storeName={shopInfo.name}
+            storeProfileImage={shopInfo.bannerUrl}
+            rating={shopInfo.rating}
+            reviewCount={shopInfo.ratingCount}
+            saleMenu={shopInfo.salesMenu.join(', ')}
+            distance={`${shopInfo.distance.toFixed(1)} km`}
             onClick={() => {
-              navigate(`/shop/${detail.shop.shopId}`);
+              navigate(`/shop/${shopInfo.shopId}`);
             }}
           />
           
           {/* 지도 */}
           <div className="w-full h-48 rounded-lg overflow-hidden">
             <NaverMap
-              center={{ lat: detail.shop.lat, lng: detail.shop.lng }}
-              markers={[{ lat: detail.shop.lat, lng: detail.shop.lng, title: detail.shop.name }]}
+              center={{ lat: shopInfo.lat, lng: shopInfo.lng }}
+              markers={[{ lat: shopInfo.lat, lng: shopInfo.lng, title: shopInfo.name }]}
               zoom={16}
               zoomControl={false}
               className="w-full h-full"
