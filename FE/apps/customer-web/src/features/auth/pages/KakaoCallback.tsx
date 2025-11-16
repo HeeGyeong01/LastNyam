@@ -12,6 +12,7 @@ export default function KakaoCallback() {
     const accessToken = searchParams.get('accessToken');
     const refreshToken = searchParams.get('refreshToken');
     const userId = searchParams.get('userId');
+    const isNewUser = searchParams.get('isNewUser'); // 회원가입 여부 (백엔드에서 전달)
     const error = searchParams.get('error');
 
     if (error) {
@@ -22,18 +23,58 @@ export default function KakaoCallback() {
       return;
     }
 
-    // 백엔드에서 토큰을 전달받은 경우
-    if (accessToken && refreshToken && userId) {
-      console.log('✅ 백엔드로부터 토큰 수신');
+    // 신규 회원가입인 경우 (isNewUser === 'true')
+    if (isNewUser === 'true') {
+      if (!userId) {
+        console.error('❌ userId가 없습니다.');
+        alert('인증 정보가 없습니다.');
+        navigate('/login');
+        return;
+      }
 
-      // Store에 로그인 정보 저장 (내부적으로 localStorage도 함께 저장)
+      console.log('✅ 신규 회원가입');
+      console.log('userId:', userId);
+
+      // 신규 회원가입인 경우 userId만 저장 (토큰은 추가 정보 입력 후 받을 수 있음)
       const userIdNum = parseInt(userId, 10);
-      login(accessToken, refreshToken, userIdNum);
+      // localStorage에 userId 저장
+      localStorage.setItem('userId', userIdNum.toString());
+      // useAuthStore에도 userId만 설정 (토큰 없이)
+      useAuthStore.setState({
+        userId: userIdNum,
+        isAuthenticated: false,
+        accessToken: null,
+        refreshToken: null,
+      });
+
+      // 추가 정보 입력 페이지로 이동
+      navigate('/auth/additional-info');
+      return;
+    }
+
+    // 기존 회원 로그인인 경우 (isNewUser === 'false' 또는 없음)
+    // 기존 회원인 경우에만 accessToken과 refreshToken을 받음
+    if (accessToken && refreshToken && userId) {
+      console.log('✅ 백엔드로부터 토큰 수신 (기존 회원 로그인)');
+
+      // Store에 로그인 정보 저장
+      const userIdNum = parseInt(userId, 10);
+      // localStorage에 저장
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('userId', userIdNum.toString());
+      // useAuthStore에도 설정
+      useAuthStore.setState({
+        userId: userIdNum,
+        isAuthenticated: true,
+        accessToken,
+        refreshToken,
+      });
 
       // 로그인 후 React Query 캐시 무효화하여 새로운 데이터 가져오기
       queryClient.invalidateQueries();
 
-      // 홈으로 이동
+      // 기존 회원 로그인인 경우 홈으로 이동
       navigate('/');
       return;
     }
