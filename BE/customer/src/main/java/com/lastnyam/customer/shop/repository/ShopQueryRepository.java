@@ -32,7 +32,7 @@ public class ShopQueryRepository {
     private static final String MENU_QUERY = """
             SELECT m.menu_name
             FROM discounts d
-            JOIN menu m ON d.menu_id = m.menu_id
+            JOIN menus m ON d.menu_id = m.menu_id
             WHERE m.shop_id = ? AND d.discount_date = ?
             ORDER BY d.discount_id DESC
             LIMIT 6;
