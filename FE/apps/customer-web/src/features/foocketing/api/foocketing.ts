@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/client';
 import { getLocation } from '@/shared/lib/geolocation';
+import { useAuthStore } from '@/store/useAuthStore';
 import type {
   FoocketingListData,
   FoocketingDetail,
@@ -74,13 +75,15 @@ export const getFoocketingDetail = async (
  * 3. 푸켓팅 참여하기
  * POST /api/entry/foocketing/{foocketingId}
  */
-export const entryFoocketing = async (
+export const enterFoocketing = async (
   foocketingId: number
 ): Promise<FoocketingEntryResponse> => {
-  const response = await apiClient.post(
-    `/api/entry/foocketing/${foocketingId}`
+  const userId = useAuthStore.getState().userId ?? 2; // null이면 2로 고정
+  const response = await apiClient.post<ApiResponseWrapper<FoocketingEntryResponse>>(
+    `/api/entry/foocketing/${foocketingId}`,
+    { userId }
   );
-  return response.data;
+  return response.data.data;
 };
 
 /**

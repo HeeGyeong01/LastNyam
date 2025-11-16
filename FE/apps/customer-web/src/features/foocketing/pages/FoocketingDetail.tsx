@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ClockIcon } from '@heroicons/react/24/outline';
-import { getFoocketingDetail } from '@/features/foocketing/api';
+import { getFoocketingDetail, enterFoocketing } from '@/features/foocketing/api';
 import { Badge } from '@shared/components/Badge';
 import { PageHeader } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
@@ -16,6 +16,7 @@ export default function FoocketingDetail() {
   const { id } = useParams();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -71,6 +72,25 @@ export default function FoocketingDetail() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // 푸켓팅 참여하기 핸들러
+  const handleEnterFoocketing = async () => {
+    if (!id) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await enterFoocketing(Number(id));
+      // 성공 시 성공 페이지로 이동
+      navigate(`/foocketing-success/${id}`);
+    } catch (error) {
+      console.error('푸켓팅 참여 실패:', error);
+      alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -189,8 +209,13 @@ export default function FoocketingDetail() {
               </div>
             </div>
           </div>
-          <Button btnStyle="filled-red" size="lg">
-            푸켓팅 참여하기
+          <Button 
+            btnStyle="filled-red" 
+            size="lg"
+            onClick={handleEnterFoocketing}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '참여 중...' : '푸켓팅 참여하기'}
           </Button>
         </div>
       </BottomSheet>

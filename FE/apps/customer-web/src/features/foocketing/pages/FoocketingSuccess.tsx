@@ -5,6 +5,7 @@ import { PageHeader } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
 import NaverMap from '@/shared/components/NaverMap';
 import lastnyamCatImage from '@/shared/assets/lastnyam-cat.png';
+import { Badge } from '@shared/components/Badge';
 
 export default function FoocketingSuccess() {
   const { id } = useParams();
@@ -45,52 +46,60 @@ export default function FoocketingSuccess() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-bg-1">
-      <PageHeader title="" showCart={false} />
+    <>
+      <PageHeader title="푸켓팅"/>
       
-      <div className="flex flex-col gap-6 p-4 pt-6">
+      <div className="flex flex-col gap-10 p-4">
         {/* 성공 메시지 카드 */}
-        <div className="w-full p-6 rounded-2xl bg-brand-bg-1 flex flex-col items-center gap-4">
+        <div className="w-80 p-7 bg-brand-bg-1 rounded-3xl flex flex-col items-center gap-4 mx-auto">
           {/* 제목 */}
-          <h1 className="text-brand h4-b text-center">
-            축하해요! 푸켓팅 성공!
-          </h1>
+          <div className="self-stretch py-2 bg-white rounded-full flex justify-center items-center">
+            <div className="text-brand font-kr-h4 text-kr-h4">
+              축하해요! 푸켓팅 성공!
+            </div>
+          </div>
           
-          {/* 고양이 캐릭터 이미지 */}
-          <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center overflow-hidden">
+          {/* 이미지 및 순위 영역 */}
+          <div className="self-stretch rounded-2xl flex flex-col items-center gap-4">
+            {/* 고양이 캐릭터 이미지 */}
             <img 
+              className="w-28 h-28" 
               src={lastnyamCatImage} 
-              alt="성공한 고양이" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          {/* 당첨 순위 */}
-          <div className="text-brand h2-b">
-            {winnerRank}번
-          </div>
-          
-          {/* 메시지 */}
-          <div className="text-primary p1 text-center">
-            째로 득템했어요!
+              alt="성공한 고양이"
+              />
+            
+            {/* 순위 및 메시지 */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-brand font-kr-h1 text-kr-h1">
+                {winnerRank}번
+              </div>
+              <div className="text-brand text-p2-b">
+                🔥 째로 득템했어요!🔥
+              </div>
+            </div>
           </div>
         </div>
 
         {/* QR 코드 안내 카드 */}
-        <div className="w-full p-5 rounded-2xl bg-bg-0 flex flex-col gap-3">
-          <div className="text-primary p1-b">
-            음식 수령 시 사장님께 QR을 제시해 주세요
+        <div className="w-full rounded-2xl bg-bg-0 flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-1">
+            <Badge badgeStyle="red" size="lg">
+              NOTICE
+            </Badge>
+            <p className="text-primary p1-b pt-2">
+              음식 수령 시 사장님께 QR을 제시해 주세요
+            </p>
+            <p className="text-secondary p3">
+              QR은 주문내역에서 확인할 수 있습니다
+            </p>
           </div>
-          <div className="text-secondary p2">
-            QR은 주문내역에서 확인할 수 있습니다
-          </div>
-          <div className="text-error p2">
-            ⚠️ 픽업 마감시간 이후에는 당첨이 취소되니 꼭 시간 내 방문해주세요!
-          </div>
+          <p className="text-brand p3-b">
+            픽업 마감시간 이후에는 당첨이 취소되니 꼭 시간 내 방문해주세요!
+          </p>
         </div>
 
         {/* 가게 정보 및 지도 카드 */}
-        <div className="w-full p-5 rounded-2xl bg-bg-0 flex flex-col gap-4">
+        <div className="w-full p-5 rounded-2xl border border-stroke-subtle flex flex-col gap-4">
           {/* 가게 정보 */}
           <ShopCardHorizontal
             storeName={detail.shop.name}
@@ -116,7 +125,7 @@ export default function FoocketingSuccess() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

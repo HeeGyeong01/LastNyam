@@ -65,8 +65,6 @@ export interface FoocketingDetail extends Omit<FoocketingItem, 'menu'> {
 // 푸켓팅 참여 응답
 export interface FoocketingEntryResponse {
   success: boolean;
-  entryId: number;
-  message: string;
 }
 
 // 푸켓팅 참여 결과
