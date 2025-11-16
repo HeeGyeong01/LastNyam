@@ -1,6 +1,5 @@
 package com.lastnyam.customer.security.config;
 
-import com.lastnyam.authentication.enums.UserRole;
 import com.lastnyam.customer.security.filter.JwtAuthenticationFilter;
 import com.lastnyam.customer.security.filter.JwtRefreshFilter;
 import com.lastnyam.customer.security.handler.OAuth2FailureHandler;
@@ -53,8 +52,8 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 공개 API (인증 불필요)
-                        .requestMatchers("/api/foocketing/*/result")
-                        .hasRole(UserRole.USER.getName())
+//                        .requestMatchers("/api/foocketing/*/result")
+//                        .hasRole(UserRole.USER.getName())
                         .requestMatchers(
                                 "/",
                                 "/error",
