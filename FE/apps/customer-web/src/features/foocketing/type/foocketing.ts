@@ -13,6 +13,7 @@ export type FoocketingSortType = 'IMMINENT' | 'CLOSEST' | 'PRICE' ;
 // 푸켓팅 메뉴 (리스트용)
 export interface FoocketingMenu {
   name: string;
+  description: string | null;
   price: number;
   photoUrl: string;
 }
@@ -25,7 +26,7 @@ export interface FoocketingMenuDetail extends FoocketingMenu {
 // 푸켓팅 가게
 export interface FoocketingShop {
   shopId: number;
-  bannerUrl: string;
+  bannerUrl: string | null;
   name: string;
   lat: number;
   lng: number;
@@ -130,4 +131,18 @@ export interface FoocketingSearchData {
   nextCursor: string | null;
   hasNextPage: boolean;
 }
+
+
+//////////////////////////////////////////////////////////////
+// 푸켓팅 추천 목록
+
+// 푸켓팅 추천 아이템
+export interface RecommendedFoocketingItem {
+  foocketing: FoocketingItem;
+  visitedShop: boolean;
+  purchasedMenu: boolean;
+}
+
+// 푸켓팅 추천 목록 데이터
+export type RecommendedFoocketingListData = RecommendedFoocketingItem[];
 

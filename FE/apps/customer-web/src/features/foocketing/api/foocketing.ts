@@ -9,6 +9,7 @@ import type {
   FoocketingSortType,
   FoocketingCategory,
   FoocketingSearchData,
+  RecommendedFoocketingListData,
 } from '../type/foocketing';
 import type { ApiResponseWrapper } from '@/shared/types/common';
 
@@ -78,7 +79,7 @@ export const getFoocketingDetail = async (
 export const enterFoocketing = async (
   foocketingId: number
 ): Promise<FoocketingEntryResponse> => {
-  const userId = useAuthStore.getState().userId ?? 3; // null이면 2로 고정
+  const userId = useAuthStore.getState().userId ?? 3; // null이면 3로 고정
   const response = await apiClient.post<ApiResponseWrapper<FoocketingEntryResponse>>(
     `/api/entry/foocketing/${foocketingId}`,
     { userId }
@@ -151,6 +152,40 @@ export const searchFoocketing = async (
         lat: location.lat,
         lng: location.lng,
         ...(params.cursor ? { cursor: params.cursor } : {}),
+      },
+    }
+  );
+  return response.data.data;
+};
+
+/**
+ * 6. 푸켓팅 추천 목록 조회
+ * GET /api/foocketing/recommendation/{userId}?lat={latitude}&lng={longitude}
+ * 
+ * @param params.userId - 사용자 ID (선택, 없으면 store에서 가져오거나 기본값 사용)
+ * @param params.lat - 위도 (선택, 없으면 자동으로 가져옴)
+ * @param params.lng - 경도 (선택, 없으면 자동으로 가져옴)
+ */
+export const getRecommendedFoocketingList = async (
+  params: {
+    userId?: number;
+    lat?: number;
+    lng?: number;
+  } = {}
+): Promise<RecommendedFoocketingListData> => {
+  const userId = params.userId ?? useAuthStore.getState().userId ?? 3; // null이면 3로 고정
+  
+  // 위치 정보가 없으면 자동으로 가져오기
+  const location = params.lat && params.lng 
+    ? { lat: params.lat, lng: params.lng }
+    : await getLocation();
+
+  const response = await apiClient.get<ApiResponseWrapper<RecommendedFoocketingListData>>(
+    `/api/foocketing/recommendation/${userId}`,
+    {
+      params: {
+        lat: location.lat,
+        lng: location.lng,
       },
     }
   );

@@ -71,3 +71,17 @@ export interface DiscountSearchData {
   hasNextPage: boolean;
 }
 
+
+//////////////////////////////////////////////////////////////
+// 마감세일 추천 목록
+
+// 마감세일 추천 아이템
+export interface RecommendedDiscountItem {
+  discount: DiscountItem;
+  visitedShop: boolean;
+  purchasedMenu: boolean;
+}
+
+// 마감세일 추천 목록 데이터
+export type RecommendedDiscountListData = RecommendedDiscountItem[];
+
