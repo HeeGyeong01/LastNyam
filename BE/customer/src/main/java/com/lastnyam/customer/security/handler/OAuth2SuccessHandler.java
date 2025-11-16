@@ -40,32 +40,43 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
         Integer userId = oAuth2User.getUserId();
+        boolean isNewUser = oAuth2User.isNewUser();
 
         String userRoleString = oAuth2User.getRole();
         UserRole userRole = UserRole.valueOf(userRoleString);
 
-        // 사용자별 버전 초기화
-        Long initialVersion = initializeTokenVersion(userId);
-
-        // JWT 토큰 생성
-        String accessToken = jwtProvider.generateAccessToken(
-                userRole,
-                userId,
-                initialVersion.toString());
-        String refreshToken = jwtProvider.generateRefreshToken(
-                userRole,
-                userId,
-                initialVersion.toString());
-
-        log.info("OAuth2 로그인 성공: userId={}, role={}, version={}, accessToken 생성 완료", userId, userRole, initialVersion);
-
-        // 프론트엔드로 리다이렉트
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
+        // 프론트엔드로 리다이렉트 URL 빌더 생성
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(redirectUrl)
                 .queryParam("userId", userId)
-                .build()
-                .toUriString();
+                .queryParam("isNewUser", isNewUser); // 최초 로그인 여부 전달
+
+        // isNewUser가 false인 경우에만 토큰 생성 및 전달
+        if (!isNewUser) {
+            // 사용자별 버전 초기화
+            Long initialVersion = initializeTokenVersion(userId);
+
+            // JWT 토큰 생성
+            String accessToken = jwtProvider.generateAccessToken(
+                    userRole,
+                    userId,
+                    initialVersion.toString());
+            String refreshToken = jwtProvider.generateRefreshToken(
+                    userRole,
+                    userId,
+                    initialVersion.toString());
+
+            log.info("OAuth2 로그인 성공: userId={}, role={}, version={}, isNewUser={}, accessToken 생성 완료",
+                    userId, userRole, initialVersion, isNewUser);
+
+            // 토큰을 쿼리 파라미터로 추가
+            uriBuilder.queryParam("accessToken", accessToken)
+                    .queryParam("refreshToken", refreshToken);
+        } else {
+            log.info("OAuth2 로그인 성공 (신규 사용자): userId={}, role={}, isNewUser={}, 토큰 미생성",
+                    userId, userRole, isNewUser);
+        }
+
+        String targetUrl = uriBuilder.build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

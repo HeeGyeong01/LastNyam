@@ -65,7 +65,8 @@ public class SecurityConfig {
                                 "/api/auth/token/refresh",
                                 "/api/foocketing/**",
                                 "/api/discounts/**",
-                                "/api/shop/*")
+                                "/api/shop/*",
+                                "/api/user/*/profile/onboarding")
                         .permitAll()
                         .anyRequest().authenticated())
                 // OAuth2 로그인 설정
