@@ -52,10 +52,10 @@ export default function TransactionCard({
 
       {/* 주문 항목들 */}
       <div className="w-full flex flex-col gap-3">
-        {menus.map((menu) => {
+        {menus.map((menu, index) => {
           const formattedPrice = menu.price.toLocaleString('ko-KR');
           return (
-            <div key={menu.menuName} className="w-full flex flex-col gap-0.5">
+            <div key={`${menu.menuName}-${index}-${menu.price}-${menu.quantity}`} className="w-full flex flex-col gap-0.5">
               <div className="w-full flex justify-start items-center gap-1">
                 <div className="text-primary text-sm font-normal leading-5 line-clamp-1">
                   {menu.menuName}

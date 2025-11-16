@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import catImage from '@/shared/assets/lastnyam-cat.png';
 import { Button } from '@shared/components/Button';
+import { useAuthStore } from '@/store/useAuthStore';
+import { updateOnboardingProfile } from '../api';
+import { queryClient } from '@/lib/queryClient';
 
 // 음식 카테고리 타입 정의 (1-19)
-export type FoodCategory = 
+export type FoodCategory =
   | 1  // 빵
   | 2  // 샌드위치
   | 3  // 디저트
@@ -54,7 +57,17 @@ const foodCategories: FoodCategoryItem[] = [
 
 export default function AdditionalInfo() {
   const navigate = useNavigate();
+  const storeUserId = useAuthStore((state) => state.userId);
   const [selectedCategories, setSelectedCategories] = useState<FoodCategory[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // userId 가져오기 (store 또는 localStorage에서)
+  const userId =
+    storeUserId ||
+    (() => {
+      const localUserId = localStorage.getItem('userId');
+      return localUserId ? parseInt(localUserId, 10) : null;
+    })();
 
   const toggleCategory = (categoryId: FoodCategory) => {
     setSelectedCategories((prev) => {
@@ -77,14 +90,48 @@ export default function AdditionalInfo() {
       return;
     }
 
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
     try {
-      // TODO: 백엔드에 선호 카테고리 전송
-      console.log('선택된 카테고리:', selectedCategories);
-      
+      setIsSubmitting(true);
+
+      // 백엔드에 선호 카테고리 전송
+      const categoryIds = selectedCategories.map((id) => id as number);
+      const response = await updateOnboardingProfile(userId, categoryIds);
+
+      console.log('✅ 온보딩 프로필 업데이트 성공');
+
+      // 응답으로 받은 토큰이 없으면 실패 처리
+      if (!response.accessToken || !response.refreshToken) {
+        throw new Error('토큰을 받지 못했습니다. 다시 시도해주세요.');
+      }
+
+      // localStorage에 저장
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('userId', response.userId.toString());
+      // useAuthStore에도 설정
+      useAuthStore.setState({
+        userId: response.userId,
+        isAuthenticated: true, // 토큰이 있으므로 인증 완료
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      });
+
+      // React Query 캐시 무효화하여 새로운 데이터 가져오기
+      queryClient.invalidateQueries();
+
       // 회원가입 완료 페이지로 이동
       navigate('/auth/signup-complete');
     } catch (error) {
       console.error('추가정보 저장 실패:', error);
+      alert('추가정보 저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -93,17 +140,11 @@ export default function AdditionalInfo() {
       <div className="flex flex-col items-center w-full max-w-md">
         {/* 고양이 이미지 - 원형 배경 */}
         <div className="relative mb-4">
-          <img 
-            src={catImage} 
-            alt="Last Nyam Cat" 
-            className="w-28 h-28 object-contain"
-          />
+          <img src={catImage} alt="Last Nyam Cat" className="w-28 h-28 object-contain" />
         </div>
 
         {/* 질문 */}
-        <h1 className="h4-b text-brand text-center">
-          어떤 음식을 좋아하시나요?
-        </h1>
+        <h1 className="h4-b text-brand text-center">어떤 음식을 좋아하시나요?</h1>
 
         {/* 안내 문구 */}
         <p className="text-tertiary p3 mb-8 text-center">
@@ -132,12 +173,12 @@ export default function AdditionalInfo() {
         <div className="w-full px-4 mt-auto">
           <Button
             onClick={handleSubmit}
-            disabled={selectedCategories.length === 0}
+            disabled={selectedCategories.length === 0 || isSubmitting}
             btnStyle={selectedCategories.length === 0 ? 'filled-default' : 'filled-yellow'}
             size="lg"
             className="w-full"
           >
-            회원가입 완료하기
+            {isSubmitting ? '저장 중...' : '회원가입 완료하기'}
           </Button>
         </div>
       </div>
