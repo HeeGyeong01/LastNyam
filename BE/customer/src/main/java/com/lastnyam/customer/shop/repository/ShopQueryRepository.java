@@ -25,7 +25,7 @@ public class ShopQueryRepository {
                             ) as distance,
                             COALESCE(sr.shop_rating_avg, 0) as shop_rating_avg,
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count
-            FROM shop s
+            FROM shops s
             LEFT JOIN shop_ratings sr ON s.shop_id = sr.shop_id
             WHERE s.shop_id = ?;
             """;
