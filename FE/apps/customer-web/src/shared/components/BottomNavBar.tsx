@@ -9,7 +9,7 @@ const navItems = [
   { icon: HeartIcon, label: '찜', path: '/favorite' },
   { icon: MagnifyingGlassIcon, label: '검색', path: '/search', strokeWidth: 3 },
   { icon: OrderListIcon, label: '주문내역', path: '/order-list' },
-  { icon: FaceSmileIcon, label: '마이페이지', path: '/login' },
+  { icon: FaceSmileIcon, label: '마이페이지', path: '/mypage' },
 ];
 
 export default function BottomNavBar() {
@@ -32,4 +32,3 @@ export default function BottomNavBar() {
     </nav>
   );
 }
-

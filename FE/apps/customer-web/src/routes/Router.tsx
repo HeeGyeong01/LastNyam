@@ -18,6 +18,7 @@ import Search from '@/features/search/pages/Search';
 import OrderList from '@/features/transaction/pages/Transaction';
 import MyPage from '@/features/mypage/pages/MyPage';
 import QR from '@/features/qr/pages/QR';
+import PrivateRoute from './PrivateRoute';
 
 export const router = createBrowserRouter([
   // Auth routes (네비게이션 바 없음)
@@ -37,7 +38,7 @@ export const router = createBrowserRouter([
     path: '/auth/signup-complete',
     element: <SignupComplete />,
   },
-  
+
   // Main routes (네비게이션 바 있음)
   {
     element: <MainLayout />,
@@ -80,7 +81,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/mypage',
-        element: <MyPage />,
+        element: (
+          <PrivateRoute>
+            <MyPage />
+          </PrivateRoute>
+        ),
       },
       {
         path: '/qr',
@@ -88,7 +93,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  
+
   // Detail routes (네비게이션 바 없음)
   {
     element: <DetailLayout />,
@@ -108,4 +113,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-
