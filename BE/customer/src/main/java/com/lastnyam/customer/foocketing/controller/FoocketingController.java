@@ -36,9 +36,11 @@ public class FoocketingController {
     @GetMapping("/{foocketingId}/result")
     public ResponseEntity<ApiResponse<FoocketingResult>> getResultOf(
             @RequestParam("userId") Integer userId,
+            @RequestParam("lat") Double lat,
+            @RequestParam("lng") Double lng,
             @PathVariable("foocketingId") Integer foocketingId) {
 
-        FoocketingResult result = foocketingService.getFoocketingResult(userId, foocketingId);
+        FoocketingResult result = foocketingService.getFoocketingResult(userId, foocketingId, lat, lng);
 
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
