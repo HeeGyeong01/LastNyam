@@ -41,7 +41,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-20 bg-white max-w-[500px]">
+      <div className="fixed top-0 left-0 right-0 max-w-[500px] mx-auto z-50">
         <HomeHeader />
       </div>
       <div className="flex flex-col gap-9 px-4 ">
