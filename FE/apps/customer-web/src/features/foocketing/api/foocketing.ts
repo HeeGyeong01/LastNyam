@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/client';
 import { getLocation } from '@/shared/lib/geolocation';
+import { useAuthStore } from '@/store/useAuthStore';
 import type {
   FoocketingListData,
   FoocketingDetail,
@@ -74,30 +75,47 @@ export const getFoocketingDetail = async (
  * 3. 푸켓팅 참여하기
  * POST /api/entry/foocketing/{foocketingId}
  */
-export const entryFoocketing = async (
+export const enterFoocketing = async (
   foocketingId: number
 ): Promise<FoocketingEntryResponse> => {
-  const response = await apiClient.post(
-    `/api/entry/foocketing/${foocketingId}`
+  const userId = useAuthStore.getState().userId ?? 3; // null이면 2로 고정
+  const response = await apiClient.post<ApiResponseWrapper<FoocketingEntryResponse>>(
+    `/api/entry/foocketing/${foocketingId}`,
+    { userId }
   );
-  return response.data;
+  return response.data.data;
 };
 
 /**
  * 4. 푸켓팅 결과 조회
- * GET /api/foocketing/{foocketingId}/result?userId={userId}
+ * GET /api/foocketing/{foocketingId}/result?userId={userId}&lat={lat}&lng={lng}
  */
 export const getFoocketingResult = async (
   foocketingId: number,
-  userId: number
+  params?: {
+    userId?: number;
+    lat?: number;
+    lng?: number;
+  }
 ): Promise<FoocketingResult> => {
-  const response = await apiClient.get(
+  const finalUserId = params?.userId ?? useAuthStore.getState().userId ?? 3; // null이면 2로 고정
+  
+  // 위치 정보가 없으면 자동으로 가져오기
+  const location = params?.lat && params?.lng 
+    ? { lat: params.lat, lng: params.lng }
+    : await getLocation();
+  
+  const response = await apiClient.get<ApiResponseWrapper<FoocketingResult>>(
     `/api/foocketing/${foocketingId}/result`,
     {
-      params: { userId },
+      params: {
+        userId: finalUserId,
+        lat: location.lat,
+        lng: location.lng,
+      },
     }
   );
-  return response.data;
+  return response.data.data;
 };
 
 /**

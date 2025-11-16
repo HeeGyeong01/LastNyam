@@ -61,26 +61,51 @@ export interface FoocketingDetail extends Omit<FoocketingItem, 'menu'> {
 }
 
 
+
 //////////////////////////////////////////////////////////////
+// 푸켓팅 참여, 결과 조회
+
 // 푸켓팅 참여 응답
 export interface FoocketingEntryResponse {
   success: boolean;
-  entryId: number;
-  message: string;
 }
 
-// 푸켓팅 참여 결과
-export interface FoocketingResult {
-  foocketingId: number;
-  userId: number;
-  isWinner: boolean;
-  entryTime: string;
-  resultTime?: string;
-  message: string;
+// 푸켓팅 결과 조회 - 성공 시 shopInfo
+export interface FoocketingResultShopInfo {
+  shopId: number;
+  salesMenu: string[];
+  bannerUrl: string;
+  name: string;
+  lat: number;
+  lng: number;
+  distance: number;
+  rating: number;
+  ratingCount: number;
 }
+
+// 푸켓팅 결과 조회 - 성공 시
+export interface FoocketingResultSuccess {
+  success: true;
+  rank: number;
+  shopInfo: FoocketingResultShopInfo;
+}
+
+// 푸켓팅 결과 조회 - 실패 시
+export interface FoocketingResultFailure {
+  success: false;
+  rank: number;
+  otherFoocketingsOfShop: FoocketingItem[];
+  recommendedFoocketings: FoocketingItem[];
+}
+
+// 푸켓팅 참여 결과 (성공/실패 union type)
+export type FoocketingResult = FoocketingResultSuccess | FoocketingResultFailure;
+
 
 
 //////////////////////////////////////////////////////////////
+// 푸켓팅 검색
+
 // 푸켓팅 검색용 가게 정보 (shopId, bannerUrl 없음)
 export interface FoocketingSearchShop {
   name: string;
