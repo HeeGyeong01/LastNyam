@@ -5,19 +5,24 @@ import { useFoocketingList } from '@/features/foocketing/hook';
 import { Input } from '@shared/components/Input';
 import { HomeHeader } from '@/shared/components';
 import { FoocketingCard } from '@/features/foocketing/component';
-import DiscountCategoryTab from './DiscountCategoryTab';
+import DiscountCategoryTab from '../component/DiscountCategoryTab';
 import { Button } from '@shared/components/Button';
 import { Tab } from '@shared/components/Tab';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getRecommendedDiscountList } from '@/features/discount/api';
 import { getRecommendedFoocketingList } from '@/features/foocketing/api';
+import { useAuthStore } from '@/store/useAuthStore';
 import DiscountList from '@/features/discount/component/DiscountList';
 import FoocketingList from '@/features/foocketing/component/FoocketingList';
 
 export default function Home() {
   const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.userId);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0); // 0: 마감세일, 1: 푸켓팅
+  
+  // Home 페이지에서는 로그인하지 않아도 보여야 하므로, userId가 null이면 2로 설정
+  const finalUserId = userId ?? 2;
 
   // 푸켓팅 목록 가져오기 (기본 카테고리 1, 정렬 IMMINENT)
   const { foocketings, loading, error } = useFoocketingList({
@@ -34,8 +39,8 @@ export default function Home() {
     isLoading: discountLoading,
     error: discountError,
   } = useQuery({
-    queryKey: ['recommended', 'discount'],
-    queryFn: () => getRecommendedDiscountList(),
+    queryKey: ['recommended', 'discount', finalUserId],
+    queryFn: () => getRecommendedDiscountList({ userId: finalUserId }),
     enabled: selectedTabIndex === 0,
   });
 
@@ -45,8 +50,8 @@ export default function Home() {
     isLoading: foocketingLoading,
     error: foocketingError,
   } = useQuery({
-    queryKey: ['recommended', 'foocketing'],
-    queryFn: () => getRecommendedFoocketingList(),
+    queryKey: ['recommended', 'foocketing', finalUserId],
+    queryFn: () => getRecommendedFoocketingList({ userId: finalUserId }),
     enabled: selectedTabIndex === 1,
   });
 
