@@ -69,7 +69,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/favorite',
-        element: <Favorite />,
+        element: (
+          <PrivateRoute>
+            <Favorite />
+          </PrivateRoute>
+        ),
       },
       {
         path: '/search',
@@ -77,7 +81,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/order-list',
-        element: <OrderList />,
+        element: (
+          <PrivateRoute>
+            <OrderList />
+          </PrivateRoute>
+        ),
       },
       {
         path: '/mypage',
@@ -108,7 +116,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/cart',
-        element: <Cart />,
+        element: (
+          <PrivateRoute>
+            <Cart />
+          </PrivateRoute>
+        ),
       },
     ],
   },
