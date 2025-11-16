@@ -63,7 +63,7 @@ public class SecurityConfig {
                                 "/api/auth/social/kakao",
                                 "/api/auth/token/refresh",
                                 "/api/foocketing/**",
-                                "/api/discounts/**",
+                                "/api/discount/**",
                                 "/api/shop/*")
                         .permitAll()
                         .anyRequest().authenticated())
