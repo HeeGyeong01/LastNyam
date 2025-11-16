@@ -1,5 +1,8 @@
 package com.lastnyam.customer.foocketing.repository;
 
+import com.lastnyam.customer.foocketing.exception.FoocketingErrorCode;
+import com.lastnyam.customer.foocketing.exception.FoocketingException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -27,8 +30,14 @@ public class FoocketingRankRepository {
     private final JdbcTemplate jdbcTemplate;
 
     public Integer getRankOf(Integer userId, Integer foocketingId) {
-        return jdbcTemplate.query(RANK_QUERY,
+        List<Integer> result = jdbcTemplate.query(RANK_QUERY,
                 (rs, rowNum) -> rs.getInt("result_rank")
-                , foocketingId, userId).getFirst();
+                , foocketingId, userId);
+
+        if (result.isEmpty()) {
+            throw new FoocketingException(FoocketingErrorCode.FOOCKETING_NO_ENTRY);
+        }
+
+        return result.getFirst();
     }
 }

@@ -108,10 +108,8 @@ public class FoocketingQueryRepository {
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
         int shopId = rs.getInt("shop_id");
-        int shopRatingSum = rs.getInt("shop_rating_sum");
         int shopRatingCount = rs.getInt("shop_rating_count");
-
-        double shopRating = Math.round(((double) shopRatingSum / shopRatingCount) * 10.0) / 10.0;
+        double shopRating = rs.getDouble("shop_rating_avg");
 
         MenuInfo menuInfo = MenuInfo.builder()
                 .name(menuName)
@@ -173,7 +171,7 @@ public class FoocketingQueryRepository {
                                ST_Point(?, ?)::geography,
                                ST_Point(s.shop_lng, s.shop_lat)::geography                       
                             ) as distance,
-                            COALESCE(sr.shop_rating_sum, 0) as shop_rating_sum, 
+                            COALESCE(sr.shop_rating_avg, 0) as shop_rating_avg, 
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count
                     FROM foocketings f
                     INNER JOIN menus m ON f.menu_id = m.menu_id

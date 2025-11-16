@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum FoocketingErrorCode implements BaseErrorCode {
+    FOOCKETING_NO_ENTRY(HttpStatus.BAD_REQUEST, 400, "참여하지 않은 푸켓팅입니다."),
     FOOCKETING_INVALID_CURSOR(HttpStatus.BAD_REQUEST, 400, "잘못된 커서입니다.");
 
     private final HttpStatus status;

@@ -18,12 +18,12 @@ public class FoocketingFailRepository {
 
     private static final String FOOCKETINGS_OF_SHOP_QUERY = """
                 SELECT f.foocketing_id,f.foocketing_time,m.menu_name,m.menu_price,m.menu_image,
-                            s.shop_id, s.shop_name, s.shop_lat, s.shop_lng, 
+                            s.shop_id, s.shop_name, s.shop_lat, s.shop_lng,
                             ST_Distance(
                                ST_Point(?, ?)::geography,
-                               ST_Point(s.shop_lng, s.shop_lat)::geography                       
+                               ST_Point(s.shop_lng, s.shop_lat)::geography
                             ) as distance,
-                            COALESCE(sr.shop_rating_sum, 0) as shop_rating_sum, 
+                            COALESCE(sr.shop_rating_avg, 0) as shop_rating_avg,
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count
                     FROM foocketings f
                     INNER JOIN menus m ON f.menu_id = m.menu_id
@@ -41,7 +41,7 @@ public class FoocketingFailRepository {
                                ST_Point(?, ?)::geography,
                                ST_Point(s.shop_lng, s.shop_lat)::geography
                             ) as distance,
-                            COALESCE(sr.shop_rating_sum, 0) as shop_rating_sum, 
+                            COALESCE(sr.shop_rating_avg, 0) as shop_rating_avg,
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count
                     FROM foocketings f
                     INNER JOIN menus m ON f.menu_id = m.menu_id
@@ -89,7 +89,6 @@ public class FoocketingFailRepository {
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
         int shopId = rs.getInt("shop_id");
-        int shopRatingSum = rs.getInt("shop_rating_sum");
         int shopRatingCount = rs.getInt("shop_rating_count");
         double shopRating = rs.getDouble("shop_rating_avg");
 
