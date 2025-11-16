@@ -3,7 +3,6 @@ import TypoLogo from '@/shared/assets/typo-logo.svg?react';
 
 export default function Login() {
   const handleKakaoLogin = () => {
-    const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     // 🔍 로그: 환경 변수 및 요청 URL 확인
