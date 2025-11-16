@@ -51,11 +51,12 @@ public class FoocketingService {
         Integer rank = foocketingRankRepository.getRankOf(userId, foocketingId);
 
         FoocketingResult result = new FoocketingResult();
-
+        result.setSuccess(false);
         result.setRank(rank);
         if (rank <= foocketing.getFoocketingAmount()) {
             Shop shop = foocketing.getMenu().getShop();
             result.setShopId(shop.getShopId());
+            result.setSuccess(true);
         }
         return result;
     }

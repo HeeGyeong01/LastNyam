@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FoocketingResult {
+    private boolean isSuccess;
     private Integer rank;
     private Integer shopId;
 }
