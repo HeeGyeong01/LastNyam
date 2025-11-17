@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useFoocketingList } from '@/features/foocketing/hook';
@@ -15,14 +15,29 @@ import { getRecommendedFoocketingList } from '@/features/foocketing/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import DiscountList from '@/features/discount/component/DiscountList';
 import FoocketingList from '@/features/foocketing/component/FoocketingList';
+import { queryClient } from '@/lib/queryClient';
 
 export default function Home() {
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.userId);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0); // 0: 마감세일, 1: 푸켓팅
-  
+
   // Home 페이지에서는 로그인하지 않아도 보여야 하므로, userId가 null이면 2로 설정
   const finalUserId = userId ?? 2;
+
+  const logout = useAuthStore((state) => state.logout);
+
+  // 로그아웃 플래그 확인 및 처리
+  useEffect(() => {
+    const shouldLogout = sessionStorage.getItem('shouldLogout');
+    if (shouldLogout === 'true') {
+      sessionStorage.removeItem('shouldLogout');
+      // 로그아웃 처리
+      logout();
+      // React Query 캐시 초기화
+      queryClient.invalidateQueries();
+    }
+  }, [logout]);
 
   // 푸켓팅 목록 가져오기 (기본 카테고리 1, 정렬 IMMINENT)
   const { foocketings, loading, error } = useFoocketingList({
@@ -77,9 +92,9 @@ export default function Home() {
       </div>
       <div className="flex flex-col gap-9 px-4 ">
         <div className="flex flex-col gap-6">
-          <Input 
-            className="mt-12" 
-            placeholder="먹고 싶은 음식을 검색해보세요" 
+          <Input
+            className="mt-12"
+            placeholder="먹고 싶은 음식을 검색해보세요"
             onClick={handleInputClick}
             readOnly
             icon={<MagnifyingGlassIcon />}
@@ -127,13 +142,13 @@ export default function Home() {
         {/* 추천 목록 */}
         <div className="flex flex-col mt-6">
           <h2 className="h5-b text-primary pb-1">당신을 위한 맞춤 추천</h2>
-          <Tab 
-            tabLabels={['마감세일', '푸켓팅']} 
-            defaultSelectedIndex={selectedTabIndex} 
-            onTabChange={(index) => handleTabChange(index)} 
+          <Tab
+            tabLabels={['마감세일', '푸켓팅']}
+            defaultSelectedIndex={selectedTabIndex}
+            onTabChange={(index) => handleTabChange(index)}
             className="px-0 mb-3"
           />
-          
+
           {/* 마감세일 추천 목록 */}
           {selectedTabIndex === 0 && (
             <>
@@ -143,14 +158,18 @@ export default function Home() {
                   에러: {discountError instanceof Error ? discountError.message : '알 수 없는 에러'}
                 </p>
               )}
-              {!discountLoading && !discountError && recommendedDiscounts && recommendedDiscounts.length === 0 && (
-                <p className="py-4 text-center text-gray-500">추천 마감세일이 없습니다.</p>
-              )}
-              {!discountLoading && !discountError && recommendedDiscounts && recommendedDiscounts.length > 0 && (
-                <DiscountList
-                  discounts={recommendedDiscounts.map(item => item.discount)}
-                />
-              )}
+              {!discountLoading &&
+                !discountError &&
+                recommendedDiscounts &&
+                recommendedDiscounts.length === 0 && (
+                  <p className="py-4 text-center text-gray-500">추천 마감세일이 없습니다.</p>
+                )}
+              {!discountLoading &&
+                !discountError &&
+                recommendedDiscounts &&
+                recommendedDiscounts.length > 0 && (
+                  <DiscountList discounts={recommendedDiscounts.map((item) => item.discount)} />
+                )}
             </>
           )}
 
@@ -160,17 +179,24 @@ export default function Home() {
               {foocketingLoading && <p className="py-4 text-center text-gray-500">로딩 중...</p>}
               {foocketingError && (
                 <p className="py-4 text-center text-red-500">
-                  에러: {foocketingError instanceof Error ? foocketingError.message : '알 수 없는 에러'}
+                  에러:{' '}
+                  {foocketingError instanceof Error ? foocketingError.message : '알 수 없는 에러'}
                 </p>
               )}
-              {!foocketingLoading && !foocketingError && recommendedFoocketings && recommendedFoocketings.length === 0 && (
-                <p className="py-4 text-center text-gray-500">추천 푸켓팅이 없습니다.</p>
-              )}
-              {!foocketingLoading && !foocketingError && recommendedFoocketings && recommendedFoocketings.length > 0 && (
-                <FoocketingList
-                  foocketings={recommendedFoocketings.map(item => item.foocketing)}
-                />
-              )}
+              {!foocketingLoading &&
+                !foocketingError &&
+                recommendedFoocketings &&
+                recommendedFoocketings.length === 0 && (
+                  <p className="py-4 text-center text-gray-500">추천 푸켓팅이 없습니다.</p>
+                )}
+              {!foocketingLoading &&
+                !foocketingError &&
+                recommendedFoocketings &&
+                recommendedFoocketings.length > 0 && (
+                  <FoocketingList
+                    foocketings={recommendedFoocketings.map((item) => item.foocketing)}
+                  />
+                )}
             </>
           )}
         </div>
@@ -178,4 +204,3 @@ export default function Home() {
     </>
   );
 }
-
