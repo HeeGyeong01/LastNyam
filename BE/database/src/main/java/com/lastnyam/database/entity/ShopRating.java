@@ -36,6 +36,9 @@ public class ShopRating {
     @Column(name = "shop_rating_count", nullable = false)
     private Integer shopRatingCount;
 
+    @Column(name = "shop_favorite_count", nullable = false)
+    private Integer shopFavoriteCount;
+
     @Column(name = "shop_rating_avg", nullable = false)
     private Integer shopRatingAverage;
 }

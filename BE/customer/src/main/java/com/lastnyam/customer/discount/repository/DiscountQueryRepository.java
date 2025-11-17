@@ -10,8 +10,6 @@ import com.lastnyam.customer.global.dto.ShopInfo;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -250,13 +248,15 @@ public class DiscountQueryRepository {
         }
 
         public void addSortCondition(DiscountSortType type) {
+            sql.append(" ORDER BY");
             switch (type) {
-                case RATING -> sql.append(" ORDER BY sr.shop_rating_avg DESC,");
-                case CLOSEST -> sql.append(" ORDER BY distance ASC,");
-                case PRICE -> sql.append(" ORDER BY d.discount_price DESC,");
-                case DISCOUNT -> sql.append(" ORDER BY d.discount_rate DESC,");
+                case RATING -> sql.append(" sr.shop_rating_avg DESC");
+                case CLOSEST -> sql.append(" distance ASC");
+                case PRICE -> sql.append(" d.discount_price DESC");
+                case DISCOUNT -> sql.append(" d.discount_rate DESC");
+                default -> sql.append(" sr.shop_favorite_count DESC");
             }
-            sql.append(" discount_id DESC");
+            sql.append(" ,discount_id DESC");
         }
 
         public void addLimitCondition(Integer count) {

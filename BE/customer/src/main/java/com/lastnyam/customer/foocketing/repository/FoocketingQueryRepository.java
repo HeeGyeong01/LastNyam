@@ -215,10 +215,11 @@ public class FoocketingQueryRepository {
 
         public void addSortCondition(FoocketingSortType type) {
 
-            sql.append(" ORDER BY f.foocketing_close_time ASC");
+            sql.append(" ORDER BY");
             switch (type) {
-                case CLOSEST -> sql.append(" ,distance ASC");
-                case PRICE -> sql.append(" ,m.menu_price DESC");
+                case CLOSEST -> sql.append(" distance ASC");
+                case PRICE -> sql.append(" m.menu_price DESC");
+                default -> sql.append(" f.foocketing_close_time ASC");
             }
         }
 
