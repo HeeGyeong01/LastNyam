@@ -9,10 +9,13 @@ import { FoocketingList } from '@/features/foocketing/component';
 import { searchDiscount } from '@/features/discount/api';
 import { searchFoocketing } from '@/features/foocketing/api';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
+import { useLayout } from '@/contexts/LayoutContext';
+import { discountSortLabels, foocketingSortLabels } from '@/shared/components/SortBottomSheet';
 import type { DiscountSearchItem, DiscountSortType } from '@/features/discount/type';
 import type { FoocketingSearchItem, FoocketingSortType } from '@/features/foocketing/type';
 // Note: SearchTab type is defined locally in this file
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Button } from '@shared/components/Button';
 
 type SearchTab = 'discount' | 'foocketing';
 
@@ -25,8 +28,10 @@ export default function Search() {
 
   const [keyword, setKeyword] = useState(keywordFromUrl);
   const [activeTab, setActiveTab] = useState<SearchTab>(tabFromUrl);
-  const [discountSort] = useState<DiscountSortType>('RATING');
-  const [foocketingSort] = useState<FoocketingSortType>('IMMINENT');
+  const [discountSort, setDiscountSort] = useState<DiscountSortType>('FAVORITES');
+  const [foocketingSort, setFoocketingSort] = useState<FoocketingSortType>('IMMINENT');
+  
+  const { openSortBottomSheet } = useLayout();
 
   // 마감세일 검색 결과 상태
   const [discounts, setDiscounts] = useState<DiscountSearchItem[]>([]);
@@ -217,6 +222,30 @@ export default function Search() {
     setKeyword(value);
   };
 
+  const handleSortClick = () => {
+    // activeTab에 따라 discount 또는 foocketing sort 바텀시트 열기
+    if (activeTab === 'discount') {
+      openSortBottomSheet('discount', {
+        currentSort: discountSort,
+        onSortSelect: (selectedSort) => setDiscountSort(selectedSort as DiscountSortType),
+      });
+    } else {
+      openSortBottomSheet('foocketing', {
+        currentSort: foocketingSort,
+        onSortSelect: (selectedSort) => setFoocketingSort(selectedSort as FoocketingSortType),
+      });
+    }
+  };
+  
+  // activeTab에 따라 표시할 sort label (SortBottomSheet에서 관리하는 데이터 사용)
+  const getSortLabel = () => {
+    if (activeTab === 'discount') {
+      return discountSortLabels[discountSort].label;
+    } else {
+      return foocketingSortLabels[foocketingSort].label;
+    }
+  };
+
   return (
     <>
       <PageHeader title="검색" variant="light" />
@@ -233,12 +262,18 @@ export default function Search() {
 
         {/* 탭 */}
         {keyword.length > 0 && (
-          <Tab
-            tabLabels={['마감세일', '푸켓팅']}
-            defaultSelectedIndex={activeTab === 'discount' ? 0 : 1}
-            onTabChange={handleTabChange}
-            className="px-0"
-          />
+          <div className="flex justify-between">
+            <Tab
+              tabLabels={['마감세일', '푸켓팅']}
+              defaultSelectedIndex={activeTab === 'discount' ? 0 : 1}
+              onTabChange={handleTabChange}
+              className="px-0"
+            />
+            <Button btnStyle="ghost" size="default" onClick={handleSortClick} className="px-0">
+              <span>{getSortLabel()}</span>
+              <ChevronDownIcon className="w-3.5 h-3.5" />
+            </Button>   
+          </div>
         )}
 
         {/* 검색 결과 */}

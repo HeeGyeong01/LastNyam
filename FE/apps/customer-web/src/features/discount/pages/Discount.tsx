@@ -16,29 +16,7 @@ export default function Discount() {
   // 지도 중심 좌표 상태 (지도 이동 시 업데이트)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
-  // 정렬 옵션
-  const sortLabels: Record<DiscountSortType, { label: string; description: string }> = {
-    FAVORITES: {
-      label: '찜하기순',
-      description: '찜한 가게를 우선적으로 보여줍니다',
-    },
-    RATING: {
-      label: '별점순',
-      description: '별점이 높은 순으로 정렬됩니다',
-    },
-    CLOSEST: {
-      label: '거리순',
-      description: '가까운 거리 순으로 정렬됩니다',
-    },
-    DISCOUNT: {
-      label: '할인율순',
-      description: '할인율이 높은 순으로 정렬됩니다',
-    },
-    PRICE: {
-      label: '가격순',
-      description: '가격이 낮은 순으로 정렬됩니다',
-    },
-  };
+  // 정렬 옵션 (SortBottomSheet에서 관리)
   const [sort, setSort] = useState<DiscountSortType>('FAVORITES');
 
   // 마감세일 데이터 가져오기
@@ -126,7 +104,6 @@ export default function Discount() {
             <>
               <DiscountListHeader
                 sort={sort}
-                sortLabels={sortLabels}
                 onSortSelect={setSort} // sort 변경 시 setSort 실행 → useDiscountList의 queryKey 변경 → API 재요청
               />
               <DiscountList

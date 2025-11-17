@@ -5,24 +5,23 @@ import type { FoocketingSortType } from '../type/foocketing';
 import { formatTimeToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
 import { useLayout } from '@/contexts/LayoutContext';
+import { foocketingSortLabels } from '@/shared/components/SortBottomSheet';
 
 interface FoocketingListHeaderProps {
   sort: FoocketingSortType;
-  sortLabels: Record<FoocketingSortType, { label: string; description: string }>;
   onSortSelect: (sort: FoocketingSortType) => void;
 }
 
 export default function FoocketingListHeader({
   sort,
-  sortLabels,
   onSortSelect,
 }: FoocketingListHeaderProps) {
   const { openSortBottomSheet } = useLayout();
 
   const handleSortClick = () => {
-    // 단방향 데이터 흐름:
-    // 1. 부모에서 sort 상태와 setSort(onSortSelect)를 props로 받음
-    // 2. Context에 현재 sort와 콜백을 전달하여 바텀시트 열기
+    // 단방향 데이터 흐름 (각 페이지에서 sort 상태 소유):
+    // 1. 부모(Foocketing.tsx)에서 sort 상태와 setSort(onSortSelect)를 props로 받음
+    // 2. Context에 현재 sort와 콜백을 전달하여 바텀시트 열기 (UI 상태만 Context에서 관리)
     // 3. SortBottomSheet에서 선택 시 콜백 호출 → 부모의 setSort 실행
     // 4. 부모의 sort 상태 변경 → useFoocketingList의 queryKey 변경 → API 재요청
     openSortBottomSheet('foocketing', {
@@ -57,7 +56,7 @@ export default function FoocketingListHeader({
 
       {/* 정렬 옵션 */}
       <Button btnStyle="ghost" size="default" onClick={handleSortClick} className="px-0">
-        <span>{sortLabels[sort].label}</span>
+        <span>{foocketingSortLabels[sort].label}</span>
         <ChevronDownIcon className="w-3.5 h-3.5" />
       </Button>
     </div>

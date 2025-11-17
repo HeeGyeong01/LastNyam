@@ -10,10 +10,10 @@ interface SortOption {
 }
 
 // 마감세일 정렬 옵션
-const discountSortLabels: Record<DiscountSortType, SortOption> = {
+export const discountSortLabels: Record<DiscountSortType, SortOption> = {
   FAVORITES: {
     label: '찜하기순',
-    description: '찜한 가게를 우선적으로 보여줍니다',
+    description: '사용자가 많이 찜한 순으로 정렬됩니다',
   },
   RATING: {
     label: '별점순',
@@ -21,7 +21,7 @@ const discountSortLabels: Record<DiscountSortType, SortOption> = {
   },
   CLOSEST: {
     label: '거리순',
-    description: '가까운 거리 순으로 정렬됩니다',
+    description: '현재 위치에서 가장 가까운 순으로 정렬됩니다',
   },
   DISCOUNT: {
     label: '할인율순',
@@ -34,18 +34,18 @@ const discountSortLabels: Record<DiscountSortType, SortOption> = {
 };
 
 // 푸켓팅 정렬 옵션
-const foocketingSortLabels: Record<FoocketingSortType, SortOption> = {
+export const foocketingSortLabels: Record<FoocketingSortType, SortOption> = {
   IMMINENT: {
     label: '마감순',
     description: '푸켓팅 시간이 임박한 순으로 정렬됩니다',
   },
   CLOSEST: {
     label: '거리순',
-    description: '가까운 거리 순으로 정렬됩니다',
+    description: '현재 위치에서 가장 가까운 순으로 정렬됩니다',
   },
   PRICE: {
-    label: '가격순',
-    description: '가격이 낮은 순으로 정렬됩니다',
+    label: '정가순',
+    description: '할인 전 기존 판매가가 높은 음식 순으로 정렬됩니다',
   },
 };
 
@@ -89,9 +89,7 @@ export default function SortBottomSheet() {
                 className="self-stretch inline-flex justify-start items-center gap-2 px-4 py-3 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex-1 flex flex-col justify-start items-start gap-1 min-w-0">
-                  <div className={`p1-b text-primary leading-6 text-left ${
-                    isSelected ? 'text-slate-900' : 'text-slate-600'
-                  }`}>
+                  <div className="p1-b text-primary leading-6 text-left">
                     {option.label}
                   </div>
                   <div className="p3 text-tertiary leading-4 text-left">

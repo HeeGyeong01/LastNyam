@@ -67,16 +67,18 @@ export function useDiscountList(options: UseDiscountListOptions = {}) {
 
   // React Query를 사용한 마감세일 목록 조회
   // queryKey에는 디바운싱된 좌표만 포함하여 불필요한 API 호출 방지
+  // sort는 기본값 'FAVORITES'를 명시적으로 전달하여 백엔드 기본값(RATING) 사용 방지
+  const finalSort = sort ?? 'FAVORITES';
   const {
     data,
     isLoading: loading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['discount', 'list', category, sort, debouncedLat, debouncedLng],
+    queryKey: ['discount', 'list', category, finalSort, debouncedLat, debouncedLng],
     queryFn: () => getDiscountList({
       category,
-      sort,
+      sort: finalSort,
       // 디바운싱된 lat, lng가 있으면 전달하고, 없으면 API 함수에서 자동으로 가져옴
       ...(debouncedLat && debouncedLng ? { lat: debouncedLat, lng: debouncedLng } : {}),
     }),

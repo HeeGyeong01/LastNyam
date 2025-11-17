@@ -16,21 +16,7 @@ export default function Foocketing() {
   // 지도 중심 좌표 상태 (지도 이동 시 업데이트)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
-  // 정렬 옵션
-  const sortLabels: Record<FoocketingSortType, { label: string; description: string }> = {
-    IMMINENT: {
-      label: '마감순',
-      description: '푸켓팅 시간이 임박한 순으로 정렬됩니다',
-    },
-    CLOSEST: {
-      label: '거리순',
-      description: '가까운 거리 순으로 정렬됩니다',
-    },
-    PRICE: {
-      label: '가격순',
-      description: '가격이 낮은 순으로 정렬됩니다',
-    },
-  };
+  // 정렬 옵션 (SortBottomSheet에서 관리)
   const [sort, setSort] = useState<FoocketingSortType>('IMMINENT');
 
   // 푸켓팅 데이터 가져오기
@@ -117,7 +103,6 @@ export default function Foocketing() {
             <>
               <FoocketingListHeader
                 sort={sort}
-                sortLabels={sortLabels}
                 onSortSelect={setSort} // sort 변경 시 setSort 실행 → useFoocketingList의 queryKey 변경 → API 재요청
               />
               <FoocketingList
