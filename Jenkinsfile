@@ -405,6 +405,7 @@ pipeline {
                     ]) {
                         sh """
                         npm install
+                        chmod -R 755 .
                         cp -v \$OWNER_ENV ./.env
                         echo "📦 FE Owner 빌드 결과물을 원격 서버로 전송 중..."
                         rsync -avz --delete \
