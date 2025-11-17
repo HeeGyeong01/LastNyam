@@ -9,6 +9,8 @@ import { useShopDetail } from '@/features/shop/hook';
 import type { ShopDetailFoocketing } from '@/features/shop/type';
 import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
 import { useLayout } from '@/contexts/LayoutContext';
+import { useFavorite } from '@/features/favorite/hook/useFavorite';
+import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 
 export default function ShopDetail() {
   const { id } = useParams();
@@ -29,6 +31,22 @@ export default function ShopDetail() {
   } = useShopDetail({
     shopId: id ? Number(id) : 0, // id가 없으면 0 (enabled: !!shopId로 쿼리 실행 안됨)
   });
+
+  // 찜하기 mutation 훅
+  const shopId = id ? Number(id) : 0;
+  const { addFavorite, removeFavorite, isPending: isFavoritePending } = useFavorite(shopId);
+  const requireAuth = useRequireAuth();
+
+  // 찜하기 버튼 클릭 핸들러
+  const handleFavoriteClick = () => {
+    requireAuth(() => {
+      if (detail?.favorited) {
+        removeFavorite();
+      } else {
+        addFavorite();
+      }
+    });
+  };
 
   if (error) {
     console.log('가게 상세 조회 에러:', error);
@@ -134,6 +152,9 @@ export default function ShopDetail() {
             shopName={detail.shopName}
             rating={detail.rating}
             ratingCount={detail.ratingCount}
+            favorited={detail.favorited ?? false}
+            onFavoriteClick={handleFavoriteClick}
+            isFavoritePending={isFavoritePending}
           />
           {/* 가게 정보 탭 (노쇼 시간, 가게 위치, 가게 소개) */}
           <div className="w-full mt-28">

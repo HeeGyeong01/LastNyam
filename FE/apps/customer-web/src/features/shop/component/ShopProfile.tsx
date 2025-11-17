@@ -10,6 +10,9 @@ interface ShopProfileProps {
   shopName: string;
   rating: number;
   ratingCount: number;
+  favorited?: boolean; // 찜하기 여부
+  onFavoriteClick?: () => void; // 찜하기 버튼 클릭 핸들러
+  isFavoritePending?: boolean; // 찜하기 처리 중 여부
 }
 
 export default function ShopProfile({
@@ -17,6 +20,9 @@ export default function ShopProfile({
   shopName,
   rating,
   ratingCount,
+  favorited = false,
+  onFavoriteClick,
+  isFavoritePending = false,
 }: ShopProfileProps) {
   return (
     <div className="relative w-full h-40">
@@ -53,10 +59,21 @@ export default function ShopProfile({
               <PhoneIcon className="w-4 h-4 stroke-2 text-tertiary" />
               <span className="text-secondary p2-b">전화</span>
             </div>
-            <div className="flex items-center gap-1">
-              <HeartIcon className="w-5 h-5 stroke-2 text-tertiary" fill="none" />
-              <span className="text-secondary p2-b">{ratingCount.toLocaleString('ko-KR')}</span>
-            </div>
+            <button
+              className="flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={onFavoriteClick}
+              disabled={isFavoritePending}
+            >
+              <HeartIcon
+                className={`w-5 h-5 stroke-2 ${
+                  favorited ? 'text-brand fill-brand' : 'text-tertiary'
+                }`}
+                fill={favorited ? 'currentColor' : 'none'}
+              />
+              <span className={`p2-b ${favorited ? 'text-brand' : 'text-secondary'}`}>
+                찜하기
+              </span>
+            </button>
             <div className="flex items-center gap-1">
               <ShareIcon className="w-5 h-5 text-tertiary" />
               <span className="text-secondary p2-b">공유</span>

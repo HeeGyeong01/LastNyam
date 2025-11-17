@@ -44,3 +44,49 @@ export const getFavoriteShops = async (
   return response.data.data;
 };
 
+/**
+ * 찜하기
+ * POST /api/shop/{shopId}/favorite
+ * 
+ * @param shopId - 가게 ID
+ * @param userId - 사용자 ID (선택, 없으면 store에서 가져옴)
+ */
+export const addFavorite = async (
+  shopId: number,
+  userId?: number
+): Promise<{ shopId: number; userId: number; favorited: boolean }> => {
+  const finalUserId = userId ?? useAuthStore.getState().userId;
+  if (!finalUserId) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  const response = await apiClient.post<ApiResponseWrapper<{ shopId: number; userId: number; favorited: boolean }>>(
+    `/api/shop/${shopId}/favorite`,
+    { userId: finalUserId }
+  );
+  return response.data.data;
+};
+
+/**
+ * 찜취소
+ * DELETE /api/shop/{shopId}/favorite
+ * 
+ * @param shopId - 가게 ID
+ * @param userId - 사용자 ID (선택, 없으면 store에서 가져옴)
+ */
+export const removeFavorite = async (
+  shopId: number,
+  userId?: number
+): Promise<{ shopId: number; userId: number; favorited: boolean }> => {
+  const finalUserId = userId ?? useAuthStore.getState().userId;
+  if (!finalUserId) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  const response = await apiClient.delete<ApiResponseWrapper<{ shopId: number; userId: number; favorited: boolean }>>(
+    `/api/shop/${shopId}/favorite`,
+    { data: { userId: finalUserId } }
+  );
+  return response.data.data;
+};
+
