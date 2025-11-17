@@ -36,6 +36,16 @@ public class ShopView {
     @Column(name = "shop_favorite_prev_count", nullable = false)
     private Integer shopFavoritePrevCount;
 
+    // 전주 통계 데이터 (저저번주와 비교하기 위한 기준)
+    @Column(name = "shop_total_sales_prev_count")
+    private Integer shopTotalSalesPrevCount;
+
+    @Column(name = "shop_total_revenue_prev")
+    private Integer shopTotalRevenuePrev;
+
+    @Column(name = "shop_pocketing_prev_count")
+    private Integer shopPocketingPrevCount;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id", insertable = false, updatable = false)
     private Shop shop;
