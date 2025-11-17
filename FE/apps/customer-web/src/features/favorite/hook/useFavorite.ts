@@ -13,7 +13,7 @@ export function useFavorite(shopId: number) {
 
   // 찜하기 mutation
   const addFavoriteMutation = useMutation({
-    mutationFn: () => addFavorite(shopId, userId),
+    mutationFn: () => addFavorite(shopId, userId ?? undefined),
     onSuccess: () => {
       // ShopDetail 쿼리 캐시 무효화하여 최신 데이터 가져오기
       queryClient.invalidateQueries({ queryKey: ['shop', 'detail', shopId] });
@@ -26,7 +26,7 @@ export function useFavorite(shopId: number) {
 
   // 찜취소 mutation
   const removeFavoriteMutation = useMutation({
-    mutationFn: () => removeFavorite(shopId, userId),
+    mutationFn: () => removeFavorite(shopId, userId ?? undefined),
     onSuccess: () => {
       // ShopDetail 쿼리 캐시 무효화하여 최신 데이터 가져오기
       queryClient.invalidateQueries({ queryKey: ['shop', 'detail', shopId] });
