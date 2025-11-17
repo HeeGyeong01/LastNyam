@@ -205,3 +205,24 @@ export const getRecommendedFoocketingList = async (
   return response.data.data;
 };
 
+/**
+ * 서버 시간 조회
+ * GET /api/time
+ * 
+ * 네트워크 지연을 고려하여 정확한 서버 시간을 반환합니다.
+ * 
+ * @returns 서버의 현재 시간 (ISO 8601 형식)
+ */
+export const getServerTime = async (): Promise<string> => {
+  const requestStartTime = Date.now();
+  
+  const response = await apiClient.get<ApiResponseWrapper<{ currentTime: string }>>('/api/time');
+  
+  const requestEndTime = Date.now();
+  const networkLatency = (requestEndTime - requestStartTime) / 2; // 왕복 지연의 절반
+  const estimatedServerTimeAtRequest = new Date(response.data.data.currentTime).getTime() - networkLatency;
+  
+  // 네트워크 지연을 고려한 서버 시간 반환
+  return new Date(estimatedServerTimeAtRequest).toISOString();
+};
+
