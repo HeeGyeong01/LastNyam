@@ -38,7 +38,7 @@ public class ShopService {
     private final ShopRatingRepository shopRatingRepository;
 
     @Transactional(readOnly = true)
-    public ShopDetailResponseDto getShopDetail(Integer shopId, Double currentLat, Double currentLng) {
+    public ShopDetailResponseDto getShopDetail(Integer shopId, Double currentLat, Double currentLng, Integer userId) {
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
 
@@ -47,6 +47,14 @@ public class ShopService {
         int ratingCount = rating != null ? rating.getShopRatingCount() : 0;
         double ratingAvg =
                 ratingCount > 0 ? (double) Objects.requireNonNull(rating).getShopRatingSum() / ratingCount : 0.0;
+        
+        int favoriteCount = rating != null ? rating.getShopFavoriteCount() : 0;
+
+        // 즐겨찾기 여부 (userId 있을 때만 계산)
+        Boolean favorited = null;
+        if (userId != null) {
+                favorited = favoriteRepository.existsByUserUserIdAndShopShopId(userId, shopId);
+        }
 
         // 마감세일 (미래만)
         LocalDateTime now = LocalDateTime.now();
@@ -100,6 +108,8 @@ public class ShopService {
                 .ownerId(shop.getOwner() != null ? shop.getOwner().getOwnerId() : null)
                 .rating(ratingAvg)
                 .ratingCount(ratingCount)
+                .favoriteCount(favoriteCount)
+                .favorited(favorited)
                 .distanceMeters(distanceMeters)
                 .discounts(discountDtos)
                 .foocketings(foocketingDtos)
