@@ -8,9 +8,24 @@ import DiscountCategoryTab from './DiscountCategoryTab';
 import { Button } from '@shared/components/Button';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useAuthStore } from '@/store/useAuthStore';
+import { queryClient } from '@/lib/queryClient';
 
 export default function Home() {
   const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+
+  // 로그아웃 플래그 확인 및 처리
+  useEffect(() => {
+    const shouldLogout = sessionStorage.getItem('shouldLogout');
+    if (shouldLogout === 'true') {
+      sessionStorage.removeItem('shouldLogout');
+      // 로그아웃 처리
+      logout();
+      // React Query 캐시 초기화
+      queryClient.invalidateQueries();
+    }
+  }, [logout]);
 
   // 푸켓팅 목록 가져오기 (기본 카테고리 1, 정렬 IMMINENT)
   const { foocketings, loading, error } = useFoocketingList({
