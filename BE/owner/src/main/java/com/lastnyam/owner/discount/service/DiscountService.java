@@ -169,6 +169,74 @@ public class DiscountService {
         }
     }
 
+    @Transactional
+    public void updateDiscount(Integer userId, Integer ownerId, Integer shopId, Integer discountId,
+            com.lastnyam.owner.discount.dto.DiscountUpdateRequest request) {
+        checkPermission(userId, ownerId);
+
+        // 가게 확인 및 점주 권한 확인
+        Shop shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new DiscountException(ShopErrorCode.SHOP_NOT_FOUND));
+        if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+            throw new DiscountException(ShopErrorCode.NOT_SHOP_OWNER);
+        }
+
+        // 마감세일 확인
+        Discount discount = discountRepository.findById(discountId)
+                .orElseThrow(() -> new DiscountException(DiscountErrorCode.DISCOUNT_NOT_FOUND));
+
+        // 마감세일이 해당 가게의 메뉴인지 확인
+        if (!discount.getMenu().getShop().getShopId().equals(shopId)) {
+            throw new DiscountException(ShopErrorCode.MENU_NOT_IN_SHOP);
+        }
+
+		// 할인 가격 수정이 있는 경우
+		if (request.getDiscountPrice() != null) {
+			Menu menu = discount.getMenu();
+			Integer originalPrice = menu.getMenuPrice();
+			Integer newDiscountPrice = request.getDiscountPrice();
+
+			// 할인 가격 검증
+			if (newDiscountPrice >= originalPrice) {
+				throw new DiscountException(DiscountErrorCode.INVALID_DISCOUNT_PRICE);
+			}
+
+			// 할인율 재계산 (소수점 버림)
+			Integer newDiscountRate = (int) (((double) (originalPrice - newDiscountPrice) / originalPrice) * 100);
+
+			discount.setDiscountPrice(newDiscountPrice);
+			discount.setDiscountRate(newDiscountRate);
+		}
+
+		// 마감세일 수량 수정이 있는 경우
+		if (request.getDiscountMenuAmount() != null) {
+			discount.setDiscountMenuAmount(request.getDiscountMenuAmount());
+		}
+    }
+
+    @Transactional
+    public void deleteDiscount(Integer userId, Integer ownerId, Integer shopId, Integer discountId) {
+        checkPermission(userId, ownerId);
+
+        // 가게 확인 및 점주 권한 확인
+        Shop shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new DiscountException(ShopErrorCode.SHOP_NOT_FOUND));
+        if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+            throw new DiscountException(ShopErrorCode.NOT_SHOP_OWNER);
+        }
+
+        // 마감세일 확인
+        Discount discount = discountRepository.findById(discountId)
+                .orElseThrow(() -> new DiscountException(DiscountErrorCode.DISCOUNT_NOT_FOUND));
+
+        // 마감세일이 해당 가게의 메뉴인지 확인
+        if (!discount.getMenu().getShop().getShopId().equals(shopId)) {
+            throw new DiscountException(ShopErrorCode.MENU_NOT_IN_SHOP);
+        }
+
+        discountRepository.delete(discount);
+    }
+
     private static void checkPermission(Integer userId, Integer ownerId) {
         if (!Objects.equals(userId, ownerId)) {
             throw new OwnerException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
