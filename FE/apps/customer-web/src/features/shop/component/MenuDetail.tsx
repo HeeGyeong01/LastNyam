@@ -52,7 +52,6 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
         
         console.log('🚀 장바구니 페이지로 이동');
         closeMenuDetail();
-        navigate('/cart');
       } catch (error) {
         console.error('❌ 장바구니 추가 실패:', error);
         console.error('에러 상세:', {
