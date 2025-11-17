@@ -32,6 +32,36 @@ const CATEGORY_OPTIONS: { value: string; label: string }[] = [
 const DEFAULT_SHOP_LAT = 37.501452;
 const DEFAULT_SHOP_LNG = 127.039474;
 
+/**
+ * 주어진 중심 좌표에서 반경(미터) 내의 랜덤 좌표를 생성합니다.
+ * @param lat 중심 위도
+ * @param lng 중심 경도
+ * @param radiusInMeters 반경 (미터)
+ * @returns 랜덤 좌표 { lat, lng }
+ */
+function getRandomCoordinateWithinRadius(
+  lat: number,
+  lng: number,
+  radiusInMeters: number,
+): { lat: number; lng: number } {
+  // 반경 내 랜덤 거리와 각도 생성
+  const randomRadius = Math.random() * radiusInMeters;
+  const randomAngle = Math.random() * 2 * Math.PI;
+
+  // 랜덤 좌표 계산
+  // 위도 1도 ≈ 111,000m
+  // 경도 1도 ≈ 111,000m * cos(위도)
+  const deltaLat = (randomRadius / 111000) * Math.cos(randomAngle);
+  const deltaLng =
+    (randomRadius / (111000 * Math.cos((lat * Math.PI) / 180))) *
+    Math.sin(randomAngle);
+
+  return {
+    lat: lat + deltaLat,
+    lng: lng + deltaLng,
+  };
+}
+
 interface Step2FormValues {
   storeName: string;
   address: string;
@@ -161,10 +191,17 @@ export default function StoreInformationStep2Page() {
           throw new Error("가게 카테고리를 선택해주세요.");
         }
 
+        // 500m 반경 내 랜덤 좌표 생성
+        const randomCoord = getRandomCoordinateWithinRadius(
+          DEFAULT_SHOP_LAT,
+          DEFAULT_SHOP_LNG,
+          500,
+        );
+
         const payload: CreateShopRequest = {
           shopName: formValues.storeName.trim(),
-          shopLat: DEFAULT_SHOP_LAT,
-          shopLng: DEFAULT_SHOP_LNG,
+          shopLat: randomCoord.lat,
+          shopLng: randomCoord.lng,
           shopAddress: formValues.address.trim(),
           shopDescription: formValues.storeDescription.trim(),
           shopBanner: imageFile.fileUrl,
@@ -206,7 +243,7 @@ export default function StoreInformationStep2Page() {
         setShops(nextShops);
 
         alert("가게 등록이 완료되었습니다.");
-        navigate("/owner/orders/list", { replace: true });
+        navigate("/orders/list", { replace: true });
       } catch (error) {
         console.error("⚠️ 가게 등록 실패:", error);
         const message =
@@ -282,7 +319,7 @@ export default function StoreInformationStep2Page() {
             placeholder: "가게 이름을 입력해주세요",
             value: formValues.storeName,
             onChange: handleFieldChange("storeName"),
-            autoComplete: "organization",
+            autoComplete: "off",
           }}
         />
 
@@ -295,7 +332,7 @@ export default function StoreInformationStep2Page() {
             placeholder: "가게 주소를 입력해주세요",
             value: formValues.address,
             onChange: handleFieldChange("address"),
-            autoComplete: "street-address",
+            autoComplete: "off",
           }}
         />
 
@@ -310,6 +347,8 @@ export default function StoreInformationStep2Page() {
             onChange: handleFieldChange("storeDescription"),
             rows: 4,
             className: "min-h-[120px]",
+            maxLength: 200,
+            autoComplete: "off",
           }}
         />
 

@@ -64,15 +64,25 @@ export default function ReceiptConfirmPage() {
   useEffect(() => {
     const fetchTransactionDetail = async () => {
       try {
-        // URL 파라미터에서 transactionId와 type 가져오기
-        const transactionIdParam = searchParams.get("transactionId");
-        const typeParam = searchParams.get("type") as TransactionType | null;
+        // URL 파라미터에서 id와 type 가져오기
+        const transactionIdParam = searchParams.get("id");
+        const typeParamRaw = searchParams.get("type");
 
-        if (!transactionIdParam || !typeParam) {
+        if (!transactionIdParam || !typeParamRaw) {
           setError("거래 정보가 없습니다.");
           setIsLoading(false);
           return;
         }
+
+        // type 검증 (대소문자 구분 없이)
+        const typeParamUpper = typeParamRaw.toUpperCase();
+        if (typeParamUpper !== "DISCOUNT" && typeParamUpper !== "FOOCKETING") {
+          setError("지원하지 않는 거래 타입입니다.");
+          setIsLoading(false);
+          return;
+        }
+
+        const typeParam = typeParamUpper as TransactionType;
 
         if (!ownerId || !accessToken) {
           setError("인증 정보가 없습니다.");

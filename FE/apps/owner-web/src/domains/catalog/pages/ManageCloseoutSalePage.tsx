@@ -75,7 +75,7 @@ export default function ManageCloseoutSalePage() {
   const [discountMenus, setDiscountMenus] = React.useState<CloseoutMenuItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [closeoutSaleModalOpen, setCloseoutSaleModalOpen] = React.useState(false)
-  const { ownerId, accessToken, shops, getMenuById, menus } = useOwnerStore()
+  const { ownerId, accessToken, shops, getMenuById, menus, setMenus, setMenusLoading } = useOwnerStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -87,6 +87,38 @@ export default function ManageCloseoutSalePage() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   )
+
+  // 메뉴 데이터 로드 (store에 없으면)
+  React.useEffect(() => {
+    const fetchMenus = async () => {
+      // 이미 메뉴가 있으면 스킵
+      if (menus.length > 0) {
+        return
+      }
+
+      if (!ownerId || !accessToken || shops.length === 0) {
+        return
+      }
+
+      try {
+        console.log('📋 마감세일 페이지에서 메뉴 로드 중...')
+        setMenusLoading(true)
+        const shopId = shops[0].shopId
+        const response = await menuApi.getMenus(ownerId, shopId, accessToken)
+        
+        if (response.data?.menus) {
+          setMenus(response.data.menus)
+          console.log('✅ 메뉴 로드 완료:', response.data.menus.length, '개')
+        }
+      } catch (error) {
+        console.error('❌ 메뉴 로드 실패:', error)
+      } finally {
+        setMenusLoading(false)
+      }
+    }
+
+    fetchMenus()
+  }, [ownerId, accessToken, shops, menus.length, setMenus, setMenusLoading])
 
   // 마감세일 목록 조회
   React.useEffect(() => {
@@ -237,12 +269,12 @@ export default function ManageCloseoutSalePage() {
 
             <section className="bg-bg-0 rounded-2xl shadow-sm overflow-hidden pb-4">
               {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <p className="p1 text-secondary">로딩 중...</p>
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">마감세일 목록을 불러오는 중...</p>
                 </div>
               ) : discountMenus.length === 0 ? (
-                <div className="flex items-center justify-center py-20">
-                  <p className="p1 text-secondary">등록된 마감세일 메뉴가 없습니다</p>
+                <div className="flex items-center justify-center py-10">
+                  <p className="p2 text-secondary">등록된 마감세일 메뉴가 없습니다.</p>
                 </div>
               ) : (
                 <DndContext

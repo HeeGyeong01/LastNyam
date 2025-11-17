@@ -2,21 +2,29 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ClockIcon } from '@heroicons/react/24/outline';
-import { getFoocketingDetail } from '@/features/foocketing/api';
+import {
+  getFoocketingDetail,
+  enterFoocketing,
+  getFoocketingResult,
+} from '@/features/foocketing/api';
 import { Badge } from '@shared/components/Badge';
-import { PageHeader } from '@/shared/components';
+import { PageHeader, LoadingModal } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
 import { BottomSheet } from '@/shared/components';
 import NaverMap from '@/shared/components/NaverMap';
 import { formatTimeToKorean, formatISOStringToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
 import { useNavigate } from 'react-router-dom';
+import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isWaitingEntry, setIsWaitingEntry] = useState(false);
+  const [isWaitingResult, setIsWaitingResult] = useState(false);
   const navigate = useNavigate();
+  const requireAuth = useRequireAuth();
 
   const {
     data: detail,
@@ -58,7 +66,7 @@ export default function FoocketingDetail() {
 
     const scrollContainer = document.querySelector('.h-screen.overflow-y-auto');
     const target = scrollContainer || window;
-    
+
     target.addEventListener('scroll', handleScroll);
     return () => target.removeEventListener('scroll', handleScroll);
   }, []);
@@ -72,17 +80,67 @@ export default function FoocketingDetail() {
     return () => clearInterval(timer);
   }, []);
 
+  // 푸켓팅 참여하기 핸들러
+  const handleEnterFoocketing = () => {
+    requireAuth(async () => {
+      if (!id) {
+        return;
+      }
+      
+      try {
+        setIsWaitingEntry(true);
+        const entryResponse = await enterFoocketing(Number(id));
+        setIsWaitingEntry(false);
+
+        // success가 true이면 결과 조회 API 호출
+        if (entryResponse.success) {
+          setIsWaitingResult(true);
+          const result = await getFoocketingResult(Number(id));
+          setIsWaitingResult(false);
+
+          // 결과에 따라 성공/실패 페이지로 이동
+          if (result.success) {
+            navigate(`/foocketing-success/${id}`);
+          } else {
+            navigate(`/foocketing-fail/${id}`);
+          }
+        } else {
+          alert('푸켓팅 참여에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('푸켓팅 참여 실패:', error);
+        alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
+        setIsWaitingEntry(false);
+        setIsWaitingResult(false);
+      }
+    });
+  };
+
   return (
     <>
+      {/* 로딩 모달 - entryResponse 응답 대기 중 */}
+      <LoadingModal
+        isOpen={isWaitingEntry}
+        title="푸켓팅 참여 중입니다"
+        message="잠시만 기다려주세요"
+      />
+
+      {/* 로딩 모달 - result 응답 대기 중 */}
+      <LoadingModal
+        isOpen={isWaitingResult}
+        title="결과 확인 중입니다"
+        message="잠시만 기다려주세요"
+      />
+
       {/* Header - 화면 최상단에 고정, 이미지 위에 겹쳐서 표시 */}
       <div className="fixed top-0 left-0 right-0 max-w-[500px] mx-auto z-50">
-        <PageHeader 
-          title="푸켓팅 상세" 
-          variant={isScrolled ? 'light' : 'dark'} 
+        <PageHeader
+          title="푸켓팅 상세"
+          variant={isScrolled ? 'light' : 'dark'}
           className="sticky top-0"
         />
       </div>
-      
+
       {/* 이미지 - 스크롤 시 같이 움직임 */}
       {detail && !loading && (
         <div className="relative w-full h-40">
@@ -95,18 +153,15 @@ export default function FoocketingDetail() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
         </div>
       )}
-      
+
       {/* {loading && <p>로딩 중...</p>} */}
-      
-      {(error || !detail) && !loading && (
-        <p>페이지를 찾을 수 없습니다</p>
-      )}
-      
+
+      {(error || !detail) && !loading && <p>페이지를 찾을 수 없습니다</p>}
+
       {detail && !loading && (
         <div className="w-full inline-flex flex-col justify-center items-start gap-6">
           {/* 컨텐츠 영역 */}
           <div className="w-full p-4 flex flex-col justify-center items-start gap-6">
-
             {/* 메뉴 정보 섹션 */}
             <div className="self-stretch flex flex-col justify-start items-start gap-1">
               {/* 배지: "3등 안에 들면 성공이에요" */}
@@ -115,15 +170,11 @@ export default function FoocketingDetail() {
               </Badge>
 
               {/* 메뉴명 */}
-              <div className="text-primary h5-b line-clamp-1">
-                {detail.menu.name}
-              </div>
+              <div className="text-primary h5-b line-clamp-1">{detail.menu.name}</div>
 
               {/* 가격 */}
               <div className="flex items-center gap-1">
-                <div className="text-brand p1-b">
-                  0원
-                </div>
+                <div className="text-brand p1-b">0원</div>
                 <div className="text-secondary p2 line-through leading-5 line-clamp-1">
                   {detail.menu.price.toLocaleString()}원
                 </div>
@@ -149,12 +200,18 @@ export default function FoocketingDetail() {
                   navigate(`/shop/${detail.shop.shopId}`);
                 }}
               />
-              
+
               {/* 가게 위치 지도 */}
               <div className="self-stretch h-48 rounded-lg overflow-hidden">
                 <NaverMap
                   center={{ lat: detail.shop.lat, lng: detail.shop.lng }}
-                  markers={[{ lat: detail.shop.lat, lng: detail.shop.lng, title: detail.shop.name }]}
+                  markers={[
+                    {
+                      lat: detail.shop.lat,
+                      lng: detail.shop.lng,
+                      title: detail.shop.name,
+                    },
+                  ]}
                   zoom={16}
                   zoomControl={false}
                   className="w-full h-full"
@@ -169,7 +226,8 @@ export default function FoocketingDetail() {
       <BottomSheet>
         <div className="flex flex-col gap-3">
           <div className="text-primary p1-b text-center">
-            🔥지금 <span className="text-brand p1-b">{detail?.currentViewing}</span>명이 같은 푸드를 노리고 있어요!🔥
+            🔥지금 <span className="text-brand p1-b">{detail?.currentViewing}</span>
+            명이 같은 푸드를 노리고 있어요!🔥
           </div>
           <div className="flex gap-2">
             <div className="w-full flex flex-col py-4 bg-bg-2 rounded-2xl items-center gap-0.5">
@@ -189,8 +247,13 @@ export default function FoocketingDetail() {
               </div>
             </div>
           </div>
-          <Button btnStyle="filled-red" size="lg">
-            푸켓팅 참여하기
+          <Button
+            btnStyle="filled-red"
+            size="lg"
+            onClick={handleEnterFoocketing}
+            disabled={isWaitingEntry || isWaitingResult}
+          >
+            {isWaitingEntry || isWaitingResult ? '참여 중...' : '푸켓팅 참여하기'}
           </Button>
         </div>
       </BottomSheet>

@@ -13,6 +13,7 @@ export type FoocketingSortType = 'IMMINENT' | 'CLOSEST' | 'PRICE' ;
 // 푸켓팅 메뉴 (리스트용)
 export interface FoocketingMenu {
   name: string;
+  description: string | null;
   price: number;
   photoUrl: string;
 }
@@ -25,7 +26,7 @@ export interface FoocketingMenuDetail extends FoocketingMenu {
 // 푸켓팅 가게
 export interface FoocketingShop {
   shopId: number;
-  bannerUrl: string;
+  bannerUrl: string | null;
   name: string;
   lat: number;
   lng: number;
@@ -61,26 +62,51 @@ export interface FoocketingDetail extends Omit<FoocketingItem, 'menu'> {
 }
 
 
+
 //////////////////////////////////////////////////////////////
+// 푸켓팅 참여, 결과 조회
+
 // 푸켓팅 참여 응답
 export interface FoocketingEntryResponse {
   success: boolean;
-  entryId: number;
-  message: string;
 }
 
-// 푸켓팅 참여 결과
-export interface FoocketingResult {
-  foocketingId: number;
-  userId: number;
-  isWinner: boolean;
-  entryTime: string;
-  resultTime?: string;
-  message: string;
+// 푸켓팅 결과 조회 - 성공 시 shopInfo
+export interface FoocketingResultShopInfo {
+  shopId: number;
+  salesMenu: string[];
+  bannerUrl: string;
+  name: string;
+  lat: number;
+  lng: number;
+  distance: number;
+  rating: number;
+  ratingCount: number;
 }
+
+// 푸켓팅 결과 조회 - 성공 시
+export interface FoocketingResultSuccess {
+  success: true;
+  rank: number;
+  shopInfo: FoocketingResultShopInfo;
+}
+
+// 푸켓팅 결과 조회 - 실패 시
+export interface FoocketingResultFailure {
+  success: false;
+  rank: number;
+  otherFoocketingsOfShop: FoocketingItem[];
+  recommendedFoocketings: FoocketingItem[];
+}
+
+// 푸켓팅 참여 결과 (성공/실패 union type)
+export type FoocketingResult = FoocketingResultSuccess | FoocketingResultFailure;
+
 
 
 //////////////////////////////////////////////////////////////
+// 푸켓팅 검색
+
 // 푸켓팅 검색용 가게 정보 (shopId, bannerUrl 없음)
 export interface FoocketingSearchShop {
   name: string;
@@ -105,4 +131,18 @@ export interface FoocketingSearchData {
   nextCursor: string | null;
   hasNextPage: boolean;
 }
+
+
+//////////////////////////////////////////////////////////////
+// 푸켓팅 추천 목록
+
+// 푸켓팅 추천 아이템
+export interface RecommendedFoocketingItem {
+  foocketing: FoocketingItem;
+  visitedShop: boolean;
+  purchasedMenu: boolean;
+}
+
+// 푸켓팅 추천 목록 데이터
+export type RecommendedFoocketingListData = RecommendedFoocketingItem[];
 

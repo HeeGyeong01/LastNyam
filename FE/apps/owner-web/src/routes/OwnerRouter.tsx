@@ -28,7 +28,7 @@ const OwnerRootRedirect = () => {
 
   return (
     <Navigate
-      to={isAuthenticated ? "/owner/orders/list" : "/owner/login"}
+      to={isAuthenticated ? "/orders/list" : "/login"}
       replace
     />
   );
@@ -36,7 +36,7 @@ const OwnerRootRedirect = () => {
 
 const router = createBrowserRouter([
   {
-    path: "/owner",
+    path: "/",
     element: <App />,
     children: [
       {
@@ -188,6 +188,8 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  basename: "/owner"
+});
 
 export default router;

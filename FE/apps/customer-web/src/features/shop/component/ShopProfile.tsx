@@ -3,9 +3,10 @@
 import { PhoneIcon, ShareIcon } from '@heroicons/react/24/solid';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { HeartIcon } from '@/shared/assets/icons';
+import { getShopBannerUrl } from '@/shared/lib/image';
 
 interface ShopProfileProps {
-  shopBanner: string;
+  shopBanner: string | null;
   shopName: string;
   rating: number;
   ratingCount: number;
@@ -21,7 +22,7 @@ export default function ShopProfile({
     <div className="relative w-full h-40">
       <img
         className="w-full h-full object-cover"
-        src={shopBanner || 'https://placehold.co/400x200'}
+        src={getShopBannerUrl(shopBanner)}
         alt={shopName}
       />
       {/* 그라데이션 오버레이 - 위는 어둡고 아래는 투명 */}

@@ -1,4 +1,4 @@
-const DEFAULT_OWNER_API_BASE_URL = 'https://k13a101.p.ssafy.io';
+const DEFAULT_OWNER_API_BASE_URL = 'https://lastnyam.co.kr';
 const OWNER_API_BASE_URL =
   import.meta.env.VITE_OWNER_API_BASE_URL ?? DEFAULT_OWNER_API_BASE_URL;
 

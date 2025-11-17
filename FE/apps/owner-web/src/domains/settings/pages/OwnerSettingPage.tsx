@@ -56,7 +56,7 @@ export default function OwnerSettingPage() {
     } finally {
       clearAuth();
       setIsLoggingOut(false);
-      navigate("/owner/login", { replace: true });
+      navigate("/login", { replace: true });
     }
   };
 
@@ -69,17 +69,17 @@ export default function OwnerSettingPage() {
     {
       icon: ClipboardList,
       label: "메뉴 관리",
-      onClick: () => navigate("/owner/catalog/menu"),
+      onClick: () => navigate("/catalog/menu"),
     },
     {
       icon: Settings,
       label: "가게 관리",
-      onClick: () => navigate("/owner/settings/shop"),
+      onClick: () => navigate("/settings/shop"),
     },
     {
       icon: Presentation,
       label: "가게 통계",
-      onClick: () => navigate("/owner/insights/report"),
+      onClick: () => navigate("/insights/report"),
     },
     {
       icon: Calculator,
@@ -88,7 +88,7 @@ export default function OwnerSettingPage() {
     {
       icon: TestTube,
       label: "오너 테스트",
-      onClick: () => navigate("/owner/test"),
+      onClick: () => navigate("/test"),
     },
   ];
 
@@ -109,10 +109,10 @@ export default function OwnerSettingPage() {
         )}
         <div className="pl-5 flex flex-col gap-2 items-start justify-center flex-1 overflow-hidden">
           <button
-            onClick={() => navigate("/owner/settings/shop")}
+            onClick={() => navigate("/settings/shop")}
             className="flex flex-row gap-2.5 items-center justify-start w-full h-9 hover:opacity-80 transition-opacity"
           >
-            <div className="text-brand h2-b leading-9 flex items-center justify-start">
+            <div className="text-brand h2-b leading-9 flex items-center justify-start truncate">
               {isLoadingShops ? "로딩 중..." : storeName}
             </div>
             <ChevronRight className="w-6 h-6 flex-shrink-0" />

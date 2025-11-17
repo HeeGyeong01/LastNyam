@@ -183,7 +183,7 @@ export default function LoginPage() {
 
           <div className="mt-4 text-center">
             <span className="p2-r text-secondary">아직 회원이 아니신가요? </span>
-            <a href="/owner/signup" className="p2-b text-brand hover:underline">
+            <a href="/signup" className="p2-b text-brand hover:underline">
               회원가입
             </a>
           </div>

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BellIcon } from '@heroicons/react/24/outline';
+// import { BellIcon } from '@heroicons/react/24/outline';
 import { ShoppingBagIcon } from '@heroicons/react/24/solid';
 import TypoLogo from '@/shared/assets/typo-logo.svg?react';
 
@@ -19,12 +19,12 @@ export default function HomeHeader() {
       {/* 아이콘 버튼들 */}
       <div className="flex items-center gap-1">
         {/* 알림 버튼 */}
-        <button
+        {/* <button
           onClick={() => navigate('/notifications')}
           className="w-8 h-8 flex justify-center items-center"
         >
           <BellIcon className="w-5 h-5 text-primary" strokeWidth={2} />
-        </button>
+        </button> */}
 
         {/* 장바구니 버튼 */}
         <button

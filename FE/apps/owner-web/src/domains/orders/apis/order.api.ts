@@ -1,4 +1,4 @@
-const DEFAULT_OWNER_API_BASE_URL = "https://k13a101.p.ssafy.io";
+const DEFAULT_OWNER_API_BASE_URL = "https://lastnyam.co.kr";
 const OWNER_API_BASE_URL =
   import.meta.env.VITE_OWNER_API_BASE_URL ?? DEFAULT_OWNER_API_BASE_URL;
 
@@ -129,13 +129,13 @@ export const orderApi = {
 
   async updateOrderStatus(
     ownerId: number,
-    orderId: number | string,
+    transactionId: number | string,
     requestData: UpdateOrderStatusRequest,
     accessToken: string,
   ): Promise<UpdateOrderStatusResponse> {
     const url = `${sanitizeBaseUrl(
       OWNER_API_BASE_URL,
-    )}/api/owner/${ownerId}/order/${orderId}/status`;
+    )}/api/owner/${ownerId}/transaction/${transactionId}/status`;
 
     const response = await fetch(url, {
       method: "PATCH",

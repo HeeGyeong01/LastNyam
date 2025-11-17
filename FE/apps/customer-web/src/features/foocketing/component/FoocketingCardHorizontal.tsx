@@ -1,13 +1,14 @@
 import { StarIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { formatTimeToHHmm } from '@/shared/lib/time';
+import { getMenuImageUrl } from '@/shared/lib/image';
 
 interface FoocketingCardHorizontalProps {
   openTime: string; // ISO 8601 형식 (예: "2025-11-10T14:00:00")
   menuName: string;
   originalPrice: number;
   shopName?: string;
-  menuProfileImage: string;
+  menuProfileImage: string | null;
   distance?: number; // km 단위 (예: 1.2)
   rating?: number;
   reviewCount?: number;
@@ -38,7 +39,7 @@ export default function FoocketingCardHorizontal({
 
   return (
     <div
-      className={cn('flex w-full items-start gap-3 pt-0 pb-5 px-0 cursor-pointer', className)}
+      className={cn('w-full flex items-start gap-3 pt-0 pb-5 px-0 cursor-pointer', className)}
       onClick={onClick}
     >
       {/* 오픈시간 배지 (왼쪽) */}
@@ -95,7 +96,7 @@ export default function FoocketingCardHorizontal({
         <img
           className="h-full w-full object-cover object-center"
           alt={menuName}
-          src={menuProfileImage}
+          src={getMenuImageUrl(menuProfileImage)}
         />
       </div>
     </div>
