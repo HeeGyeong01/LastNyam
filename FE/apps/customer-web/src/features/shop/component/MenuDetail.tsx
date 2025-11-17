@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Badge } from '@shared/components/Badge';
 import type { ShopDetailDiscount } from '@/features/shop/type';
 import { Stepper } from '@/shared/components';
@@ -18,7 +17,6 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const requireAuth = useRequireAuth();
-  const navigate = useNavigate();
   const userId = useAuthStore((state) => state.userId);
   const { closeMenuDetail } = useLayout();
   
