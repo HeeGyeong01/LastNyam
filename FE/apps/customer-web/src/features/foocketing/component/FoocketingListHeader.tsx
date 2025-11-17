@@ -4,18 +4,32 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { FoocketingSortType } from '../type/foocketing';
 import { formatTimeToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
+import { useLayout } from '@/contexts/LayoutContext';
 
 interface FoocketingListHeaderProps {
   sort: FoocketingSortType;
-  sortLabels: Record<FoocketingSortType, string>;
-  onSortClick?: () => void;
+  sortLabels: Record<FoocketingSortType, { label: string; description: string }>;
+  onSortSelect: (sort: FoocketingSortType) => void;
 }
 
 export default function FoocketingListHeader({
   sort,
   sortLabels,
-  onSortClick,
+  onSortSelect,
 }: FoocketingListHeaderProps) {
+  const { openSortBottomSheet } = useLayout();
+
+  const handleSortClick = () => {
+    // 단방향 데이터 흐름:
+    // 1. 부모에서 sort 상태와 setSort(onSortSelect)를 props로 받음
+    // 2. Context에 현재 sort와 콜백을 전달하여 바텀시트 열기
+    // 3. SortBottomSheet에서 선택 시 콜백 호출 → 부모의 setSort 실행
+    // 4. 부모의 sort 상태 변경 → useFoocketingList의 queryKey 변경 → API 재요청
+    openSortBottomSheet('foocketing', {
+      currentSort: sort,
+      onSortSelect: (selectedSort) => onSortSelect(selectedSort as FoocketingSortType),
+    });
+  };
   // 현재 시간 상태 관리
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -42,8 +56,8 @@ export default function FoocketingListHeader({
       </div>
 
       {/* 정렬 옵션 */}
-      <Button btnStyle="ghost" size="default" onClick={onSortClick}>
-        <span>{sortLabels[sort]}</span>
+      <Button btnStyle="ghost" size="default" onClick={handleSortClick} className="px-0">
+        <span>{sortLabels[sort].label}</span>
         <ChevronDownIcon className="w-3.5 h-3.5" />
       </Button>
     </div>
