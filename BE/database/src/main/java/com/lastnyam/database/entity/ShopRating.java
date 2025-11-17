@@ -40,5 +40,5 @@ public class ShopRating {
     private Integer shopFavoriteCount;
 
     @Column(name = "shop_rating_avg", nullable = false)
-    private Integer shopRatingAverage;
+    private Double shopRatingAverage;
 }
