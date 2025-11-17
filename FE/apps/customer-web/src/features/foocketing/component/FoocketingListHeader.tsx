@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import type { FoocketingSortType } from '../type/foocketing';
@@ -6,6 +5,7 @@ import { formatTimeToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
 import { useLayout } from '@/contexts/LayoutContext';
 import { foocketingSortLabels } from '@/shared/components/SortBottomSheet';
+import { useServerTime } from '@/shared/hooks/useServerTime';
 
 interface FoocketingListHeaderProps {
   sort: FoocketingSortType;
@@ -29,17 +29,9 @@ export default function FoocketingListHeader({
       onSortSelect: (selectedSort) => onSortSelect(selectedSort as FoocketingSortType),
     });
   };
-  // 현재 시간 상태 관리
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // 현재 시간 업데이트 (1초마다)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  
+  // 서버 시간 동기화 훅 사용 (30초마다 서버 시간과 동기화)
+  const currentTime = useServerTime(30000);
 
   return (
     <div className="bg-white flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
