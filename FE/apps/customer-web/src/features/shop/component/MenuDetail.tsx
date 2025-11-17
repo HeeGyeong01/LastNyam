@@ -25,17 +25,40 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
   const totalPrice = (detail.price * quantity).toLocaleString('ko-KR');
 
   const handleAddToCart = async () => {
+    console.log('🛒 장바구니 담기 버튼 클릭');
+    
     requireAuth(async () => {
-      if (!userId) return;
+      console.log('✅ 인증 확인 완료');
+      console.log('👤 현재 userId:', userId);
+      
+      if (!userId) {
+        console.error('❌ userId가 없습니다');
+        return;
+      }
 
       try {
         setIsLoading(true);
-        await addToCart(userId, detail.discountId, quantity);
+        console.log('📤 장바구니 추가 API 요청 시작');
+        console.log('요청 파라미터:', {
+          userId,
+          discountId: detail.discountId,
+          cartItemAmount: quantity
+        });
+        
+        const response = await addToCart(userId, detail.discountId, quantity);
+        console.log('✅ 장바구니 추가 API 응답:', response);
+        
+        console.log('🚀 장바구니 페이지로 이동');
         navigate('/cart');
       } catch (error) {
-        console.error('장바구니 추가 실패:', error);
+        console.error('❌ 장바구니 추가 실패:', error);
+        console.error('에러 상세:', {
+          message: error instanceof Error ? error.message : '알 수 없는 에러',
+          error
+        });
       } finally {
         setIsLoading(false);
+        console.log('🏁 로딩 종료');
       }
     });
   };
