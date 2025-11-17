@@ -13,6 +13,7 @@ public class ShopFavoriteResponseDto {
     private Integer shopId;
     private Integer userId;
     private boolean favorited;
+    private Integer shopFavoriteCount;
 }
 
 

@@ -170,6 +170,77 @@ public class FoocketingService {
 		}
 	}
 
+	@Transactional
+	public void updateFoocketing(Integer userId, Integer ownerId, Integer shopId, Integer foocketingId,
+			com.lastnyam.owner.foocketing.dto.FoocketingUpdateRequest request) {
+		checkPermission(userId, ownerId);
+
+		// 가게 확인 및 점주 권한 확인
+		Shop shop = shopRepository.findById(shopId)
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
+
+		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
+		}
+
+		// 푸켓팅 확인
+		Foocketing foocketing = foocketingRepository.findById(foocketingId)
+			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.FOOCKETING_NOT_FOUND));
+
+		// 푸켓팅이 해당 가게의 메뉴인지 확인
+		if (!foocketing.getMenu().getShop().getShopId().equals(shopId)) {
+			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
+		}
+
+		LocalDateTime now = LocalDateTime.now();
+
+		// 푸켓팅 시간 수정이 있는 경우
+		if (request.getFoocketingTime() != null) {
+			LocalDateTime newFoocketingTime = toBusinessDateTime(now, request.getFoocketingTime());
+			
+			// 푸켓팅 시간이 현재 시간보다 이전이면 안됨
+			if (newFoocketingTime.isBefore(now) || newFoocketingTime.isEqual(now)) {
+				throw new FoocketingException(FoocketingErrorCode.INVALID_FOOCKETING_TIME);
+			}
+			
+			// 푸켓팅 시간이 픽업 마감 시간 이후면 안됨
+			if (newFoocketingTime.isAfter(foocketing.getFoocketingPickupEndTime())) {
+				throw new FoocketingException(FoocketingErrorCode.FOOCKETING_TIME_AFTER_PICKUP_END);
+			}
+
+			foocketing.setFoocketingTime(newFoocketingTime);
+		}
+
+		// 푸켓팅 수량 수정이 있는 경우
+		if (request.getFoocketingAmount() != null) {
+			foocketing.setFoocketingAmount(request.getFoocketingAmount());
+		}
+	}
+
+	@Transactional
+	public void deleteFoocketing(Integer userId, Integer ownerId, Integer shopId, Integer foocketingId) {
+		checkPermission(userId, ownerId);
+
+		// 가게 확인 및 점주 권한 확인
+		Shop shop = shopRepository.findById(shopId)
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
+
+		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
+		}
+
+		// 푸켓팅 확인
+		Foocketing foocketing = foocketingRepository.findById(foocketingId)
+			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.FOOCKETING_NOT_FOUND));
+
+		// 푸켓팅이 해당 가게의 메뉴인지 확인
+		if (!foocketing.getMenu().getShop().getShopId().equals(shopId)) {
+			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
+		}
+
+		foocketingRepository.delete(foocketing);
+	}
+
 	private static void checkPermission(Integer userId, Integer ownerId) {
 		if (!Objects.equals(userId, ownerId)) {
 			throw new OwnerException(OwnerErrorCode.FORBIDDEN_OWNER_ACCESS);
