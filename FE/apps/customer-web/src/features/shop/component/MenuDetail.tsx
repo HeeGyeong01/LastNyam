@@ -1,9 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@shared/components/Badge';
 import type { ShopDetailDiscount } from '@/features/shop/type';
 import { Stepper } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
+import { useAuthStore } from '@/store/useAuthStore';
+import { addToCart } from '@/pages/cart/api/cart.api';
+import LoadingModal from '@/shared/components/LoadingModal';
 
 interface MenuDetailProps {
   detail: ShopDetailDiscount;
@@ -11,15 +15,28 @@ interface MenuDetailProps {
 
 export default function MenuDetail({ detail }: MenuDetailProps) {
   const [quantity, setQuantity] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const requireAuth = useRequireAuth();
+  const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.userId);
+  
   const formattedPrice = detail.price.toLocaleString('ko-KR');
   const formattedOriginalPrice = detail.originalPrice.toLocaleString('ko-KR');
   const totalPrice = (detail.price * quantity).toLocaleString('ko-KR');
 
-  const handleAddToCart = () => {
-    requireAuth(() => {
-      // TODO: 장바구니에 담기 로직
-      console.log('장바구니에 담기', { discountId: detail.discountId, quantity });
+  const handleAddToCart = async () => {
+    requireAuth(async () => {
+      if (!userId) return;
+
+      try {
+        setIsLoading(true);
+        await addToCart(userId, detail.discountId, quantity);
+        navigate('/cart');
+      } catch (error) {
+        console.error('장바구니 추가 실패:', error);
+      } finally {
+        setIsLoading(false);
+      }
     });
   };
 
@@ -73,6 +90,8 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
           {totalPrice}원 담기
         </Button>
       </div>
+
+      <LoadingModal isOpen={isLoading} />
     </div>
   );
 }

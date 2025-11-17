@@ -38,3 +38,23 @@ export const getCart = async (userId: number): Promise<CartData> => {
   return response.data.data;
 };
 
+/**
+ * 장바구니에 상품 추가
+ * POST /api/cart/{userId}
+ * 
+ * @param userId - 사용자 ID
+ * @param discountId - 할인 상품 ID
+ * @param cartItemAmount - 장바구니에 담을 수량
+ */
+export const addToCart = async (
+  userId: number,
+  discountId: number,
+  cartItemAmount: number
+): Promise<CartData> => {
+  const response = await apiClient.post<ApiResponseWrapper<CartData>>(
+    `/api/cart/${userId}`,
+    { discountId, cartItemAmount }
+  );
+  return response.data.data;
+};
+
