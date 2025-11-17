@@ -1,5 +1,7 @@
 package com.lastnyam.owner.shop.service;
 
+import com.lastnyam.owner.external.geocoding.dto.Coordinates;
+import com.lastnyam.owner.external.geocoding.service.GeocodingService;
 import com.lastnyam.owner.owner.exception.OwnerErrorCode;
 import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.shop.repository.MenuRepository;
@@ -39,6 +41,7 @@ public class ShopService {
 	private final MenuRepository menuRepository;
 	private final FoodCategoryRepository foodCategoryRepository;
 	private final ShopRatingRepository shopRatingRepository;
+	private final GeocodingService geocodingService;
 
 	@Transactional
 	public ShopCreateResponse createShop(Integer userId, Integer ownerId, ShopCreateRequest request) {
@@ -52,10 +55,13 @@ public class ShopService {
 		FoodCategory category = foodCategoryRepository.findByCategoryName(request.getCategory())
 			.orElseThrow(() -> new ShopException(ShopErrorCode.CATEGORY_NOT_FOUND));
 
+		// 주소를 위도/경도로 변환
+		Coordinates coordinates = geocodingService.getCoordinates(request.getShopAddress());
+
 		Shop shop = Shop.builder()
 			.shopName(request.getShopName())
-			.shopLat(request.getShopLat())
-			.shopLng(request.getShopLng())
+			.shopLat(coordinates.getLatitude())
+			.shopLng(coordinates.getLongitude())
 			.shopAddress(request.getShopAddress())
 			.shopDescription(request.getShopDescription())
 			.shopBanner(request.getShopBanner())
