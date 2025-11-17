@@ -4,10 +4,7 @@ import { BASE_URL } from '@/shared/api/client';
 
 export default function Login() {
   const handleKakaoLogin = () => {
-    // 🔍 로그: 환경 변수 및 요청 URL 확인
-    console.log('=== 카카오 로그인 요청 ===');
-    console.log('BASE_URL:', BASE_URL);
-
+    
     // 카카오 로그인 페이지로 직접 이동
     window.location.href = `${BASE_URL}/api/auth/social/kakao`;
   };

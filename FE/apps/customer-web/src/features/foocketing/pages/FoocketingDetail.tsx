@@ -246,7 +246,7 @@ export default function FoocketingDetail() {
             btnStyle="filled-red"
             size="lg"
             onClick={handleEnterFoocketing}
-            disabled={isWaitingEntry || isWaitingResult}
+            disabled={isWaitingEntry || isWaitingResult || detail?.hasParticipated !== false}
           >
             {isWaitingEntry || isWaitingResult ? '참여 중...' : '푸켓팅 참여하기'}
           </Button>

@@ -57,6 +57,7 @@ export type FoocketingListResponse = FoocketingListData;
 // FoocketingItem을 상속받되, menu 타입만 FoocketingMenuDetail로 변경하고 추가 필드 포함
 export interface FoocketingDetail extends Omit<FoocketingItem, 'menu'> {
   maxAvailable: number;
+  hasParticipated: boolean;
   currentViewing: number;
   menu: FoocketingMenuDetail;
 }
