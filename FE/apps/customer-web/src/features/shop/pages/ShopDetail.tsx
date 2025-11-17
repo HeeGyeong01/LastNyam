@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import { DiscountList } from '@/features/discount/component';
@@ -9,8 +10,9 @@ import { useShopDetail } from '@/features/shop/hook';
 import type { ShopDetailFoocketing } from '@/features/shop/type';
 import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
 import { useLayout } from '@/contexts/LayoutContext';
-import { useFavorite } from '@/features/favorite/hook/useFavorite';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
+import { addFavorite, removeFavorite } from '@/features/favorite/api/favorite';
 
 export default function ShopDetail() {
   const { id } = useParams();
@@ -24,47 +26,63 @@ export default function ShopDetail() {
   // 장바구니에서 온 경우 state 받기
   const fromCart = location.state?.fromCart || false;
 
+  const shopId = id ? Number(id) : 0;
+  const userId = useAuthStore((state) => state.userId);
+  const requireAuth = useRequireAuth();
+
   const {
     shopDetail: detail,
     loading,
     error,
+    refetch: refetchShopDetail,
   } = useShopDetail({
-    shopId: id ? Number(id) : 0, // id가 없으면 0 (enabled: !!shopId로 쿼리 실행 안됨)
-  });
-
-  // 찜하기 mutation 훅 (찜 상태와 찜 개수를 항상 최신으로 관리)
-  const shopId = id ? Number(id) : 0;
-  const { toggleFavorite, favorited: favoriteStatus, ratingCount: favoriteRatingCount, isLoadingFavorite, isPending: isFavoritePending } = useFavorite(shopId);
-  const requireAuth = useRequireAuth();
-  
-  // favoriteStatus가 로딩 중이면 detail.favorited를 사용, 로딩 완료되면 favoriteStatus 사용
-  const favorited = isLoadingFavorite ? (detail?.favorited ?? false) : (favoriteStatus ?? false);
-  
-  // 디버깅용 콘솔 로그
-  console.log('[ShopDetail] 찜 상태 확인:', {
     shopId,
-    'detail?.favorited': detail?.favorited,
-    'favoriteStatus (useFavorite)': favoriteStatus,
-    isLoadingFavorite,
-    '최종 favorited': favorited,
-    'favoriteRatingCount': favoriteRatingCount,
-    'detail.ratingCount': detail?.ratingCount,
+    userId: userId ?? undefined,
   });
 
-  // 찜하기 버튼 클릭 핸들러
+  // 찜하기 mutation
+  const addFavoriteMutation = useMutation({
+    mutationFn: () => addFavorite(shopId, userId ?? undefined),
+    onSuccess: () => {
+      // 찜하기 성공 후 shop 상세 정보 다시 가져오기
+      refetchShopDetail();
+    },
+  });
+
+  // 찜취소 mutation
+  const removeFavoriteMutation = useMutation({
+    mutationFn: () => removeFavorite(shopId, userId ?? undefined),
+    onSuccess: () => {
+      // 찜취소 성공 후 shop 상세 정보 다시 가져오기
+      refetchShopDetail();
+    },
+  });
+
+  // 찜하기 토글 함수
   const handleFavoriteClick = () => {
-    requireAuth(() => {
-      toggleFavorite();
-    });
+    // favorited가 null이면 requireAuth로 감싸서 로그인 체크
+    if (detail?.favorited === null) {
+      requireAuth(() => {
+        // 로그인 후에는 이 페이지로 돌아와서 다시 시도할 수 있음
+      });
+      return;
+    }
+
+    if (!userId) {
+      return;
+    }
+
+    const currentFavorited = detail?.favorited ?? false;
+    if (currentFavorited) {
+      removeFavoriteMutation.mutate();
+    } else {
+      addFavoriteMutation.mutate();
+    }
   };
 
-  if (error) {
-    console.log('가게 상세 조회 에러:', error);
-  }
-
-  if (!detail && !loading) {
-    console.log('가게 상세 데이터가 없습니다.');
-  }
+  // favorited가 null이면 false로 표시 (UI용)
+  const favorited = detail?.favorited ?? false;
+  const isFavoritePending = addFavoriteMutation.isPending || removeFavoriteMutation.isPending;
 
   // 스크롤 이벤트 감지 (DetailLayout의 스크롤 컨테이너)
   useEffect(() => {
@@ -161,8 +179,9 @@ export default function ShopDetail() {
             shopBanner={detail.shopBanner}
             shopName={detail.shopName}
             rating={detail.rating}
-            ratingCount={favoriteRatingCount || detail.ratingCount}
+            ratingCount={detail.ratingCount}
             favorited={favorited}
+            favoriteCount={detail.favoriteCount}
             onFavoriteClick={handleFavoriteClick}
             isFavoritePending={isFavoritePending}
           />

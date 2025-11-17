@@ -11,6 +11,7 @@ interface ShopProfileProps {
   rating: number;
   ratingCount: number;
   favorited?: boolean; // 찜하기 여부
+  favoriteCount: number;
   onFavoriteClick?: () => void; // 찜하기 버튼 클릭 핸들러
   isFavoritePending?: boolean; // 찜하기 처리 중 여부
 }
@@ -21,6 +22,7 @@ export default function ShopProfile({
   rating,
   ratingCount,
   favorited = false,
+  favoriteCount,
   onFavoriteClick,
   isFavoritePending = false,
 }: ShopProfileProps) {
@@ -79,7 +81,7 @@ export default function ShopProfile({
                 fill={favorited ? 'currentColor' : 'none'}
               />
               <span className={`p2-b ${favorited ? 'text-brand' : 'text-secondary'}`}>
-                찜하기
+                {favoriteCount}
               </span>
             </button>
             <div className="flex items-center gap-1">
