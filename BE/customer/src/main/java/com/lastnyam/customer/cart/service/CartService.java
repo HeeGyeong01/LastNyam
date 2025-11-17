@@ -269,25 +269,6 @@ public class CartService {
                 .queryParam("partner_order_id", partnerOrderId)
                 .build().toUriString();
 
-        // 결제 요청 시점에 거래(승인 대기) 및 아이템 생성
-        Shop shop = cartItems.get(0).getDiscount().getMenu().getShop();
-        DiscountTransaction transaction = DiscountTransaction.builder()
-                .transactionStatus(TransactionStatus.PENDING_APPROVAL)
-                .createdAt(LocalDateTime.now())
-                .user(User.builder().userId(userId).build())
-                .shop(shop)
-                .build();
-        discountTransactionRepository.save(transaction);
-
-        List<DiscountTransactionItem> transactionItems = cartItems.stream()
-                .map(item -> DiscountTransactionItem.builder()
-                        .transactionAmount(item.getCartItemAmount())
-                        .discountTransaction(transaction)
-                        .discount(item.getDiscount())
-                        .build())
-                .collect(Collectors.toList());
-        discountTransactionItemRepository.saveAll(transactionItems);
-
         // 카카오페이 결제 준비 요청 생성
         KakaoPayReadyRequest readyRequest = KakaoPayReadyRequest.builder()
                 .cid(kakaoPayConfig.getCid())
@@ -313,7 +294,7 @@ public class CartService {
         kakaoPayTempStore.put(partnerOrderId, readyResponse.getTid());
 
         return CartOrderResponseDto.builder()
-                .orderId(transaction.getTransactionId())
+                .orderId(null)
                 .userId(userId)
                 .totalPrice(totalPrice)
                 .paymentStatus("PENDING_APPROVAL")
@@ -360,13 +341,31 @@ public class CartService {
                 .mapToInt(item -> item.getDiscount().getDiscountPrice() * item.getCartItemAmount())
                 .sum();
 
-        // TODO: 주문 생성 및 저장 로직 (DiscountTransaction 등)
+        // 결제 승인 시점에 거래(승인) 및 아이템 생성
+        Shop shop = cartItems.get(0).getDiscount().getMenu().getShop();
+        DiscountTransaction transaction = DiscountTransaction.builder()
+                .transactionStatus(TransactionStatus.PENDING_APPROVAL)
+                .createdAt(LocalDateTime.now())
+                .user(User.builder().userId(userId).build())
+                .shop(shop)
+                .build();
+        discountTransactionRepository.save(transaction);
+
+        List<DiscountTransactionItem> transactionItems = cartItems.stream()
+                .map(item -> DiscountTransactionItem.builder()
+                        .transactionAmount(item.getCartItemAmount())
+                        .discountTransaction(transaction)
+                        .discount(item.getDiscount())
+                        .build())
+                .collect(Collectors.toList());
+        discountTransactionItemRepository.saveAll(transactionItems);
+
         // 주문 생성 후 장바구니 비우기
         cartItemRepository.deleteAll(cartItems);
         cartRepository.delete(cart);
 
         return CartOrderResponseDto.builder()
-                .orderId(null) // TODO: 실제 주문 ID로 변경
+                .orderId(transaction.getTransactionId())
                 .userId(userId)
                 .totalPrice(totalPrice)
                 .paymentStatus("APPROVED") // 결제 승인 완료

@@ -10,6 +10,7 @@ import com.lastnyam.customer.cart.dto.CartUpdateRequestDto;
 import com.lastnyam.customer.cart.service.CartService;
 import com.lastnyam.customer.external.kakaopay.store.KakaoPayTempStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -123,7 +125,7 @@ public class CartController {
      * 쿼리 파라미터로 전달된 pg_token과 partner_order_id, userId를 사용해 서버에서 최종 승인 처리합니다.
      */
     @GetMapping("/kakao/approve")
-    public ResponseEntity<ApiResponse<CartOrderResponseDto>> approveCallback(
+    public ResponseEntity<?> approveCallback(
             @RequestParam("pg_token") String pgToken,
             @RequestParam("partner_order_id") String partnerOrderId,
             @RequestParam("userId") Integer userId) {
@@ -142,7 +144,9 @@ public class CartController {
         CartOrderResponseDto result = cartService.approveOrder(userId, approveRequest);
         kakaoPayTempStore.remove(partnerOrderId);
 
-        return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("https://lastnyam.co.kr/order-list"))
+                .build();
     }
 
     /**
