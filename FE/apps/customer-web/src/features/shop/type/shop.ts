@@ -36,7 +36,8 @@ export interface ShopDetail {
   rating: number;
   ratingCount: number;
   distanceMeters: number;
-  favorited?: boolean; // 찜하기 여부 (선택적)
+  favoriteCount: number;
+  favorited?: boolean | null; // 찜하기 여부 (선택적, null이면 로그인 필요)
   discounts: ShopDetailDiscount[];
   foocketings: ShopDetailFoocketing[];
 }

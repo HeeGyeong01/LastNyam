@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import { DiscountList } from '@/features/discount/component';
@@ -9,8 +10,10 @@ import { useShopDetail } from '@/features/shop/hook';
 import type { ShopDetailFoocketing } from '@/features/shop/type';
 import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
 import { useLayout } from '@/contexts/LayoutContext';
-import { useFavorite } from '@/features/favorite/hook/useFavorite';
+// TODO: 임시 하드코딩 - 로그인 기능 연결 후 주석 해제 필요
+// import { useAuthStore } from '@/store/useAuthStore';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
+import { addFavorite, removeFavorite } from '@/features/favorite/api/favorite';
 
 export default function ShopDetail() {
   const { id } = useParams();
@@ -24,37 +27,65 @@ export default function ShopDetail() {
   // 장바구니에서 온 경우 state 받기
   const fromCart = location.state?.fromCart || false;
 
+  const shopId = id ? Number(id) : 0;
+  // TODO: 임시 하드코딩 - 로그인 기능 연결 후 제거 필요
+  // const userId = useAuthStore((state) => state.userId);
+  const userId = 2; // 임시: 로그인 기능 연결 후 위의 주석 해제하고 이 줄 삭제
+  const requireAuth = useRequireAuth();
+
   const {
     shopDetail: detail,
     loading,
     error,
+    refetch: refetchShopDetail,
   } = useShopDetail({
-    shopId: id ? Number(id) : 0, // id가 없으면 0 (enabled: !!shopId로 쿼리 실행 안됨)
+    shopId,
+    userId: userId ?? undefined,
   });
 
-  // 찜하기 mutation 훅
-  const shopId = id ? Number(id) : 0;
-  const { addFavorite, removeFavorite, isPending: isFavoritePending } = useFavorite(shopId);
-  const requireAuth = useRequireAuth();
+  // 찜하기 mutation
+  const addFavoriteMutation = useMutation({
+    mutationFn: () => addFavorite(shopId, userId ?? undefined),
+    onSuccess: () => {
+      // 찜하기 성공 후 shop 상세 정보 다시 가져오기
+      refetchShopDetail();
+    },
+  });
 
-  // 찜하기 버튼 클릭 핸들러
+  // 찜취소 mutation
+  const removeFavoriteMutation = useMutation({
+    mutationFn: () => removeFavorite(shopId, userId ?? undefined),
+    onSuccess: () => {
+      // 찜취소 성공 후 shop 상세 정보 다시 가져오기
+      refetchShopDetail();
+    },
+  });
+
+  // 찜하기 토글 함수
   const handleFavoriteClick = () => {
-    requireAuth(() => {
-      if (detail?.favorited) {
-        removeFavorite();
-      } else {
-        addFavorite();
-      }
-    });
+    // favorited가 null이면 requireAuth로 감싸서 로그인 체크
+    if (detail?.favorited === null) {
+      requireAuth(() => {
+        // 로그인 후에는 이 페이지로 돌아와서 다시 시도할 수 있음
+      });
+      return;
+    }
+
+    if (!userId) {
+      return;
+    }
+
+    const currentFavorited = detail?.favorited ?? false;
+    if (currentFavorited) {
+      removeFavoriteMutation.mutate();
+    } else {
+      addFavoriteMutation.mutate();
+    }
   };
 
-  if (error) {
-    console.log('가게 상세 조회 에러:', error);
-  }
-
-  if (!detail && !loading) {
-    console.log('가게 상세 데이터가 없습니다.');
-  }
+  // favorited가 null이면 false로 표시 (UI용)
+  const favorited = detail?.favorited ?? false;
+  const isFavoritePending = addFavoriteMutation.isPending || removeFavoriteMutation.isPending;
 
   // 스크롤 이벤트 감지 (DetailLayout의 스크롤 컨테이너)
   useEffect(() => {
@@ -152,7 +183,8 @@ export default function ShopDetail() {
             shopName={detail.shopName}
             rating={detail.rating}
             ratingCount={detail.ratingCount}
-            favorited={detail.favorited ?? false}
+            favorited={favorited}
+            favoriteCount={detail.favoriteCount}
             onFavoriteClick={handleFavoriteClick}
             isFavoritePending={isFavoritePending}
           />
