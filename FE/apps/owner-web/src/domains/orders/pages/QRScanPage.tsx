@@ -24,9 +24,13 @@ export default function QRScanPage() {
       
       console.log("🔍 QR 스캔됨:", url);
 
+      // basename (/owner) 제거
+      const urlWithoutBasename = url.startsWith("/owner") ? url.substring(6) : url;
+      console.log("🔍 basename 제거 후:", urlWithoutBasename);
+
       // 1️⃣ URL 형식 체크
-      if (!url.startsWith("/orders/receipt-confirm")) {
-        console.log("❌ URL 형식 오류:", url);
+      if (!urlWithoutBasename.startsWith("/orders/receipt-confirm")) {
+        console.log("❌ URL 형식 오류:", urlWithoutBasename);
         setScanning(false);
         setShowInvalidQRWarning(true);
         setTimeout(() => {
@@ -39,7 +43,7 @@ export default function QRScanPage() {
       console.log("✅ URL 형식 확인 완료");
 
       // 2️⃣ URL 파라미터 파싱
-      const urlParams = new URLSearchParams(url.split('?')[1]);
+      const urlParams = new URLSearchParams(urlWithoutBasename.split('?')[1]);
       const transactionId = urlParams.get('id');
       const typeRaw = urlParams.get('type');
       
@@ -152,7 +156,9 @@ export default function QRScanPage() {
 
   const handleViewOrderDetail = () => {
     setShowSuccessModal(false);
-    navigate(scannedData);
+    // basename (/owner) 제거 후 navigate
+    const urlWithoutBasename = scannedData.startsWith("/owner") ? scannedData.substring(6) : scannedData;
+    navigate(urlWithoutBasename);
   };
 
   const handleCloseSuccessModal = () => {
