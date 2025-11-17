@@ -6,6 +6,7 @@ import CartMenuCard from './component/cartMenuCard';
 import { useAuthStore } from '@/store/useAuthStore';
 import { orderCart } from '@/features/cart/api/cart';
 import { getCart } from './api/cart.api';
+import { useLayout } from '@/contexts/LayoutContext';
 
 // API 응답 타입
 interface CartItem {
@@ -42,6 +43,7 @@ function formatCloseTime(closeTime: string): string {
 export default function Cart() {
   const navigate = useNavigate();
   const { userId } = useAuthStore();
+  const { setCartTotalPrice } = useLayout();
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,11 +99,11 @@ export default function Cart() {
 
   const handleAddMore = () => {
     if (cartData?.shop?.shopId) {
+      // LayoutContext에 현재 장바구니 총 가격 저장
+      setCartTotalPrice(totalPrice);
+      
       navigate(`/shop/${cartData.shop.shopId}`, {
-        state: { 
-          fromCart: true, 
-          totalPrice: totalPrice 
-        }
+        state: { fromCart: true }
       });
     }
   };

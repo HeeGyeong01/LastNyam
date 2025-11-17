@@ -8,18 +8,19 @@ import { Tab } from '@shared/components/Tab';
 import { useShopDetail } from '@/features/shop/hook';
 import type { ShopDetailFoocketing } from '@/features/shop/type';
 import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
+import { useLayout } from '@/contexts/LayoutContext';
 
 export default function ShopDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { cartTotalPrice } = useLayout();
   const [isScrolled, setIsScrolled] = useState(false);
   const discountSectionRef = useRef<HTMLDivElement>(null);
   const foocketingSectionRef = useRef<HTMLDivElement>(null);
 
   // 장바구니에서 온 경우 state 받기
   const fromCart = location.state?.fromCart || false;
-  const cartTotalPrice = location.state?.totalPrice || 0;
 
   const {
     shopDetail: detail,

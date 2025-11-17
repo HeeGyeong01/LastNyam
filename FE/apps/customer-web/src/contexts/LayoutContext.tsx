@@ -44,6 +44,10 @@ interface LayoutContextType {
     data: SortBottomSheetData
   ) => void;
   closeSortBottomSheet: () => void;
+
+  // 장바구니 총 가격 관련
+  cartTotalPrice: number;
+  setCartTotalPrice: (price: number) => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -63,6 +67,9 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
   // Sort BottomSheet 상태
   const [sortBottomSheetType, setSortBottomSheetType] = useState<SortBottomSheetType>(null);
   const [sortBottomSheetData, setSortBottomSheetData] = useState<SortBottomSheetData | null>(null);
+
+  // 장바구니 총 가격 상태
+  const [cartTotalPrice, setCartTotalPrice] = useState(0);
 
   const updatePadding = useCallback(() => {
     const heights = Array.from(elementsRef.current.values());
@@ -121,6 +128,8 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
         sortBottomSheetData,
         openSortBottomSheet,
         closeSortBottomSheet,
+        cartTotalPrice,
+        setCartTotalPrice,
       }}
     >
       {children}

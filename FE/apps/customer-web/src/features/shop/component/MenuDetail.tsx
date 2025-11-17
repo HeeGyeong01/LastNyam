@@ -18,7 +18,7 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
   const [isLoading, setIsLoading] = useState(false);
   const requireAuth = useRequireAuth();
   const userId = useAuthStore((state) => state.userId);
-  const { closeMenuDetail } = useLayout();
+  const { closeMenuDetail, setCartTotalPrice } = useLayout();
   
   const formattedPrice = detail.price.toLocaleString('ko-KR');
   const formattedOriginalPrice = detail.originalPrice.toLocaleString('ko-KR');
@@ -47,6 +47,15 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
         
         const response = await addToCart(userId, detail.discountId, quantity);
         console.log('✅ 장바구니 추가 API 응답:', response);
+        
+        // 장바구니 총 가격 업데이트 (API 응답의 cartItems로 계산)
+        const newTotalPrice = response.cartItems.reduce(
+          (sum, item) => sum + item.discountPrice * item.cartItemAmount,
+          0
+        );
+        setCartTotalPrice(newTotalPrice);
+        console.log('💰 장바구니 총 가격 업데이트:', newTotalPrice);
+        
         closeMenuDetail();
       } catch (error) {
         console.error('❌ 장바구니 추가 실패:', error);
