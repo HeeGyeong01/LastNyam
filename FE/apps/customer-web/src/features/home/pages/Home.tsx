@@ -23,7 +23,7 @@ export default function Home() {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0); // 0: 마감세일, 1: 푸켓팅
 
   // Home 페이지에서는 로그인하지 않아도 보여야 하므로, userId가 null이면 2로 설정
-  const finalUserId = userId ?? 2;
+  const finalUserId = userId ?? 0;
 
   const logout = useAuthStore((state) => state.logout);
 

@@ -55,8 +55,11 @@ export const getFoocketingDetail = async (
   params: {
     lat?: number;
     lng?: number;
+    userId?: number
   } = {}
 ): Promise<FoocketingDetail> => {
+  const finalUserId = params?.userId ?? useAuthStore.getState().userId ?? 0; // null이면 0로 고정
+
   // 위치 정보가 없으면 자동으로 가져오기
   const location = params.lat && params.lng 
     ? { lat: params.lat, lng: params.lng }
@@ -66,6 +69,7 @@ export const getFoocketingDetail = async (
     params: {
       lat: location.lat,
       lng: location.lng,
+      userId: finalUserId,
       },
     }
   );
@@ -181,11 +185,8 @@ export const getRecommendedFoocketingList = async (
     lng?: number;
   } = {}
 ): Promise<RecommendedFoocketingListData> => {
-  // const userId = params.userId ?? useAuthStore.getState().userId ?? 3; // null이면 3로 고정 (주석처리)
-  const userId = params.userId ?? useAuthStore.getState().userId;
-  if (!userId) {
-    throw new Error('로그인이 필요합니다.');
-  }
+  // 로그인하지 않아도 조회 가능하므로, userId가 없으면 0으로 설정
+  const userId = params.userId ?? useAuthStore.getState().userId ?? 0;
   
   // 위치 정보가 없으면 자동으로 가져오기
   const location = params.lat && params.lng 
