@@ -4,6 +4,7 @@ import com.lastnyam.owner.external.geocoding.dto.Coordinates;
 import com.lastnyam.owner.external.geocoding.service.GeocodingService;
 import com.lastnyam.owner.owner.exception.OwnerErrorCode;
 import com.lastnyam.owner.owner.exception.OwnerException;
+import com.lastnyam.owner.shop.dto.*;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,12 +14,6 @@ import com.lastnyam.database.entity.Menu;
 import com.lastnyam.database.entity.Owner;
 import com.lastnyam.database.entity.Shop;
 import com.lastnyam.database.entity.ShopRating;
-import com.lastnyam.owner.shop.dto.MenuCreateRequest;
-import com.lastnyam.owner.shop.dto.MenuCreateResponse;
-import com.lastnyam.owner.shop.dto.MenuGetResponse;
-import com.lastnyam.owner.shop.dto.MenuListResponse;
-import com.lastnyam.owner.shop.dto.ShopCreateRequest;
-import com.lastnyam.owner.shop.dto.ShopCreateResponse;
 import com.lastnyam.owner.shop.repository.FoodCategoryRepository;
 import com.lastnyam.owner.owner.repository.OwnerRepository;
 import com.lastnyam.owner.shop.repository.ShopRatingRepository;
@@ -166,6 +161,79 @@ public class ShopService {
 		return MenuListResponse.builder()
 			.menus(menuList)
 			.build();
+	}
+
+	@Transactional
+	public void updateMenu(Integer userId, Integer ownerId, Integer shopId, Integer menuId, MenuUpdateRequest request) {
+		checkPermission(userId, ownerId);
+
+		// 가게 확인 및 점주 권한 확인
+		Shop shop = shopRepository.findById(shopId)
+			.orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
+
+		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+			throw new ShopException(ShopErrorCode.NOT_SHOP_OWNER);
+		}
+
+		// 메뉴 확인
+		Menu menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new ShopException(ShopErrorCode.MENU_NOT_FOUND));
+
+		// 메뉴가 해당 가게의 것인지 확인
+		if (!menu.getShop().getShopId().equals(shopId)) {
+			throw new ShopException(ShopErrorCode.MENU_NOT_IN_SHOP);
+		}
+
+		// 메뉴명 수정
+		if (request.getMenuName() != null) {
+			menu.setMenuName(request.getMenuName());
+		}
+
+		// 메뉴 설명 수정
+		if (request.getMenuDescription() != null) {
+			menu.setMenuDescription(request.getMenuDescription());
+		}
+
+		// 메뉴 이미지 수정
+		if (request.getMenuImage() != null) {
+			menu.setMenuImage(request.getMenuImage());
+		}
+
+		// 메뉴 가격 수정
+		if (request.getMenuPrice() != null) {
+			menu.setMenuPrice(request.getMenuPrice());
+		}
+
+		// 카테고리 수정
+		if (request.getCategory() != null) {
+			FoodCategory foodCategory = foodCategoryRepository.findByCategoryName(request.getCategory())
+				.orElseThrow(() -> new ShopException(ShopErrorCode.CATEGORY_NOT_FOUND));
+			menu.setFoodCategory(foodCategory);
+		}
+	}
+
+	@Transactional
+	public void deleteMenu(Integer userId, Integer ownerId, Integer shopId, Integer menuId) {
+		checkPermission(userId, ownerId);
+
+		// 가게 확인 및 점주 권한 확인
+		Shop shop = shopRepository.findById(shopId)
+			.orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
+
+		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+			throw new ShopException(ShopErrorCode.NOT_SHOP_OWNER);
+		}
+
+		// 메뉴 확인
+		Menu menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new ShopException(ShopErrorCode.MENU_NOT_FOUND));
+
+		// 메뉴가 해당 가게의 것인지 확인
+		if (!menu.getShop().getShopId().equals(shopId)) {
+			throw new ShopException(ShopErrorCode.MENU_NOT_IN_SHOP);
+		}
+
+		menuRepository.delete(menu);
 	}
 
 	private static void checkPermission(Integer userId, Integer ownerId) {
