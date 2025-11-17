@@ -171,7 +171,7 @@ export default function QRScanPage() {
   };
 
   return (
-    <div className="relative w-full h-full bg-black">
+    <div className="relative w-full h-[100dvh] bg-black">
       {/* 카메라 화면 */}
       <div className="absolute inset-0">
         <Scanner
@@ -197,7 +197,7 @@ export default function QRScanPage() {
         />
       </div>
       {/* 중앙 스캔 가이드 영역 (헤더/푸터 제외한 중앙) */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pt-15 pb-25">
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pt-4 pb-48">
         {/* 안내 텍스트 */}
         <div className="mb-8">
           <h2 className="text-white h3-b drop-shadow-lg text-center">
@@ -217,7 +217,7 @@ export default function QRScanPage() {
 
       {/* 하단 상태 표시 */}
       {!showSuccessModal && !showNotMyShopWarning && !showInvalidQRWarning && (
-        <div className="absolute bottom-20 left-0 right-0 z-20 mb-2">
+        <div className="fixed bottom-20 left-0 right-0 z-20 mb-2">
           <div className="bg-bg-inverse py-3 flex items-center justify-center gap-2.5">
             <Loader2 className="w-4 h-4 text-inverse animate-spin" />
             <p className="p4-b text-white text-center">
@@ -231,13 +231,13 @@ export default function QRScanPage() {
         <>
           {/* 배경 오버레이 - 푸터 영역 제외 */}
           <div
-            className="absolute top-0 left-0 right-0 bottom-[70px] z-[59] bg-black/50"
+            className="fixed top-0 left-0 right-0 bottom-[70px] z-[59] bg-black/50"
             onClick={handleCloseSuccessModal}
           />
           
           {/* 바텀 시트 */}
           <div
-            className="absolute bottom-[70px] left-0 right-0 z-[60] bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl transition-transform duration-300 ease-out"
+            className="fixed bottom-[70px] left-0 right-0 z-[60] bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl transition-transform duration-300 ease-out"
             style={{
               animation: "slideUp 0.3s ease-out",
             }}
@@ -270,7 +270,7 @@ export default function QRScanPage() {
       {/* 잘못된 QR 경고 바텀 시트 */}
       {showInvalidQRWarning && !showSuccessModal && (
         <div
-          className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl "
+          className="fixed bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl"
           style={{
             animation: "slideUp 0.3s ease-out",
           }}
@@ -294,7 +294,7 @@ export default function QRScanPage() {
       {/* 권한 없음 경고 바텀 시트 */}
       {showNotMyShopWarning && !showSuccessModal && (
         <div
-          className="absolute bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl"
+          className="fixed bottom-[70px] left-0 right-0 z-50 bg-white rounded-t-3xl px-6 pb-6 pt-4 shadow-2xl"
           style={{
             animation: "slideUp 0.3s ease-out",
           }}
