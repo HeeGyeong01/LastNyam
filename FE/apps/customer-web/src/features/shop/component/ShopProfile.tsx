@@ -24,6 +24,14 @@ export default function ShopProfile({
   onFavoriteClick,
   isFavoritePending = false,
 }: ShopProfileProps) {
+  // 디버깅용 콘솔 로그
+  console.log('[ShopProfile] 찜 상태:', {
+    shopName,
+    favorited,
+    ratingCount,
+    isFavoritePending,
+  });
+  
   return (
     <div className="relative w-full h-40">
       <img

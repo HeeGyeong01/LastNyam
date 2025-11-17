@@ -50,6 +50,12 @@ export function useFavorite(shopId: number) {
       // 찜 상태 쿼리 데이터 가져오기
       const previousFavoriteData = queryClient.getQueryData<{ favorited: boolean; ratingCount: number }>(['shop', 'favorite', shopId]);
       
+      console.log('[addFavorite onMutate] Optimistic Update:', {
+        shopId,
+        previousFavoriteData,
+        '업데이트 후': { favorited: true, ratingCount: (previousFavoriteData?.ratingCount ?? 0) + 1 },
+      });
+      
       // 찜 상태 쿼리 업데이트 (찜하기: favorited = true, ratingCount + 1)
       if (previousFavoriteData) {
         queryClient.setQueryData(['shop', 'favorite', shopId], {
@@ -66,7 +72,12 @@ export function useFavorite(shopId: number) {
         queryClient.setQueryData(['shop', 'favorite', shopId], context.previousFavoriteData);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[addFavorite onSuccess] 찜하기 성공:', {
+        shopId,
+        response: data,
+      });
+      
       // 찜 상태 쿼리 무효화하여 최신 데이터 가져오기
       queryClient.invalidateQueries({ queryKey: ['shop', 'favorite', shopId] });
       // ShopDetail 쿼리도 무효화 (찜 개수 업데이트를 위해)
@@ -88,6 +99,12 @@ export function useFavorite(shopId: number) {
       // 찜 상태 쿼리 데이터 가져오기
       const previousFavoriteData = queryClient.getQueryData<{ favorited: boolean; ratingCount: number }>(['shop', 'favorite', shopId]);
       
+      console.log('[removeFavorite onMutate] Optimistic Update:', {
+        shopId,
+        previousFavoriteData,
+        '업데이트 후': { favorited: false, ratingCount: Math.max(0, (previousFavoriteData?.ratingCount ?? 0) - 1) },
+      });
+      
       // 찜 상태 쿼리 업데이트 (찜취소: favorited = false, ratingCount - 1)
       if (previousFavoriteData) {
         queryClient.setQueryData(['shop', 'favorite', shopId], {
@@ -104,7 +121,12 @@ export function useFavorite(shopId: number) {
         queryClient.setQueryData(['shop', 'favorite', shopId], context.previousFavoriteData);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[removeFavorite onSuccess] 찜취소 성공:', {
+        shopId,
+        response: data,
+      });
+      
       // 찜 상태 쿼리 무효화하여 최신 데이터 가져오기
       queryClient.invalidateQueries({ queryKey: ['shop', 'favorite', shopId] });
       // ShopDetail 쿼리도 무효화 (찜 개수 업데이트를 위해)
@@ -121,6 +143,14 @@ export function useFavorite(shopId: number) {
     // 최신 상태를 다시 읽어옴 (캐시에서 직접)
     const currentFavoriteData = queryClient.getQueryData<{ favorited: boolean; ratingCount: number }>(['shop', 'favorite', shopId]);
     const currentFavorited = currentFavoriteData?.favorited ?? favorited;
+    
+    console.log('[toggleFavorite] 찜 상태 확인:', {
+      shopId,
+      'currentFavoriteData': currentFavoriteData,
+      'currentFavorited': currentFavorited,
+      'favorited (hook state)': favorited,
+      'action': currentFavorited ? '찜취소 (DELETE)' : '찜하기 (POST)',
+    });
     
     if (currentFavorited) {
       removeFavoriteMutation.mutate();

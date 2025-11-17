@@ -39,6 +39,17 @@ export default function ShopDetail() {
   
   // favoriteStatus가 로딩 중이면 detail.favorited를 사용, 로딩 완료되면 favoriteStatus 사용
   const favorited = isLoadingFavorite ? (detail?.favorited ?? false) : (favoriteStatus ?? false);
+  
+  // 디버깅용 콘솔 로그
+  console.log('[ShopDetail] 찜 상태 확인:', {
+    shopId,
+    'detail?.favorited': detail?.favorited,
+    'favoriteStatus (useFavorite)': favoriteStatus,
+    isLoadingFavorite,
+    '최종 favorited': favorited,
+    'favoriteRatingCount': favoriteRatingCount,
+    'detail.ratingCount': detail?.ratingCount,
+  });
 
   // 찜하기 버튼 클릭 핸들러
   const handleFavoriteClick = () => {
