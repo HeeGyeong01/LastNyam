@@ -10,6 +10,7 @@ import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.owner.shop.dto.MenuCreateRequest;
 import com.lastnyam.owner.shop.dto.MenuCreateResponse;
 import com.lastnyam.owner.shop.dto.MenuListResponse;
+import com.lastnyam.owner.shop.dto.MenuUpdateRequest;
 import com.lastnyam.owner.shop.dto.ShopCreateRequest;
 import com.lastnyam.owner.shop.dto.ShopCreateResponse;
 
@@ -51,6 +52,29 @@ public class ShopController {
 		@PathVariable("shopId") Integer shopId) {
 		MenuListResponse result = shopService.getShopMenus(userId, ownerId, shopId);
 		return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+	}
+
+	// 메뉴 수정
+	@PatchMapping("/{ownerId}/shop/{shopId}/menu/{menuId}")
+	public ResponseEntity<ApiResponse<Void>> updateMenu(
+		@AuthenticationPrincipal Integer userId,
+		@PathVariable("ownerId") Integer ownerId,
+		@PathVariable("shopId") Integer shopId,
+		@PathVariable("menuId") Integer menuId,
+		@RequestBody MenuUpdateRequest request) {
+		shopService.updateMenu(userId, ownerId, shopId, menuId, request);
+		return ResponseEntity.ok(ApiResponse.ofSuccess(null));
+	}
+
+	// 메뉴 삭제
+	@DeleteMapping("/{ownerId}/shop/{shopId}/menu/{menuId}")
+	public ResponseEntity<ApiResponse<Void>> deleteMenu(
+		@AuthenticationPrincipal Integer userId,
+		@PathVariable("ownerId") Integer ownerId,
+		@PathVariable("shopId") Integer shopId,
+		@PathVariable("menuId") Integer menuId) {
+		shopService.deleteMenu(userId, ownerId, shopId, menuId);
+		return ResponseEntity.ok(ApiResponse.ofSuccess(null));
 	}
 
 }
