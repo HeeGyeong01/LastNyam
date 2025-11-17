@@ -1,6 +1,6 @@
 package com.lastnyam.customer.time.dto;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CurrentTimeResponse {
-    public Instant currentTime;
+    public ZonedDateTime currentTime;
 }
