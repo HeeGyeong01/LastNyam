@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { getLocationSync } from '@/shared/lib/geolocation';
+import defaultProfileImage from '@/shared/assets/default-profile.png';
 
 interface MarkerData {
   lat: number;
   lng: number;
   title?: string;
+  imageUrl?: string; // 음식 사진 URL
+  id?: string | number; // 마커 식별자 (클릭 이벤트에서 사용)
 }
 
 interface NaverMapProps {
@@ -12,6 +15,7 @@ interface NaverMapProps {
   style?: React.CSSProperties;
   markers?: MarkerData[];
   onCenterChange?: (lat: number, lng: number) => void;
+  onMarkerClick?: (id: string | number) => void; // 마커 클릭 핸들러
   padding?: {
     top?: number;
     right?: number;
@@ -84,6 +88,8 @@ interface MarkerOptions {
 
 interface Marker {
   // 네이버 지도 마커 인스턴스 메서드들
+  addListener(event: string, listener: () => void): void;
+  removeListener(event: string, listener: () => void): void;
 }
 
 interface LatLngBounds {
@@ -92,28 +98,31 @@ interface LatLngBounds {
   getNE(): LatLng;
 }
 
-export default function NaverMap({ className = '', style, markers = [], onCenterChange, padding, center, zoom = 16, zoomControl = false }: NaverMapProps) {
+export default function NaverMap({ className = '', style, markers = [], onCenterChange, onMarkerClick, padding, center, zoom = 16, zoomControl = false }: NaverMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
   const markersRef = useRef<Marker[]>([]);
+  const markerClickListenersRef = useRef<Array<() => void>>([]); // 마커 클릭 리스너 저장
   const centerChangeListenerRef = useRef<(() => void) | null>(null);
   const isUserInteractingRef = useRef(false); // 사용자가 지도를 직접 조작 중인지 여부
   const markersRefProp = useRef(markers); // markers prop의 최신 값을 저장
   const onCenterChangeRef = useRef(onCenterChange); // onCenterChange prop의 최신 값을 저장
+  const onMarkerClickRef = useRef(onMarkerClick); // onMarkerClick prop의 최신 값을 저장
   const paddingRef = useRef(padding); // padding prop의 최신 값을 저장
   const centerRef = useRef(center); // center prop의 최신 값을 저장
   const zoomRef = useRef(zoom); // zoom prop의 최신 값을 저장
   const zoomControlRef = useRef(zoomControl); // zoomControl prop의 최신 값을 저장
 
-  // markers, onCenterChange, padding, center, zoom, zoomControl의 최신 값을 ref에 저장
+  // markers, onCenterChange, onMarkerClick, padding, center, zoom, zoomControl의 최신 값을 ref에 저장
   useEffect(() => {
     markersRefProp.current = markers;
     onCenterChangeRef.current = onCenterChange;
+    onMarkerClickRef.current = onMarkerClick;
     paddingRef.current = padding;
     centerRef.current = center;
     zoomRef.current = zoom;
     zoomControlRef.current = zoomControl;
-  }, [markers, onCenterChange, padding, center, zoom, zoomControl]);
+  }, [markers, onCenterChange, onMarkerClick, padding, center, zoom, zoomControl]);
 
   useEffect(() => {
     const CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
@@ -196,23 +205,103 @@ export default function NaverMap({ className = '', style, markers = [], onCenter
 
     function addMarkers() {
       const currentMarkers = markersRefProp.current;
-      if (!mapInstanceRef.current || !window.naver?.maps || currentMarkers.length === 0) return;
+      if (!mapInstanceRef.current || !window.naver?.maps) return;
 
-      // 기존 마커 제거
-      markersRef.current.forEach(marker => {
-        if (marker && 'setMap' in marker && typeof (marker as { setMap: (map: Map | null) => void }).setMap === 'function') {
-          (marker as { setMap: (map: Map | null) => void }).setMap(null);
+      // 기존 마커 제거 (markers가 비어있어도 제거해야 함)
+      markersRef.current.forEach((marker, index) => {
+        if (marker) {
+          // 리스너를 명시적으로 제거 (메모리 누수 방지)
+          const listener = markerClickListenersRef.current[index];
+          if (listener && 'removeListener' in marker && typeof (marker as Marker).removeListener === 'function') {
+            try {
+              (marker as Marker).removeListener('click', listener);
+            } catch (error) {
+              // 마커가 이미 제거되었거나 유효하지 않은 경우 무시
+              // 네이버 지도 API가 자동으로 정리했을 수 있음
+            }
+          }
+          // 마커 제거
+          if ('setMap' in marker && typeof (marker as { setMap: (map: Map | null) => void }).setMap === 'function') {
+            try {
+              (marker as { setMap: (map: Map | null) => void }).setMap(null);
+            } catch (error) {
+              // 마커가 이미 제거된 경우 무시
+            }
+          }
         }
       });
       markersRef.current = [];
+      markerClickListenersRef.current = [];
+
+      // markers가 비어있으면 여기서 종료
+      if (currentMarkers.length === 0) return;
 
       // 새 마커 추가
       currentMarkers.forEach((markerData) => {
-        const marker = new window.naver.maps.Marker({
+        const markerOptions: MarkerOptions = {
           position: new window.naver.maps.LatLng(markerData.lat, markerData.lng),
           map: mapInstanceRef.current!,
           title: markerData.title || '',
-        });
+        };
+
+        // 이미지 URL이 있으면 커스텀 아이콘으로 설정, 없으면 기본 이미지 사용
+        const imageUrl = markerData.imageUrl || defaultProfileImage;
+        const iconSize = { width: 50, height: 50 };
+        const iconAnchor = { x: 25, y: 50 }; // 이미지 하단 중앙을 기준점으로 설정
+        
+        // 원형 이미지와 아래 화살표를 포함한 HTML 마커
+        const markerHtml = `
+          <div style="
+            position: relative;
+            width: ${iconSize.width}px;
+            height: ${iconSize.height + 10}px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+          ">
+            <img 
+              src="${imageUrl}" 
+              alt="${markerData.title || ''}"
+              style="
+                width: ${iconSize.width}px;
+                height: ${iconSize.height}px;
+                border-radius: 8px;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                object-fit: cover;
+              "
+              onerror="this.src='${defaultProfileImage}'"
+            />
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 8px solid transparent;
+              border-right: 8px solid transparent;
+              border-top: 10px solid white;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+              margin-top: -3px;
+            "></div>
+          </div>
+        `;
+
+        markerOptions.icon = {
+          content: markerHtml,
+          size: { width: iconSize.width, height: iconSize.height + 10 },
+          anchor: iconAnchor,
+        };
+
+        const marker = new window.naver.maps.Marker(markerOptions);
+        
+        // 마커 클릭 이벤트 리스너 추가
+        if (markerData.id !== undefined && onMarkerClickRef.current) {
+          const clickListener = () => {
+            onMarkerClickRef.current!(markerData.id!);
+          };
+          marker.addListener('click', clickListener);
+          markerClickListenersRef.current.push(clickListener);
+        }
+        
         markersRef.current.push(marker);
       });
     }
@@ -263,22 +352,102 @@ export default function NaverMap({ className = '', style, markers = [], onCenter
 
   // markers가 변경되면 마커 업데이트
   useEffect(() => {
-    if (mapInstanceRef.current && window.naver?.maps && markers.length > 0) {
-      // 기존 마커 제거
-      markersRef.current.forEach(marker => {
-        if (marker && 'setMap' in marker && typeof (marker as { setMap: (map: Map | null) => void }).setMap === 'function') {
-          (marker as { setMap: (map: Map | null) => void }).setMap(null);
+    if (mapInstanceRef.current && window.naver?.maps) {
+      // 기존 마커 제거 (markers가 비어있어도 제거해야 함)
+      markersRef.current.forEach((marker, index) => {
+        if (marker) {
+          // 리스너를 명시적으로 제거 (메모리 누수 방지)
+          const listener = markerClickListenersRef.current[index];
+          if (listener && 'removeListener' in marker && typeof (marker as Marker).removeListener === 'function') {
+            try {
+              (marker as Marker).removeListener('click', listener);
+            } catch (error) {
+              // 마커가 이미 제거되었거나 유효하지 않은 경우 무시
+              // 네이버 지도 API가 자동으로 정리했을 수 있음
+            }
+          }
+          // 마커 제거
+          if ('setMap' in marker && typeof (marker as { setMap: (map: Map | null) => void }).setMap === 'function') {
+            try {
+              (marker as { setMap: (map: Map | null) => void }).setMap(null);
+            } catch (error) {
+              // 마커가 이미 제거된 경우 무시
+            }
+          }
         }
       });
       markersRef.current = [];
+      markerClickListenersRef.current = [];
+
+      // markers가 비어있으면 여기서 종료
+      if (markers.length === 0) return;
 
       // 새 마커 추가
       markers.forEach((markerData) => {
-        const marker = new window.naver.maps.Marker({
+        const markerOptions: MarkerOptions = {
           position: new window.naver.maps.LatLng(markerData.lat, markerData.lng),
           map: mapInstanceRef.current!,
           title: markerData.title || '',
-        });
+        };
+
+        // 이미지 URL이 있으면 커스텀 아이콘으로 설정, 없으면 기본 이미지 사용
+        const imageUrl = markerData.imageUrl || defaultProfileImage;
+        const iconSize = { width: 50, height: 50 };
+        const iconAnchor = { x: 25, y: 50 }; // 이미지 하단 중앙을 기준점으로 설정
+        
+        // 음식 이미지와 아래 화살표를 포함한 HTML 마커
+        const markerHtml = `
+          <div style="
+            position: relative;
+            width: ${iconSize.width}px;
+            height: ${iconSize.height + 10}px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+          ">
+            <img 
+              src="${imageUrl}" 
+              alt="${markerData.title || ''}"
+              style="
+                width: ${iconSize.width}px;
+                height: ${iconSize.height}px;
+                border-radius: 8px;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                object-fit: cover;
+              "
+              onerror="this.src='${defaultProfileImage}'"
+            />
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 8px solid transparent;
+              border-right: 8px solid transparent;
+              border-top: 10px solid white;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+              margin-top: -3px;
+            "></div>
+          </div>
+        `;
+
+        markerOptions.icon = {
+          content: markerHtml,
+          size: { width: iconSize.width, height: iconSize.height + 10 },
+          anchor: iconAnchor,
+        };
+
+        const marker = new window.naver.maps.Marker(markerOptions);
+        
+        // 마커 클릭 이벤트 리스너 추가
+        if (markerData.id !== undefined && onMarkerClickRef.current) {
+          const clickListener = () => {
+            onMarkerClickRef.current!(markerData.id!);
+          };
+          marker.addListener('click', clickListener);
+          markerClickListenersRef.current.push(clickListener);
+        }
+        
         markersRef.current.push(marker);
       });
     }
