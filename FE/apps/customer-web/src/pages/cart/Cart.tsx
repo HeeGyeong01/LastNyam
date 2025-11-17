@@ -4,6 +4,7 @@ import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import CartMenuCard from './component/cartMenuCard';
 import { getCart, type CartData } from './api/cart.api';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // shopCloses 시간을 "HH시 MM분" 형식으로 변환
 function formatCloseTime(closeTime: string): string {
@@ -13,6 +14,7 @@ function formatCloseTime(closeTime: string): string {
 
 export default function Cart() {
   const navigate = useNavigate();
+  const { userId } = useAuthStore();
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +22,16 @@ export default function Cart() {
   // 장바구니 데이터 조회
   useEffect(() => {
     const fetchCart = async () => {
+      if (!userId) {
+        setError('로그인이 필요합니다.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setError(null);
-        // TODO: 로그인 구현 후 실제 userId 사용
-        const data = await getCart(2);
+        const data = await getCart(userId);
         console.log('Cart API Response:', data);
         setCartData(data);
       } catch (err) {
@@ -36,7 +43,7 @@ export default function Cart() {
     };
 
     fetchCart();
-  }, []);
+  }, [userId]);
 
   const handleQuantityChange = (cartItemId: number, newQuantity: number) => {
     setCartData(prev => {
