@@ -143,20 +143,20 @@ export default function ReceiptConfirmPage() {
     try {
       setIsConfirming(true);
       
-      // 주문 상태를 WAITING_PICKUP으로 변경 (수령 확인)
+      // 주문 상태를 COMPLETED_PICKUP으로 변경 (수령 확인)
       await orderApi.updateOrderStatus(
         ownerId,
         transactionId,
         {
           transactionType: transactionType,
-          status: "WAITING_PICKUP",
+          status: "COMPLETED_PICKUP",
         },
         accessToken
       );
       
       // 수령 확인 후 주문 목록 페이지로 이동
       setIsConfirmModalOpen(false);
-      navigate("/orders");
+      navigate("/orders/list");
     } catch (err) {
       console.error("수령 확인 실패:", err);
       alert(err instanceof Error ? err.message : "수령 확인에 실패했습니다.");

@@ -4,8 +4,11 @@ const OWNER_API_BASE_URL =
 
 export type TransactionStatus =
   | "PENDING_APPROVAL"
+  | "REJECTED"
   | "PREPARING_FOOD"
-  | "WAITING_PICKUP";
+  | "WAITING_PICKUP"
+  | "COMPLETED_PICKUP"
+  | "NO_SHOW";
 
 export type TransactionType = "DISCOUNT" | "FOOCKETING";
 
