@@ -124,7 +124,7 @@ export default function OrderListPage() {
   }, [fetchTransactions]);
 
   const handleManageMenu = () => {
-    navigate("/owner/catalog/menu");
+    navigate("/catalog/menu");
   };
 
   const handleAdvanceStatus = async (target: OrderStatusBoardTransaction) => {
@@ -192,7 +192,7 @@ export default function OrderListPage() {
       title = "등록된 가게 정보가 없어요";
       description = "가게 정보를 등록할까요?";
       buttonText = "가게 정보 등록";
-      buttonAction = () => navigate("/owner/store-information/step1-document");
+      buttonAction = () => navigate("/store-information/step1-document");
     } else if (isLoading) {
       title = "주문을 불러오고 있어요";
       description = "잠시만 기다려주세요";
@@ -235,7 +235,7 @@ export default function OrderListPage() {
             btnStyle="filled-red"
             size="lg"
             className="w-full"
-            onClick={() => navigate("/owner/orders/qr-scan")}
+            onClick={() => navigate("/orders/qr-scan")}
           >
             QR 찍기
           </Button>

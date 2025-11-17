@@ -39,20 +39,20 @@ interface Menu {
 }
 
 const ownerRoutes = [
-  { path: '/owner/login', label: '로그인' },
-  { path: '/owner/signup', label: '회원가입' },
-  { path: '/owner/orders/list', label: '주문 리스트' },
-  { path: '/owner/orders/qr-scan', label: 'QR 스캔' },
-  { path: '/owner/orders/receipt-confirm', label: '영수증 확인' },
-  { path: '/owner/catalog/menu', label: '메뉴 관리' },
-  { path: '/owner/catalog/foocketing', label: '푸켓팅' },
-  { path: '/owner/catalog/closeout-sale', label: '마감 세일' },
-  { path: '/owner/insights/report', label: '주간 레포트' },
-  { path: '/owner/settings', label: '가게 설정' },
-  { path: '/owner/store-information/step1-input', label: '가게 정보 입력 1단계 - 기본 정보' },
-  { path: '/owner/store-information/step1-document', label: '가게 정보 입력 1단계 - 서류 업로드' },
-  { path: '/owner/store-information/step2', label: '가게 정보 입력 2단계' },
-  { path: '/owner/qr-test', label: 'QR 테스트 페이지' },
+  { path: '/login', label: '로그인' },
+  { path: '/signup', label: '회원가입' },
+  { path: '/orders/list', label: '주문 리스트' },
+  { path: '/orders/qr-scan', label: 'QR 스캔' },
+  { path: '/orders/receipt-confirm', label: '영수증 확인' },
+  { path: '/catalog/menu', label: '메뉴 관리' },
+  { path: '/catalog/foocketing', label: '푸켓팅' },
+  { path: '/catalog/closeout-sale', label: '마감 세일' },
+  { path: '/insights/report', label: '주간 레포트' },
+  { path: '/settings', label: '가게 설정' },
+  { path: '/store-information/step1-input', label: '가게 정보 입력 1단계 - 기본 정보' },
+  { path: '/store-information/step1-document', label: '가게 정보 입력 1단계 - 서류 업로드' },
+  { path: '/store-information/step2', label: '가게 정보 입력 2단계' },
+  { path: '/qr-test', label: 'QR 테스트 페이지' },
 ];
 
 export default function ComponentTestPage() {

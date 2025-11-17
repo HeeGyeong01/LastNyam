@@ -83,7 +83,7 @@ export default function LoginPage() {
               setShouldPreventPublicRedirect(false);
 
               // 가게가 있으면 주문 목록 페이지로 이동
-              navigate('/owner/orders/list', { replace: true });
+              navigate('/orders/list', { replace: true });
             }
           } catch (shopError) {
             console.error('❌ 가게 목록 조회 오류:', shopError);
@@ -116,7 +116,7 @@ export default function LoginPage() {
   const handleRegisterShop = () => {
     setShowShopModal(false);
     // navigate를 먼저 호출하고, 이동 후에 플래그 해제
-    navigate('/owner/store-information/step1-document');
+    navigate('/store-information/step1-document');
     // 페이지 이동 후 플래그 해제 (약간의 지연)
     setTimeout(() => {
       setShouldPreventPublicRedirect(false);

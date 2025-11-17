@@ -112,7 +112,7 @@ export default function SignUpPage() {
   const handleStoreRegistration = () => {
     setModalOpen(false);
     // navigate를 먼저 호출하고, 이동 후에 플래그 해제
-    navigate('/owner/store-information/step1-document', { replace: true });
+    navigate('/store-information/step1-document', { replace: true });
     // 페이지 이동 후 플래그 해제 (약간의 지연)
     setTimeout(() => {
       setShouldPreventPublicRedirect(false);

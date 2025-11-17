@@ -188,6 +188,8 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  basename: "/owner"
+});
 
 export default router;
