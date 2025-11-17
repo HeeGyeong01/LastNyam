@@ -17,11 +17,13 @@ import { Button } from '@shared/components/Button';
 import { useNavigate } from 'react-router-dom';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useServerTime } from '@/shared/hooks/useServerTime';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // 서버 시간 동기화 훅 사용 (30초마다 서버 시간과 동기화)
+  const currentTime = useServerTime(30000);
   const [isWaitingEntry, setIsWaitingEntry] = useState(false);
   const [isWaitingResult, setIsWaitingResult] = useState(false);
   const navigate = useNavigate();
@@ -71,15 +73,6 @@ export default function FoocketingDetail() {
 
     target.addEventListener('scroll', handleScroll);
     return () => target.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // 현재 시간 업데이트
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
   }, []);
 
   // 푸켓팅 참여하기 핸들러
