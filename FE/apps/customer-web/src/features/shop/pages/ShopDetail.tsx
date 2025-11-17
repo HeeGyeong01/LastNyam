@@ -1,6 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
-import { PageHeader } from '@/shared/components';
+import { PageHeader, BottomSheet } from '@/shared/components';
+import { Button } from '@shared/components/Button';
 import { DiscountList } from '@/features/discount/component';
 import { FoocketingList } from '@/features/foocketing/component';
 import { Tab } from '@shared/components/Tab';
@@ -11,9 +12,14 @@ import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
 export default function ShopDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const discountSectionRef = useRef<HTMLDivElement>(null);
   const foocketingSectionRef = useRef<HTMLDivElement>(null);
+
+  // 장바구니에서 온 경우 state 받기
+  const fromCart = location.state?.fromCart || false;
+  const cartTotalPrice = location.state?.totalPrice || 0;
 
   const {
     shopDetail: detail,
@@ -185,6 +191,20 @@ export default function ShopDetail() {
             </div>
           )}
         </div>
+      )}
+
+      {/* 장바구니에서 온 경우 하단 바텀시트 */}
+      {fromCart && (
+        <BottomSheet showBackdrop={false}>
+          <Button
+            btnStyle="filled-yellow"
+            size="lg"
+            className="w-full"
+            onClick={() => navigate('/cart')}
+          >
+            {cartTotalPrice.toLocaleString('ko-KR')}원 결제하기
+          </Button>
+        </BottomSheet>
       )}
     </>
   );

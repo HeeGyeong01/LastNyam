@@ -71,7 +71,12 @@ export default function Cart() {
 
   const handleAddMore = () => {
     if (cartData?.shop?.shopId) {
-      navigate(`/shop/${cartData.shop.shopId}`);
+      navigate(`/shop/${cartData.shop.shopId}`, {
+        state: { 
+          fromCart: true, 
+          totalPrice: totalPrice 
+        }
+      });
     }
   };
 
