@@ -38,6 +38,14 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // API 경로는 Service Worker가 가로채지 않도록 설정
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [
+          // API 경로는 Service Worker가 처리하지 않음
+          /^\/api\/.*/,
+          // 외부 도메인도 제외
+          /^https:\/\/.*/,
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

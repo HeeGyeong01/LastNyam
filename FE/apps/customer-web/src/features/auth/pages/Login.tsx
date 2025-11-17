@@ -1,16 +1,15 @@
 import catImage from '@/shared/assets/lastnyam-cat.png';
 import TypoLogo from '@/shared/assets/typo-logo.svg?react';
+import { BASE_URL } from '@/shared/api/client';
 
 export default function Login() {
   const handleKakaoLogin = () => {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
     // 🔍 로그: 환경 변수 및 요청 URL 확인
     console.log('=== 카카오 로그인 요청 ===');
-    console.log('VITE_API_BASE_URL:', API_BASE_URL);
+    console.log('BASE_URL:', BASE_URL);
 
     // 카카오 로그인 페이지로 직접 이동
-    window.location.href = `${API_BASE_URL}/api/auth/social/kakao`;
+    window.location.href = `${BASE_URL}/api/auth/social/kakao`;
   };
 
   return (
