@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@shared/src/components/Input';
 import { Button } from '@shared/src/components/Button';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -183,9 +183,9 @@ export default function LoginPage() {
 
           <div className="mt-4 text-center">
             <span className="p2-r text-secondary">아직 회원이 아니신가요? </span>
-            <a href="/signup" className="p2-b text-brand hover:underline">
+            <Link to="/signup" className="p2-b text-brand hover:underline">
               회원가입
-            </a>
+            </Link>
           </div>
         </form>
       </div>
