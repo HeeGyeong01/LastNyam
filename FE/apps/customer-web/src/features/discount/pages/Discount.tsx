@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { clearLocationCache } from '@/shared/lib/geolocation';
 import { useDiscountList } from '@/features/discount/hook';
 import NaverMap from '@/shared/components/NaverMap';
-import { PageHeader, DraggableBottomSheet, BottomSheet } from '@/shared/components';
+import { PageHeader, DraggableBottomSheet } from '@/shared/components';
 import { DiscountList, DiscountListHeader } from '@/features/discount/component';
 import { Tab } from '@shared/components/Tab';
 import type { DiscountCategory, DiscountItem, DiscountSortType } from '@/features/discount/type';
@@ -16,8 +16,12 @@ export default function Discount() {
   // 지도 중심 좌표 상태 (지도 이동 시 업데이트)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
+  // 정렬 옵션 (SortBottomSheet에서 관리)
+  const [sort, setSort] = useState<DiscountSortType>('FAVORITES');
+
   // 마감세일 데이터 가져오기
   // mapCenter가 있으면 지도 중심 좌표 사용, 없으면 API 함수에서 자동으로 가져옴
+  // sort가 변경되면 queryKey가 변경되어 자동으로 새로운 데이터를 가져옴
   const {
     category,
     discounts,
@@ -25,7 +29,7 @@ export default function Discount() {
     error,
     changeCategory,
   } = useDiscountList({
-    sort: 'RATING',
+    sort,
     lat: mapCenter?.lat,
     lng: mapCenter?.lng,
   });
@@ -47,21 +51,8 @@ export default function Discount() {
     changeCategory(newCategory);
   };
 
-  // 정렬 옵션
-  const sortLabels: Record<DiscountSortType, string> = {
-    FAVORITES: '찜하기순',
-    RATING: '별점순',
-    CLOSEST: '거리순',
-    DISCOUNT: '할인율순',
-    PRICE: '가격순',
-  };
-  const [sort] = useState<DiscountSortType>('FAVORITES');
-  // TODO: 정렬 기능 구현 시 setSort 사용 
-
   // Header와 Tab 높이 (PageHeader: 48px, Tab: 약 48px)
   const HEADER_TAB_HEIGHT = 96;
-  
-  const [isSortBottomSheetOpen, setIsSortBottomSheetOpen] = useState(false);
 
   return (
     <div className="w-full">
@@ -113,10 +104,7 @@ export default function Discount() {
             <>
               <DiscountListHeader
                 sort={sort}
-                sortLabels={sortLabels}
-                onSortClick={() => {
-                  setIsSortBottomSheetOpen(true);
-                }}
+                onSortSelect={setSort} // sort 변경 시 setSort 실행 → useDiscountList의 queryKey 변경 → API 재요청
               />
               <DiscountList
                 discounts={discounts}
@@ -126,23 +114,6 @@ export default function Discount() {
         </div>
       </DraggableBottomSheet>
 
-      {/* 정렬 옵션 바텀시트 */}
-      {isSortBottomSheetOpen && (
-        <BottomSheet
-          showBackdrop={true}
-          onBackdropClick={() => setIsSortBottomSheetOpen(false)}
-        >
-          <div className="p-4">
-            <p>정렬 옵션 바텀시트</p>
-            <button 
-              onClick={() => setIsSortBottomSheetOpen(false)}
-              className="mt-4 px-4 py-2 bg-gray-200 rounded"
-            >
-              닫기
-            </button>
-          </div>
-        </BottomSheet>
-      )}
     </div>
   );
 }

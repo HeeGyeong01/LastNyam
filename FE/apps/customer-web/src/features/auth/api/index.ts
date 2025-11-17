@@ -40,3 +40,13 @@ export const updateOnboardingProfile = async (
   // 응답 구조: { data: { userId, ... }, status, code, message }
   return response.data.data;
 };
+
+/**
+ * 로그아웃
+ * GET /api/auth/logout
+ *
+ * 헤더에 Authorization 토큰이 자동으로 포함됩니다 (apiClient interceptor)
+ */
+export const logout = async (): Promise<void> => {
+  await apiClient.get('/api/auth/logout');
+};
