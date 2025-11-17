@@ -13,6 +13,7 @@ import com.lastnyam.database.entity.DiscountTransaction;
 import com.lastnyam.database.entity.DiscountTransactionItem;
 import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingTransaction;
+import com.lastnyam.database.entity.Menu;
 import com.lastnyam.database.entity.Shop;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -142,15 +143,17 @@ public class TransactionService {
                 .openTime(shop.getShopCloses() != null ? shop.getShopCloses().format(TIME_FORMATTER) : null)
                 .build();
 
+        Menu menu = foocketing.getMenu();
+
         // 메뉴 정보 변환 (푸케팅은 거래당 1개의 메뉴)
         MenuItemInfo menuInfo = MenuItemInfo.builder()
-                .menuName(foocketing.getMenu().getMenuName())
-                .price(foocketing.getMenu().getMenuPrice()) // 푸케팅 가격
+                .menuName(menu.getMenuName())
+                .price(menu.getMenuPrice()) // 푸케팅 가격
                 .quantity(1) // 푸케팅은 항상 1개
                 .build();
 
         // 총 결제 금액 (푸케팅은 1개이므로 foocketingAmount)
-        Integer totalAmount = foocketing.getFoocketingAmount();
+        Integer totalAmount = menu.getMenuPrice();
 
         return FoocketingTransactionInfo.builder()
                 .transactionId(transaction.getTransactionId())
