@@ -124,11 +124,29 @@ public class ShopService {
 
         favoriteRepository.save(favorite);
 
+        // 즐겨찾기 카운트 +1 (없으면 생성)
+        int updated = shopRatingRepository.incrementFavoriteCount(shopId);
+        if (updated == 0) {
+                ShopRating newRating = ShopRating.builder()
+                        .shopId(shop.getShopId())
+                        .shop(shop)
+                        .shopRatingSum(0)
+                        .shopRatingCount(0)
+                        .shopFavoriteCount(1)
+                        .shopRatingAverage(0.0)
+                        .build();
+                shopRatingRepository.save(newRating);
+        }
+
+        ShopRating currentRating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
+        Integer favoriteCount = currentRating != null ? currentRating.getShopFavoriteCount() : 0;
+
         return ShopFavoriteResponseDto.builder()
-                .shopId(shopId)
-                .userId(userId)
-                .favorited(true)
-                .build();
+                        .shopId(shopId)
+                        .userId(userId)
+                        .favorited(true)
+                        .shopFavoriteCount(favoriteCount)
+                        .build();
     }
 
     @Transactional
@@ -138,11 +156,18 @@ public class ShopService {
 
         favoriteRepository.delete(favorite);
 
+        // 즐겨찾기 카운트 -1 (음수 방지 조건 포함)
+        shopRatingRepository.decrementFavoriteCount(shopId);
+
+        ShopRating currentRating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
+        Integer favoriteCount = currentRating != null ? currentRating.getShopFavoriteCount() : 0;
+
         return ShopFavoriteResponseDto.builder()
-                .shopId(shopId)
-                .userId(userId)
-                .favorited(false)
-                .build();
+                        .shopId(shopId)
+                        .userId(userId)
+                        .favorited(false)
+                        .shopFavoriteCount(favoriteCount)
+                        .build();
     }
 
     private Double haversineDistanceMeters(double lat1, double lon1, double lat2, double lon2) {
