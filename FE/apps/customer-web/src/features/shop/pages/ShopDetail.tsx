@@ -10,8 +10,7 @@ import { useShopDetail } from '@/features/shop/hook';
 import type { ShopDetailFoocketing } from '@/features/shop/type';
 import { ShopInfoTabs, ShopProfile } from '@/features/shop/component';
 import { useLayout } from '@/contexts/LayoutContext';
-// TODO: 임시 하드코딩 - 로그인 기능 연결 후 주석 해제 필요
-// import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 import { addFavorite, removeFavorite } from '@/features/favorite/api/favorite';
 
@@ -28,9 +27,7 @@ export default function ShopDetail() {
   const fromCart = location.state?.fromCart || false;
 
   const shopId = id ? Number(id) : 0;
-  // TODO: 임시 하드코딩 - 로그인 기능 연결 후 제거 필요
-  // const userId = useAuthStore((state) => state.userId);
-  const userId = 2; // 임시: 로그인 기능 연결 후 위의 주석 해제하고 이 줄 삭제
+  const userId = useAuthStore((state) => state.userId);
   const requireAuth = useRequireAuth();
 
   const {
