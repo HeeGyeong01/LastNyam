@@ -145,7 +145,7 @@ public class TransactionService {
         // 메뉴 정보 변환 (푸케팅은 거래당 1개의 메뉴)
         MenuItemInfo menuInfo = MenuItemInfo.builder()
                 .menuName(foocketing.getMenu().getMenuName())
-                .price(foocketing.getFoocketingAmount()) // 푸케팅 가격
+                .price(foocketing.getMenu().getMenuPrice()) // 푸케팅 가격
                 .quantity(1) // 푸케팅은 항상 1개
                 .build();
 

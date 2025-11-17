@@ -64,6 +64,7 @@ public class SecurityConfig {
                                 "/api/login/**",
                                 "/api/auth/social/kakao",
                                 "/api/auth/token/refresh",
+                                "/api/cart/**",
                                 "/api/foocketing/**",
                                 "/api/discount/**",
                                 "/api/shop/*",

@@ -35,10 +35,13 @@ public class FoocketingService {
     private final FoocketingDetailRepository detailRepository;
 
     public FoocketingDetail getDetailOf(Double lng, Double lat, Integer userId, Integer foocketingId) {
+        if (userId == null) {
+            userId = 0;
+        }
         FoocketingDetail result = detailRepository.getDetailOf(lng, lat, userId, foocketingId);
 
         String key = VIEW_PREFIX + foocketingId;
-        
+
         Integer viewingCount = (Integer) redisService.get(key);
 
         if (viewingCount != null) {
