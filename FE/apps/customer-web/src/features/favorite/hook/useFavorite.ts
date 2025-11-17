@@ -1,43 +1,69 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { addFavorite, removeFavorite } from '../api/favorite';
 import { useAuthStore } from '@/store/useAuthStore';
+import { getShopDetail } from '@/features/shop/api/shop';
 import type { ShopDetail } from '@/features/shop/type';
 
 /**
  * 찜하기/찜취소를 위한 React Query mutation 훅
+ * 찜 상태와 찜 개수를 항상 최신 상태로 관리
  * 
  * @param shopId - 가게 ID
  */
 export function useFavorite(shopId: number) {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.userId);
+  
+  // 찜 상태와 찜 개수를 항상 최신으로 가져오기 위한 별도 쿼리
+  // ShopDetail은 캐싱되지만, 찜 관련 정보는 항상 최신 상태 유지
+  const {
+    data: favoriteData,
+    isLoading: isLoadingFavorite,
+  } = useQuery({
+    queryKey: ['shop', 'favorite', shopId],
+    queryFn: () => getShopDetail(shopId),
+    enabled: !!shopId,
+    staleTime: 0, // 항상 최신 상태 유지
+    refetchOnMount: 'always', // 마운트 시 항상 최신 데이터 가져오기
+    select: (data: ShopDetail) => ({
+      favorited: data.favorited ?? false,
+      ratingCount: data.ratingCount,
+    }),
+  });
+  
+  const favorited = favoriteData?.favorited ?? false;
+  const ratingCount = favoriteData?.ratingCount ?? 0;
 
   // 찜하기 mutation
   const addFavoriteMutation = useMutation({
     mutationFn: () => addFavorite(shopId, userId ?? undefined),
     onMutate: async () => {
       // Optimistic Update: 즉시 UI 업데이트
-      await queryClient.cancelQueries({ queryKey: ['shop', 'detail', shopId] });
+      await queryClient.cancelQueries({ queryKey: ['shop', 'favorite', shopId] });
       
-      const previousData = queryClient.getQueryData<ShopDetail>(['shop', 'detail', shopId]);
+      // 찜 상태 쿼리 데이터 가져오기
+      const previousFavoriteData = queryClient.getQueryData<{ favorited: boolean; ratingCount: number }>(['shop', 'favorite', shopId]);
       
-      if (previousData) {
-        queryClient.setQueryData<ShopDetail>(['shop', 'detail', shopId], {
-          ...previousData,
+      // 찜 상태 쿼리 업데이트 (찜하기: favorited = true, ratingCount + 1)
+      if (previousFavoriteData) {
+        queryClient.setQueryData(['shop', 'favorite', shopId], {
           favorited: true,
+          ratingCount: previousFavoriteData.ratingCount + 1,
         });
       }
       
-      return { previousData };
+      return { previousFavoriteData };
     },
     onError: (_err, _variables, context) => {
       // 에러 발생 시 이전 데이터로 롤백
-      if (context?.previousData) {
-        queryClient.setQueryData(['shop', 'detail', shopId], context.previousData);
+      if (context?.previousFavoriteData) {
+        queryClient.setQueryData(['shop', 'favorite', shopId], context.previousFavoriteData);
       }
     },
     onSuccess: () => {
-      // ShopDetail 쿼리 캐시 무효화하여 최신 데이터 가져오기
+      // 찜 상태 쿼리 무효화하여 최신 데이터 가져오기
+      queryClient.invalidateQueries({ queryKey: ['shop', 'favorite', shopId] });
+      // ShopDetail 쿼리도 무효화 (찜 개수 업데이트를 위해)
       queryClient.invalidateQueries({ queryKey: ['shop', 'detail', shopId] });
       // 찜한 가게 목록도 무효화
       if (userId) {
@@ -51,27 +77,31 @@ export function useFavorite(shopId: number) {
     mutationFn: () => removeFavorite(shopId, userId ?? undefined),
     onMutate: async () => {
       // Optimistic Update: 즉시 UI 업데이트
-      await queryClient.cancelQueries({ queryKey: ['shop', 'detail', shopId] });
+      await queryClient.cancelQueries({ queryKey: ['shop', 'favorite', shopId] });
       
-      const previousData = queryClient.getQueryData<ShopDetail>(['shop', 'detail', shopId]);
+      // 찜 상태 쿼리 데이터 가져오기
+      const previousFavoriteData = queryClient.getQueryData<{ favorited: boolean; ratingCount: number }>(['shop', 'favorite', shopId]);
       
-      if (previousData) {
-        queryClient.setQueryData<ShopDetail>(['shop', 'detail', shopId], {
-          ...previousData,
+      // 찜 상태 쿼리 업데이트 (찜취소: favorited = false, ratingCount - 1)
+      if (previousFavoriteData) {
+        queryClient.setQueryData(['shop', 'favorite', shopId], {
           favorited: false,
+          ratingCount: Math.max(0, previousFavoriteData.ratingCount - 1),
         });
       }
       
-      return { previousData };
+      return { previousFavoriteData };
     },
     onError: (_err, _variables, context) => {
       // 에러 발생 시 이전 데이터로 롤백
-      if (context?.previousData) {
-        queryClient.setQueryData(['shop', 'detail', shopId], context.previousData);
+      if (context?.previousFavoriteData) {
+        queryClient.setQueryData(['shop', 'favorite', shopId], context.previousFavoriteData);
       }
     },
     onSuccess: () => {
-      // ShopDetail 쿼리 캐시 무효화하여 최신 데이터 가져오기
+      // 찜 상태 쿼리 무효화하여 최신 데이터 가져오기
+      queryClient.invalidateQueries({ queryKey: ['shop', 'favorite', shopId] });
+      // ShopDetail 쿼리도 무효화 (찜 개수 업데이트를 위해)
       queryClient.invalidateQueries({ queryKey: ['shop', 'detail', shopId] });
       // 찜한 가게 목록도 무효화
       if (userId) {
@@ -80,9 +110,22 @@ export function useFavorite(shopId: number) {
     },
   });
 
+  // 찜하기 토글 함수 (현재 찜 상태를 자동으로 확인)
+  const toggleFavorite = () => {
+    if (favorited) {
+      removeFavoriteMutation.mutate();
+    } else {
+      addFavoriteMutation.mutate();
+    }
+  };
+
   return {
     addFavorite: addFavoriteMutation.mutate,
     removeFavorite: removeFavoriteMutation.mutate,
+    toggleFavorite, // 토글 함수
+    favorited, // 현재 찜하기 상태 (항상 최신)
+    ratingCount, // 찜 개수 (항상 최신)
+    isLoadingFavorite, // 찜 상태 로딩 중
     isAdding: addFavoriteMutation.isPending,
     isRemoving: removeFavoriteMutation.isPending,
     isPending: addFavoriteMutation.isPending || removeFavoriteMutation.isPending,

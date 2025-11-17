@@ -32,19 +32,15 @@ export default function ShopDetail() {
     shopId: id ? Number(id) : 0, // id가 없으면 0 (enabled: !!shopId로 쿼리 실행 안됨)
   });
 
-  // 찜하기 mutation 훅
+  // 찜하기 mutation 훅 (찜 상태와 찜 개수를 항상 최신으로 관리)
   const shopId = id ? Number(id) : 0;
-  const { addFavorite, removeFavorite, isPending: isFavoritePending } = useFavorite(shopId);
+  const { toggleFavorite, favorited, ratingCount: favoriteRatingCount, isPending: isFavoritePending } = useFavorite(shopId);
   const requireAuth = useRequireAuth();
 
   // 찜하기 버튼 클릭 핸들러
   const handleFavoriteClick = () => {
     requireAuth(() => {
-      if (detail?.favorited) {
-        removeFavorite();
-      } else {
-        addFavorite();
-      }
+      toggleFavorite();
     });
   };
 
@@ -151,8 +147,8 @@ export default function ShopDetail() {
             shopBanner={detail.shopBanner}
             shopName={detail.shopName}
             rating={detail.rating}
-            ratingCount={detail.ratingCount}
-            favorited={detail.favorited ?? false}
+            ratingCount={favoriteRatingCount}
+            favorited={favorited}
             onFavoriteClick={handleFavoriteClick}
             isFavoritePending={isFavoritePending}
           />
