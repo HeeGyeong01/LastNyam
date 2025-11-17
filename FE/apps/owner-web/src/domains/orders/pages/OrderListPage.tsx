@@ -98,7 +98,7 @@ export default function OrderListPage() {
         )
         .map<OrderStatusBoardTransaction>((transaction) => ({
           transactionId: transaction.transactionId,
-          transactionStatus: transaction.transactionStatus,
+          transactionStatus: transaction.transactionStatus as OrderStatus,
           createdAt: transaction.createdAt,
           transactionType: transaction.transactionType,
           itemDtos: Array.isArray(transaction.itemDtos) ? transaction.itemDtos : [],
