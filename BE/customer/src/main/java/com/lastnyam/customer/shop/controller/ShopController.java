@@ -27,9 +27,10 @@ public class ShopController {
     public ResponseEntity<ApiResponse<ShopDetailResponseDto>> getShop(
             @PathVariable("shopId") Integer shopId,
             @RequestParam(value = "lat", required = false) Double lat,
-            @RequestParam(value = "lng", required = false) Double lng
+			@RequestParam(value = "lng", required = false) Double lng,
+			@RequestParam(value = "userId", required = false) Integer userId
     ) {
-        ShopDetailResponseDto result = shopService.getShopDetail(shopId, lat, lng);
+		ShopDetailResponseDto result = shopService.getShopDetail(shopId, lat, lng, userId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 
