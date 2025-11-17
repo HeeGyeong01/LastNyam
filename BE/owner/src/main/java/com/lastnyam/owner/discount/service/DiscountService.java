@@ -64,10 +64,12 @@ public class DiscountService {
         // 할인율 계산 (소수점 버림)
         Integer discountRate = (int) (((double) (originalPrice - discountPrice) / originalPrice) * 100);
 
-        // 가게 마감 / 픽업 마감 시간 계산
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime closeTime = calculateTargetTime(now, shop.getShopCloses());
-        LocalDateTime pickupEndTime = calculateTargetTime(now, shop.getShopPickupEndTime());
+        
+        // 영업일 기준 시간 계산 (오전 6시 기준)
+        LocalDateTime closeTime = toBusinessDateTime(now, shop.getShopCloses());
+        LocalDateTime pickupEndTime = toBusinessDateTime(now, shop.getShopPickupEndTime());
+        LocalDate businessDate = getBusinessDate(now);
 
         // 픽업 마감 시간이 현재 시간보다 이전이면 주문 불가
         if (pickupEndTime.isBefore(now) || pickupEndTime.isEqual(now)) {
@@ -75,7 +77,7 @@ public class DiscountService {
         }
 
         Discount discount = Discount.builder()
-                .discountDate(now.toLocalDate())
+                .discountDate(businessDate)
                 .discountRate(discountRate)
                 .discountPrice(discountPrice)
                 .discountMenuAmount(request.getDiscountMenuAmount())
@@ -132,18 +134,39 @@ public class DiscountService {
     }
 
     /**
-     * 현재 시간과 목표 시간(LocalTime)을 비교하여 적절한 LocalDateTime을 반환
-     * 목표 시간이 현재 시간보다 이전이면 다음날로 설정
+     * 영업일 기준 "오늘" 날짜를 반환
+     * 새벽 6시 전이면 전날로 간주 (영업일 개념)
      */
-    private LocalDateTime calculateTargetTime(LocalDateTime now, LocalTime targetTime) {
-        LocalDateTime targetDateTime = LocalDateTime.of(now.toLocalDate(), targetTime);
-
-        // 목표 시간이 현재 시간보다 이전이면 다음날로 설정
-        if (targetDateTime.isBefore(now) || targetDateTime.isEqual(now)) {
-            targetDateTime = targetDateTime.plusDays(1);
+    private LocalDate getBusinessDate(LocalDateTime now) {
+        LocalTime cutoffTime = LocalTime.of(6, 0); // 오전 6시
+        
+        if (now.toLocalTime().isBefore(cutoffTime)) {
+            // 새벽 6시 전이면 전날 영업일로 간주
+            return now.toLocalDate().minusDays(1);
+        } else {
+            return now.toLocalDate();
         }
+    }
 
-        return targetDateTime;
+    /**
+     * 영업일 기준으로 LocalTime을 LocalDateTime으로 변환
+     * 오전 6시 기준으로 영업일을 구분하여 적절한 날짜와 시간을 조합
+     * 
+     * 예시:
+     * - 현재 23:00, 마감 02:00 → 다음날 02:00 (같은 영업일의 새벽 마감)
+     * - 현재 01:00, 마감 02:00 → 오늘 02:00 (아직 같은 영업일)
+     * - 현재 07:00, 마감 22:00 → 오늘 22:00 (새로운 영업일)
+     */
+    private LocalDateTime toBusinessDateTime(LocalDateTime now, LocalTime targetTime) {
+        LocalDate businessDate = getBusinessDate(now);
+        LocalTime cutoffTime = LocalTime.of(6, 0);
+        
+        // 목표 시간이 오전 6시 이전이면 다음날 새벽 시간
+        if (targetTime.isBefore(cutoffTime)) {
+            return LocalDateTime.of(businessDate.plusDays(1), targetTime);
+        } else {
+            return LocalDateTime.of(businessDate, targetTime);
+        }
     }
 
     private static void checkPermission(Integer userId, Integer ownerId) {

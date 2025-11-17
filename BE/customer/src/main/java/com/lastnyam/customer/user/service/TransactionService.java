@@ -15,6 +15,7 @@ import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingTransaction;
 import com.lastnyam.database.entity.Menu;
 import com.lastnyam.database.entity.Shop;
+import com.lastnyam.s3.service.S3Service;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class TransactionService {
     private final DiscountTransactionRepository discountTransactionRepository;
     private final DiscountTransactionItemRepository discountTransactionItemRepository;
     private final FoocketingTransactionRepository foocketingTransactionRepository;
+    private final S3Service s3Service;
 
     /**
      * 마감할인 내 주문 리스트 조회
@@ -106,7 +108,22 @@ public class TransactionService {
 
         log.info("마감할인 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
-        return TransactionQrResponse.fromDiscount(transaction);
+        TransactionQrResponse response = TransactionQrResponse.fromDiscount(transaction);
+        
+        // QR 이미지가 있으면 presigned URL로 변환
+        if (response.getTransactionQrImage() != null) {
+            String presignedUrl = s3Service.generatePresignedGetUrl(response.getTransactionQrImage());
+            response = TransactionQrResponse.builder()
+                    .transactionId(response.getTransactionId())
+                    .transactionStatus(response.getTransactionStatus())
+                    .transactionQrImage(presignedUrl)
+                    .createdAt(response.getCreatedAt())
+                    .shopId(response.getShopId())
+                    .shopName(response.getShopName())
+                    .build();
+        }
+        
+        return response;
     }
 
     /**
@@ -179,6 +196,21 @@ public class TransactionService {
 
         log.info("푸케팅 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
-        return TransactionQrResponse.fromFoocketing(transaction);
+        TransactionQrResponse response = TransactionQrResponse.fromFoocketing(transaction);
+        
+        // QR 이미지가 있으면 presigned URL로 변환
+        if (response.getTransactionQrImage() != null) {
+            String presignedUrl = s3Service.generatePresignedGetUrl(response.getTransactionQrImage());
+            response = TransactionQrResponse.builder()
+                    .transactionId(response.getTransactionId())
+                    .transactionStatus(response.getTransactionStatus())
+                    .transactionQrImage(presignedUrl)
+                    .createdAt(response.getCreatedAt())
+                    .shopId(response.getShopId())
+                    .shopName(response.getShopName())
+                    .build();
+        }
+        
+        return response;
     }
 }
