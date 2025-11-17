@@ -51,14 +51,20 @@ public class UserService {
             throw BadRequestException.ofCategory("최대 5개의 카테고리만 선택할 수 있습니다.");
         }
 
+        // 프론트엔드 카테고리 ID를 실제 DB 카테고리 ID로 매핑
+        List<Integer> mappedCategoryIds = request.getCategoryIds().stream()
+                .map(this::mapFrontendCategoryIdToDbCategoryId)
+                .distinct() // 중복 제거 (같은 DB 카테고리로 매핑되는 경우)
+                .collect(Collectors.toList());
+
         // 카테고리 존재 여부 검증 및 새로운 선호 카테고리 저장
-        List<UserFavorite> userFavorites = request.getCategoryIds().stream()
-                .map(categoryId -> {
+        List<UserFavorite> userFavorites = mappedCategoryIds.stream()
+                .map(dbCategoryId -> {
                     // FoodCategory 실제 조회 (존재 여부 확인)
-                    FoodCategory foodCategory = entityManager.find(FoodCategory.class, categoryId);
+                    FoodCategory foodCategory = entityManager.find(FoodCategory.class, dbCategoryId);
                     if (foodCategory == null) {
                         throw BadRequestException.ofCategory(
-                                String.format("존재하지 않는 카테고리 ID입니다: %d", categoryId));
+                                String.format("존재하지 않는 카테고리 ID입니다: %d", dbCategoryId));
                     }
 
                     return UserFavorite.builder()
@@ -112,6 +118,35 @@ public class UserService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     * 프론트엔드 카테고리 ID를 실제 DB 카테고리 ID로 매핑
+     * 
+     * @param frontendCategoryId 프론트엔드에서 받은 카테고리 ID (1~19)
+     * @return 실제 DB 카테고리 ID
+     */
+    private Integer mapFrontendCategoryIdToDbCategoryId(Integer frontendCategoryId) {
+        if (frontendCategoryId == null || frontendCategoryId < 1 || frontendCategoryId > 19) {
+            throw BadRequestException.ofCategory(
+                    String.format("유효하지 않은 카테고리 ID입니다: %d (1~19 범위만 허용)", frontendCategoryId));
+        }
+
+        // 매핑 규칙:
+        // 1~5 -> 1 (빵, 샌드위치, 디저트, 음료, 케이크)
+        // 6~9 -> 2 (회, 초밥, 육회, 해산물)
+        // 10~12 -> 3 (김밥, 떡볶이, 튀김)
+        // 15, 16 -> 4 (샐러드, 포케)
+        // 13, 14, 17, 18, 19 -> 5 (철판·그릴, 떡, 반찬, 국·탕·찌개, 스프)
+        return switch (frontendCategoryId) {
+            case 1, 2, 3, 4, 5 -> 1;
+            case 6, 7, 8, 9 -> 2;
+            case 10, 11, 12 -> 3;
+            case 15, 16 -> 4;
+            case 13, 14, 17, 18, 19 -> 5;
+            default -> throw BadRequestException.ofCategory(
+                    String.format("매핑되지 않은 카테고리 ID입니다: %d", frontendCategoryId));
+        };
     }
 
     /**
