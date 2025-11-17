@@ -27,9 +27,10 @@ public class FoocketingController {
     public ResponseEntity<ApiResponse<FoocketingDetail>> getDetailOf(
             @RequestParam("lng") Double lng,
             @RequestParam("lat") Double lat,
+            @RequestParam("userId") Integer userId,
             @PathVariable("foocketingId") Integer foocketingId) {
 
-        FoocketingDetail detail = foocketingService.getDetailOf(lng, lat, foocketingId);
+        FoocketingDetail detail = foocketingService.getDetailOf(lng, lat, userId, foocketingId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(detail));
     }
 

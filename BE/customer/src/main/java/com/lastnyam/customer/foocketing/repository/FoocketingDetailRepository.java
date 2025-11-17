@@ -20,10 +20,10 @@ public class FoocketingDetailRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public FoocketingDetail getDetailOf(Double lng, Double lat, Integer foocketingId) {
+    public FoocketingDetail getDetailOf(Double lng, Double lat, Integer userId, Integer foocketingId) {
         QueryBuilder queryBuilder = new QueryBuilder();
 
-        queryBuilder.buildBaseQuery(lng, lat, foocketingId);
+        queryBuilder.buildBaseQuery(lng, lat, userId, foocketingId);
 
         return getQueryResult(queryBuilder);
     }
@@ -59,6 +59,7 @@ public class FoocketingDetailRepository {
         int shopRatingSum = rs.getInt("shop_rating_sum");
         int shopRatingCount = rs.getInt("shop_rating_count");
 
+        boolean hasParticipated = rs.getBoolean("has_participated");
         double shopRating = Math.round(((double) shopRatingSum / shopRatingCount) * 10.0) / 10.0;
 
         DetailedMenuInfo menuInfo = DetailedMenuInfo.builder()
@@ -84,6 +85,7 @@ public class FoocketingDetailRepository {
                 .maxAvailable(maxAvailable)
                 .openTime(foocketingTime)
                 .menu(menuInfo)
+                .hasParticipated(hasParticipated)
                 .shop(shopInfo)
                 .build();
     }
@@ -94,7 +96,7 @@ public class FoocketingDetailRepository {
         @Getter
         private final List<Object> params = new ArrayList<>();
 
-        public void buildBaseQuery(Double lng, Double lat, Integer targetId) {
+        public void buildBaseQuery(Double lng, Double lat, Integer userId, Integer targetId) {
             sql.append("""
                     SELECT f.foocketing_id, f.foocketing_amount,
                             f.foocketing_time,m.menu_name,m.menu_price,m.menu_image,m.menu_description,
@@ -104,7 +106,13 @@ public class FoocketingDetailRepository {
                                ST_Point(s.shop_lng, s.shop_lat)::geography
                             ) as distance,
                             COALESCE(sr.shop_rating_sum, 0) as shop_rating_sum,
-                            COALESCE(sr.shop_rating_count, 0) as shop_rating_count
+                            COALESCE(sr.shop_rating_count, 0) as shop_rating_count,
+                            EXISTS (
+                               SELECT 1
+                               FROM foocketing_log fl
+                               WHERE fl.foocketing_id = f.foocketing_id
+                                 AND fl.user_id = ?
+                            ) AS has_participated
                     FROM foocketings f
                     JOIN menus m ON f.menu_id = m.menu_id
                     JOIN shops s ON m.shop_id = s.shop_id
@@ -114,6 +122,7 @@ public class FoocketingDetailRepository {
                     """);
             params.add(lng);
             params.add(lat);
+            params.add(userId);
             params.add(targetId);
         }
 

@@ -25,8 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class FoocketingService {
 
+    private static final String VIEW_PREFIX = "FoocketingViewingCount:";
     private final RedisService redisService;
-
     private final FoocketingRepository foocketingRepository;
     private final FoocketingRankRepository foocketingRankRepository;
     private final ShopQueryRepository shopRepository;
@@ -34,15 +34,19 @@ public class FoocketingService {
     private final UserRepository userRepository;
     private final FoocketingDetailRepository detailRepository;
 
+    public FoocketingDetail getDetailOf(Double lng, Double lat, Integer userId, Integer foocketingId) {
+        FoocketingDetail result = detailRepository.getDetailOf(lng, lat, userId, foocketingId);
 
-    public FoocketingDetail getDetailOf(Double lng, Double lat, Integer foocketingId) {
-        FoocketingDetail result = detailRepository.getDetailOf(lng, lat, foocketingId);
-
-        Integer viewingCount = (Integer) redisService.get("FoocketingViewingCount:" + foocketingId);
+        String key = VIEW_PREFIX + foocketingId;
+        
+        Integer viewingCount = (Integer) redisService.get(key);
 
         if (viewingCount != null) {
             result.setCurrentViewing(viewingCount);
+            return result;
         }
+
+        redisService.add(key, 1);
         return result;
     }
 

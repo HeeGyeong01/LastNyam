@@ -16,7 +16,7 @@ public class FoocketingDetail {
     private Integer foocketingId;
     private LocalDateTime openTime;
     private Integer maxAvailable;
-
+    private boolean hasParticipated;
     @Builder.Default
     private Integer currentViewing = 1;
     private DetailedMenuInfo menu;
