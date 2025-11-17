@@ -8,6 +8,7 @@ import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 import { useAuthStore } from '@/store/useAuthStore';
 import { addToCart } from '@/pages/cart/api/cart.api';
 import LoadingModal from '@/shared/components/LoadingModal';
+import { useLayout } from '@/contexts/LayoutContext';
 
 interface MenuDetailProps {
   detail: ShopDetailDiscount;
@@ -19,6 +20,7 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
   const requireAuth = useRequireAuth();
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.userId);
+  const { closeMenuDetail } = useLayout();
   
   const formattedPrice = detail.price.toLocaleString('ko-KR');
   const formattedOriginalPrice = detail.originalPrice.toLocaleString('ko-KR');
@@ -49,6 +51,7 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
         console.log('✅ 장바구니 추가 API 응답:', response);
         
         console.log('🚀 장바구니 페이지로 이동');
+        closeMenuDetail();
         navigate('/cart');
       } catch (error) {
         console.error('❌ 장바구니 추가 실패:', error);
