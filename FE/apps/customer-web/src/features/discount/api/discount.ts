@@ -30,9 +30,13 @@ export const getDiscountList = async (
     ? { lat: params.lat, lng: params.lng }
     : await getLocation();
 
+  // sort가 없으면 기본값 'FAVORITES' 사용 (백엔드 기본값 RATING 방지)
+  const sort = params.sort ?? 'FAVORITES';
+
   const response = await apiClient.get<ApiResponseWrapper<DiscountListData>>('/api/discount', {
     params: {
       ...params,
+      sort,
       lat: location.lat,
       lng: location.lng,
     },

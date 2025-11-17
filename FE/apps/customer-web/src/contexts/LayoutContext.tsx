@@ -18,15 +18,32 @@ import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react';
 import type { ShopDetailDiscount } from '@/features/shop/type';
 
+export type SortBottomSheetType = 'discount' | 'foocketing' | null;
+
+interface SortBottomSheetData {
+  currentSort: string;
+  onSortSelect: (sort: string) => void;
+}
+
 interface LayoutContextType {
   bottomPadding: number;
   registerBottomElement: (id: string, height: number) => void;
   unregisterBottomElement: (id: string) => void;
+
   // MenuDetail BottomSheet 관련
   selectedDiscount: ShopDetailDiscount | null;
   isMenuDetailOpen: boolean;
   openMenuDetail: (discount: ShopDetailDiscount) => void;
   closeMenuDetail: () => void;
+  
+  // Sort BottomSheet 관련
+  sortBottomSheetType: SortBottomSheetType;
+  sortBottomSheetData: SortBottomSheetData | null;
+  openSortBottomSheet: (
+    type: 'discount' | 'foocketing',
+    data: SortBottomSheetData
+  ) => void;
+  closeSortBottomSheet: () => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -37,9 +54,15 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
   const [bottomPadding, setBottomPadding] = useState(BOTTOM_NAVBAR_HEIGHT);
   const elementsRef = useRef<Map<string, number>>(new Map());
 
+  
   // MenuDetail BottomSheet 상태
   const [selectedDiscount, setSelectedDiscount] = useState<ShopDetailDiscount | null>(null);
   const [isMenuDetailOpen, setIsMenuDetailOpen] = useState(false);
+
+
+  // Sort BottomSheet 상태
+  const [sortBottomSheetType, setSortBottomSheetType] = useState<SortBottomSheetType>(null);
+  const [sortBottomSheetData, setSortBottomSheetData] = useState<SortBottomSheetData | null>(null);
 
   const updatePadding = useCallback(() => {
     const heights = Array.from(elementsRef.current.values());
@@ -57,6 +80,8 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
     updatePadding();
   }, [updatePadding]);
 
+
+  // 마감세일 메뉴 상세(장바구니 담기) BottomSheet
   const openMenuDetail = useCallback((discount: ShopDetailDiscount) => {
     setSelectedDiscount(discount);
     setIsMenuDetailOpen(true);
@@ -65,6 +90,21 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
   const closeMenuDetail = useCallback(() => {
     setIsMenuDetailOpen(false);
     setSelectedDiscount(null);
+  }, []);
+
+
+  // 정렬 BottomSheet
+  const openSortBottomSheet = useCallback((
+    type: 'discount' | 'foocketing',
+    data: SortBottomSheetData
+  ) => {
+    setSortBottomSheetType(type);
+    setSortBottomSheetData(data);
+  }, []);
+
+  const closeSortBottomSheet = useCallback(() => {
+    setSortBottomSheetType(null);
+    setSortBottomSheetData(null);
   }, []);
 
   return (
@@ -77,6 +117,10 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
         isMenuDetailOpen,
         openMenuDetail,
         closeMenuDetail,
+        sortBottomSheetType,
+        sortBottomSheetData,
+        openSortBottomSheet,
+        closeSortBottomSheet,
       }}
     >
       {children}

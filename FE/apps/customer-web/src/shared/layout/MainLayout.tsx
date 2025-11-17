@@ -1,10 +1,16 @@
 import { Outlet } from 'react-router-dom';
-import { BottomNavBar, BottomSheet } from '../components';
+import { BottomNavBar, BottomSheet, SortBottomSheet } from '../components';
 import { MenuDetail } from '@/features/shop/component';
 import { useLayout } from '@/contexts/LayoutContext';
 
 export default function MainLayout() {
-  const { bottomPadding, isMenuDetailOpen, selectedDiscount, closeMenuDetail } = useLayout();
+  const { 
+    bottomPadding, 
+    isMenuDetailOpen, 
+    selectedDiscount, 
+    closeMenuDetail,
+    sortBottomSheetType,
+  } = useLayout();
 
   return (
     <>
@@ -28,6 +34,9 @@ export default function MainLayout() {
           <MenuDetail detail={selectedDiscount} />
         </BottomSheet>
       )}
+
+      {/* Sort BottomSheet */}
+      {sortBottomSheetType && <SortBottomSheet />}
     </>
   );
 }
