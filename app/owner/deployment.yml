@@ -25,7 +25,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: owner
-        image: 941kjw/owner:124e42a
+        image: 941kjw/owner:ebd935d
         ports:
         - containerPort: 8080
           name: http
