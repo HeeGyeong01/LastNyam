@@ -3,6 +3,7 @@ package com.lastnyam.foocketingsubscriber.service;
 import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingLog;
 import com.lastnyam.database.entity.User;
+import com.lastnyam.foocketingsubscriber.event.FoocketingEntryCompleteEvent;
 import com.lastnyam.foocketingsubscriber.exception.FoocketingEntryErrorCode;
 import com.lastnyam.foocketingsubscriber.exception.FoocketingEntryException;
 import com.lastnyam.foocketingsubscriber.repository.FoocketingLogRepository;
@@ -13,6 +14,7 @@ import com.lastnyam.redis.service.RedisService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,8 @@ public class FoocketingLogService {
     private final RedisService redisService;
     private final FoocketingRepository foocketingRepository;
     private final UserRepository userRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     private final MetricService metricService;
 
@@ -55,6 +59,8 @@ public class FoocketingLogService {
                 .build();
 
         logRepository.save(log);
+
+        eventPublisher.publishEvent(new FoocketingEntryCompleteEvent(entry));
         metricService.incrementParticipantOf(entry.getFoocketingId());
     }
 
