@@ -54,10 +54,15 @@ public class CartService {
     private final KakaoPayConfig kakaoPayConfig;
     private final KakaoPayTempStore kakaoPayTempStore;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public CartResponseDto getCart(Integer userId) {
         Cart cart = cartRepository.findByUserUserId(userId)
-                .orElseThrow(() -> new CartException(CartErrorCode.CART_NOT_FOUND));
+                .orElseGet(() -> {
+                    Cart newCart = Cart.builder()
+                            .user(User.builder().userId(userId).build())
+                            .build();
+                    return cartRepository.save(newCart);
+                });
 
         List<CartItem> cartItems = cartItemRepository.findByCartCartId(cart.getCartId());
 
