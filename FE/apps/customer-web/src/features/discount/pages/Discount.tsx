@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { clearLocationCache } from '@/shared/lib/geolocation';
 import { useDiscountList } from '@/features/discount/hook';
 import NaverMap from '@/shared/components/NaverMap';
@@ -8,6 +9,8 @@ import { Tab } from '@shared/components/Tab';
 import type { DiscountCategory, DiscountItem, DiscountSortType } from '@/features/discount/type';
 
 export default function Discount() {
+  const navigate = useNavigate();
+
   // 페이지 진입 시 위치 정보 캐시 초기화
   useEffect(() => {
     clearLocationCache();
@@ -39,6 +42,11 @@ export default function Discount() {
   const handleMapCenterChange = useCallback((lat: number, lng: number) => {
     setMapCenter({ lat, lng });
   }, []);
+
+  // 마커 클릭 핸들러
+  const handleMarkerClick = useCallback((shopId: string | number) => {
+    navigate(`/shop/${shopId}`);
+  }, [navigate]);
 
   // Tab과 연동하기 위한 카테고리 매핑
   // 1: 베이커리, 2: 회/초밥, 3: 김밥/분식, 4: 샐러드/포케, 5: 기타
@@ -83,8 +91,12 @@ export default function Discount() {
             lat: item.shopInfo.lat,
             lng: item.shopInfo.lng,
             title: item.shopInfo.name,
+            imageUrl: item.menuInfo.photoUrl,
+            id: item.shopInfo.shopId,
           }))}
           onCenterChange={handleMapCenterChange}
+          onMarkerClick={handleMarkerClick}
+          zoom={14}
           // 지도 padding 계산 (가려진 영역을 고려한 중심점 조정)
           padding={{ bottom: 224 }}
         />
