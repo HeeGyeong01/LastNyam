@@ -1,7 +1,7 @@
 {
-  "name": "푸켓팅",
-  "short_name": "푸켓팅",
-  "description": "푸켓팅 고객용 웹앱",
+  "name": "LASTNYAM",
+  "short_name": "LASTNYAM",
+  "description": "LASTNYAM 웹앱",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

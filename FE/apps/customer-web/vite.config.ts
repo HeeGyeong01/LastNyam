@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["vite.svg"],
       manifest: {
-        name: "푸켓팅",
-        short_name: "푸켓팅",
-        description: "푸켓팅 고객용 웹앱",
+        name: "LASTNYAM",
+        short_name: "LASTNYAM",
+        description: "LASTNYAM 웹앱",
         theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",

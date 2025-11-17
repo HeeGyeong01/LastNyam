@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["vite.svg", "nyamcat.png"],
       manifest: {
-        name: "푸켓팅 점주용",
+        name: "LASTNYAM 점주앱",
         short_name: "점주앱",
-        description: "푸켓팅 점주용 웹앱",
+        description: "LASTNYAM 점주용 웹앱",
         theme_color: "#FF5C00",
         background_color: "#ffffff",
         display: "standalone",
