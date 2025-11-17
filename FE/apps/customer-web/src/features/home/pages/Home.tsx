@@ -21,8 +21,8 @@ export default function Home() {
   const userId = useAuthStore((state) => state.userId);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0); // 0: 마감세일, 1: 푸켓팅
   
-  // Home 페이지에서는 로그인하지 않아도 보여야 하므로, userId가 null이면 2로 설정
-  const finalUserId = userId ?? 2;
+  // Home 페이지에서는 로그인하지 않아도 보여야 하므로, userId가 null이면 0으로 설정
+  const finalUserId = userId ?? 0;
 
   // 푸켓팅 목록 가져오기 (기본 카테고리 1, 정렬 IMMINENT)
   const { foocketings, loading, error } = useFoocketingList({

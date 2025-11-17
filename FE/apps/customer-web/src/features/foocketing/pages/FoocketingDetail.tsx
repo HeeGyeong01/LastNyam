@@ -16,6 +16,7 @@ import { formatTimeToKorean, formatISOStringToKorean } from '@/shared/lib/time';
 import { Button } from '@shared/components/Button';
 import { useNavigate } from 'react-router-dom';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function FoocketingDetail() {
   const { id } = useParams();
@@ -25,13 +26,14 @@ export default function FoocketingDetail() {
   const [isWaitingResult, setIsWaitingResult] = useState(false);
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
+  const userId = useAuthStore((state) => state.userId); // userId를 store에서 가져오기
 
   const {
     data: detail,
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: ['foocketing', 'detail', id],
+    queryKey: ['foocketing', 'detail', id, userId], // userId를 queryKey에 포함
     queryFn: () => {
       if (!id) {
         throw new Error('푸켓팅 ID가 없습니다.');
