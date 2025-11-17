@@ -49,8 +49,6 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
         
         const response = await addToCart(userId, detail.discountId, quantity);
         console.log('✅ 장바구니 추가 API 응답:', response);
-        
-        console.log('🚀 장바구니 페이지로 이동');
         closeMenuDetail();
       } catch (error) {
         console.error('❌ 장바구니 추가 실패:', error);
