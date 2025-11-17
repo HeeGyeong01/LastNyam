@@ -27,12 +27,18 @@ export function useFavorite(shopId: number) {
     refetchOnMount: 'always', // 마운트 시 항상 최신 데이터 가져오기
     select: (data: ShopDetail) => ({
       favorited: data.favorited ?? false,
-      ratingCount: data.ratingCount,
+      ratingCount: data.ratingCount ?? 0,
     }),
   });
   
+  // favoriteData가 없으면 undefined를 반환하여 로딩 상태를 명확히 함
   const favorited = favoriteData?.favorited ?? false;
   const ratingCount = favoriteData?.ratingCount ?? 0;
+  
+  // 디버깅용 (개발 환경에서만)
+  if (import.meta.env.DEV) {
+    console.log('[useFavorite]', { shopId, favoriteData, favorited, ratingCount, isLoadingFavorite });
+  }
 
   // 찜하기 mutation
   const addFavoriteMutation = useMutation({
@@ -112,7 +118,11 @@ export function useFavorite(shopId: number) {
 
   // 찜하기 토글 함수 (현재 찜 상태를 자동으로 확인)
   const toggleFavorite = () => {
-    if (favorited) {
+    // 최신 상태를 다시 읽어옴 (캐시에서 직접)
+    const currentFavoriteData = queryClient.getQueryData<{ favorited: boolean; ratingCount: number }>(['shop', 'favorite', shopId]);
+    const currentFavorited = currentFavoriteData?.favorited ?? favorited;
+    
+    if (currentFavorited) {
       removeFavoriteMutation.mutate();
     } else {
       addFavoriteMutation.mutate();

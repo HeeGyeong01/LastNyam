@@ -34,8 +34,11 @@ export default function ShopDetail() {
 
   // 찜하기 mutation 훅 (찜 상태와 찜 개수를 항상 최신으로 관리)
   const shopId = id ? Number(id) : 0;
-  const { toggleFavorite, favorited, ratingCount: favoriteRatingCount, isPending: isFavoritePending } = useFavorite(shopId);
+  const { toggleFavorite, favorited: favoriteStatus, ratingCount: favoriteRatingCount, isLoadingFavorite, isPending: isFavoritePending } = useFavorite(shopId);
   const requireAuth = useRequireAuth();
+  
+  // favoriteStatus가 로딩 중이면 detail.favorited를 사용, 로딩 완료되면 favoriteStatus 사용
+  const favorited = isLoadingFavorite ? (detail?.favorited ?? false) : (favoriteStatus ?? false);
 
   // 찜하기 버튼 클릭 핸들러
   const handleFavoriteClick = () => {
@@ -147,7 +150,7 @@ export default function ShopDetail() {
             shopBanner={detail.shopBanner}
             shopName={detail.shopName}
             rating={detail.rating}
-            ratingCount={favoriteRatingCount}
+            ratingCount={favoriteRatingCount || detail.ratingCount}
             favorited={favorited}
             onFavoriteClick={handleFavoriteClick}
             isFavoritePending={isFavoritePending}
