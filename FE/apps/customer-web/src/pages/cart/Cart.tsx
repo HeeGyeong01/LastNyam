@@ -3,8 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import CartMenuCard from './component/cartMenuCard';
+<<<<<<< Updated upstream
 import { getCart, type CartData } from './api/cart.api';
 import { useAuthStore } from '@/store/useAuthStore';
+=======
+import { useAuthStore } from '@/store/useAuthStore';
+import { orderCart } from '@/features/cart/api/cart';
+
+// API 응답 타입
+interface CartItem {
+  cartItemId: number;
+  discountId: number;
+  cartItemAmount: number;
+  menuName: string;
+  discountPrice: number;
+  discountRate: number;
+  menuImage: string;
+  discountMenuAmount: number; // 메뉴의 남은 수량
+}
+
+interface Shop {
+  shopId: number;
+  shopName: string;
+  shopBanner: string;
+  shopCloses: string; // 예: "21:00:00"
+}
+
+interface CartData {
+  cartId: number;
+  userId: number;
+  cartItems: CartItem[];
+  shop: Shop;
+}
+>>>>>>> Stashed changes
 
 // shopCloses 시간을 "HH시 MM분" 형식으로 변환
 function formatCloseTime(closeTime: string): string {
@@ -14,6 +45,7 @@ function formatCloseTime(closeTime: string): string {
 
 export default function Cart() {
   const navigate = useNavigate();
+<<<<<<< Updated upstream
   const { userId } = useAuthStore();
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +76,44 @@ export default function Cart() {
 
     fetchCart();
   }, [userId]);
+=======
+  const userId = useAuthStore((s) => s.userId);
+  const [isOrdering, setIsOrdering] = useState(false);
+  
+  // 테스트용 샘플 데이터 (API 응답 구조에 맞춤)
+  const [cartData, setCartData] = useState<CartData>({
+    cartId: 2,
+    userId: 1,
+    shop: {
+      shopId: 1,
+      shopName: '생연어전문점 청라수산',
+      shopBanner: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=150&h=100&fit=crop',
+      shopCloses: '21:00:00',
+    },
+    cartItems: [
+      {
+        cartItemId: 1,
+        discountId: 1,
+        cartItemAmount: 2,
+        menuName: '초팝 한판 세트',
+        discountPrice: 800000,
+        discountRate: 10,
+        menuImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150&h=100&fit=crop',
+        discountMenuAmount: 5,
+      },
+      {
+        cartItemId: 2,
+        discountId: 1,
+        cartItemAmount: 1,
+        menuName: '냉모밀세트',
+        discountPrice: 800000,
+        discountRate: 10,
+        menuImage: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=150&h=100&fit=crop',
+        discountMenuAmount: 3,
+      },
+    ],
+  });
+>>>>>>> Stashed changes
 
   const handleQuantityChange = (cartItemId: number, newQuantity: number) => {
     setCartData(prev => {
@@ -75,9 +145,40 @@ export default function Cart() {
     }
   };
 
-  const handleOrder = () => {
-    // TODO: 주문하기 로직
-    console.log('주문하기');
+  const handleOrder = async () => {
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+    if (cartData.cartItems.length === 0) {
+      alert('장바구니가 비어있습니다.');
+      return;
+    }
+
+    try {
+      setIsOrdering(true);
+      const res = await orderCart(userId);
+
+      // 사용자 환경에 맞춰 Redirect URL 선택
+      const isMobile =
+        /Android|iPhone|iPad|iPod|iOS|Windows Phone/i.test(navigator.userAgent);
+
+      const redirectUrl = isMobile
+        ? res.nextRedirectMobileUrl || res.nextRedirectAppUrl || res.nextRedirectPcUrl
+        : res.nextRedirectPcUrl || res.nextRedirectMobileUrl || res.nextRedirectAppUrl;
+
+      if (!redirectUrl) {
+        throw new Error('결제 페이지 URL을 받지 못했습니다.');
+      }
+
+      window.location.href = redirectUrl;
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message || '결제를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setIsOrdering(false);
+    }
   };
 
   const totalPrice = cartData?.cartItems.reduce(
@@ -183,8 +284,9 @@ export default function Cart() {
               size="lg"
               className="w-full"
               onClick={handleOrder}
+              disabled={isOrdering}
             >
-              {totalPrice.toLocaleString('ko-KR')}원 결제하기
+              {isOrdering ? '결제 페이지로 이동 중…' : `${totalPrice.toLocaleString('ko-KR')}원 결제하기`}
             </Button>
           </div>
         </BottomSheet>
