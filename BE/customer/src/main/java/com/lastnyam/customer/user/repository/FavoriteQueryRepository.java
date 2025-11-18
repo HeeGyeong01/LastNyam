@@ -137,6 +137,7 @@ public class FavoriteQueryRepository {
         public void buildBaseQuery(Integer userId, Double lat, Double lng) {
             sql.append("""
                     SELECT
+                        f.favorite_id
                         s.shop_id,
                         s.shop_name,
                         s.shop_lat,
@@ -166,7 +167,7 @@ public class FavoriteQueryRepository {
                     WHERE f.user_id = ?
                     GROUP BY s.shop_id, s.shop_name, s.shop_lat, s.shop_lng, s.shop_banner,
                              sr.shop_rating_sum, sr.shop_rating_count
-                    ORDER BY distance ASC, s.shop_id ASC
+                    ORDER BY f.favorite_id DESC;
                     """);
 
             params.add(lng);
