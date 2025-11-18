@@ -73,13 +73,14 @@ export function useFoocketingList(options: UseFoocketingListOptions = {}) {
 
   // React Query를 사용한 푸켓팅 목록 조회
   // queryKey에는 디바운싱된 좌표만 포함하여 불필요한 API 호출 방지
+  const queryKey = ['foocketing', 'list', category, sort, debouncedLat, debouncedLng];
   const {
     data,
     isLoading: loading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['foocketing', 'list', category, sort, debouncedLat, debouncedLng],
+    queryKey,
     queryFn: () => getFoocketingList({
       category,
       sort,
@@ -89,21 +90,31 @@ export function useFoocketingList(options: UseFoocketingListOptions = {}) {
     enabled: true,
   });
 
-  // 초기 데이터 로드 시 누적 데이터 초기화 및 업데이트
+  // queryKey가 변경될 때만 누적 데이터 초기화 (React Query 캐시와 동기화)
+  const prevQueryKeyRef = useRef<string>('');
+  const currentQueryKey = JSON.stringify(queryKey);
+  
   useEffect(() => {
-    if (data) {
+    // queryKey가 변경되었을 때만 초기화
+    if (prevQueryKeyRef.current !== currentQueryKey) {
+      prevQueryKeyRef.current = currentQueryKey;
+      // data가 있으면 즉시 업데이트, 없으면 초기화만
+      if (data) {
+        setAllFoocketings(data.content);
+        setNextCursor(data.nextCursor);
+        setHasNextPage(data.hasNextPage);
+      } else {
+        setAllFoocketings([]);
+        setNextCursor(null);
+        setHasNextPage(false);
+      }
+    } else if (data) {
+      // queryKey가 같고 data가 있으면 업데이트 (캐시된 데이터 반영)
       setAllFoocketings(data.content);
       setNextCursor(data.nextCursor);
       setHasNextPage(data.hasNextPage);
     }
-  }, [data]);
-
-  // category, sort, debouncedLat, debouncedLng 변경 시 누적 데이터 초기화
-  useEffect(() => {
-    setAllFoocketings([]);
-    setNextCursor(null);
-    setHasNextPage(false);
-  }, [category, sort, debouncedLat, debouncedLng]);
+  }, [data, currentQueryKey]);
 
   // 다음 페이지 로드 함수
   const loadMore = useCallback(async () => {
