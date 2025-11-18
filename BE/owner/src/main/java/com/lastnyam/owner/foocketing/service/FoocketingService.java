@@ -26,6 +26,7 @@ import com.lastnyam.owner.foocketing.dto.FoocketingListResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ public class FoocketingService {
 			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
 		}
 
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 		LocalTime foocketingTimeInput = request.getFoocketingTime();
 		
 		// 영업일 기준 시간 계산 (오전 6시 기준)
@@ -115,7 +116,7 @@ public class FoocketingService {
 		}
 
 		// 활성화된 푸켓팅 조회 (픽업 마감 시간이 현재 이후인 것만)
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 		List<Foocketing> foocketings = foocketingRepository.findActiveByShopId(shopId, now);
 
 		// DTO로 변환
@@ -199,7 +200,7 @@ public class FoocketingService {
 			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
 		}
 
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
 		// 푸켓팅 시간 수정이 있는 경우
 		if (request.getFoocketingTime() != null) {
