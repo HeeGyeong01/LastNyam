@@ -23,9 +23,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShopService {
@@ -36,11 +38,20 @@ public class ShopService {
     private final DiscountRepository discountRepository;
     private final FoocketingRepository foocketingRepository;
     private final ShopRatingRepository shopRatingRepository;
+    private final DailyStatisticsService dailyStatisticsService;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ShopDetailResponseDto getShopDetail(Integer shopId, Double currentLat, Double currentLng, Integer userId) {
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
+        
+        // 일자별 통계 업데이트 (조회수 증가)
+        try {
+            dailyStatisticsService.incrementViewCount(shopId);
+        } catch (Exception e) {
+            // 통계 업데이트 실패해도 상세 조회는 정상 진행
+            log.warn("일자별 통계 업데이트 실패 - shopId: {}, error: {}", shopId, e.getMessage());
+        }
 
         // 별점 조회
         ShopRating rating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
