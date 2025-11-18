@@ -77,7 +77,7 @@ export default function Discount() {
     <div className="w-full">
       {/* Header와 Tab은 fixed로 상단 고정 */}
       <div className="fixed top-0 left-0 right-0 z-20 bg-white max-w-[500px] mx-auto">
-        <PageHeader title="마감세일" variant="light" />
+        <PageHeader title="마감세일" variant="light" onBack={() => navigate('/')}/>
         <Tab
           tabLabels={categoryLabels}
           defaultSelectedIndex={currentTabIndex}
