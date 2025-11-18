@@ -168,7 +168,10 @@ export default function Transaction() {
               !foocketingError &&
               foocketingTransactions &&
               foocketingTransactions.length === 0 && (
-                <EmptyState />
+                <EmptyState 
+                  message="아직 주문 내역이 없다냥…🐾"
+                  imageUrl={catImage}
+                />
               )}
             {!isLoadingFoocketing &&
               !foocketingError &&
