@@ -15,6 +15,7 @@ import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingTransaction;
 import com.lastnyam.database.entity.Menu;
 import com.lastnyam.database.entity.Shop;
+import com.lastnyam.database.entity.enums.TransactionStatus;
 import com.lastnyam.s3.service.S3Service;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -173,13 +174,20 @@ public class TransactionService {
         // 총 결제 금액 (푸케팅은 1개이므로 foocketingAmount)
         Integer totalAmount = menu.getMenuPrice();
 
+        // transactionStatus가 null인 경우 로깅 (기존 데이터 대응)
+        TransactionStatus status = transaction.getTransactionStatus();
+        if (status == null) {
+            log.warn("Transaction ID {}의 transactionStatus가 null입니다.",
+                    transaction.getTransactionId());
+        }
+
         return FoocketingTransactionInfo.builder()
                 .transactionId(transaction.getTransactionId())
                 .shop(shopInfo)
                 .menus(List.of(menuInfo))
                 .totalAmount(totalAmount)
                 .foocketingTime(transaction.getCreatedAt())
-                .transactionStatus(transaction.getTransactionStatus())
+                .transactionStatus(status)
                 .build();
     }
 
