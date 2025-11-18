@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
+import AlertModal from '@/shared/components/AlertModal';
 import CartMenuCard from './component/cartMenuCard';
 import { useAuthStore } from '@/store/useAuthStore';
 import { orderCart } from '@/features/cart/api/cart';
-import { getCart, removeFromCart } from './api/cart.api';
+import { getCart, removeFromCart, updateCartItemQuantity } from './api/cart.api';
 import { useLayout } from '@/contexts/LayoutContext';
 
 // API 응답 타입
@@ -48,6 +49,11 @@ export default function Cart() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOrdering, setIsOrdering] = useState(false);
+  
+  // 재고 부족 알림 모달 상태
+  const [isStockAlertOpen, setIsStockAlertOpen] = useState(false);
+  const [stockAlertMessage, setStockAlertMessage] = useState('');
+  const [stockAlertSubText, setStockAlertSubText] = useState('');
 
   // 장바구니 데이터 조회
   useEffect(() => {
@@ -75,16 +81,48 @@ export default function Cart() {
     fetchCart();
   }, [userId]);
 
-  const handleQuantityChange = (cartItemId: number, newQuantity: number) => {
-    setCartData((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        cartItems: prev.cartItems.map((item) =>
-          item.cartItemId === cartItemId ? { ...item, cartItemAmount: newQuantity } : item
-        ),
-      };
-    });
+  const handleQuantityChange = async (cartItemId: number, newQuantity: number) => {
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      // API 호출로 장바구니 수량 변경
+      const updatedCartData = await updateCartItemQuantity(userId, cartItemId, newQuantity);
+      console.log('장바구니 수량 변경 성공:', updatedCartData);
+      
+      // 서버 응답으로 받은 데이터로 상태 업데이트
+      setCartData(updatedCartData);
+    } catch (error: any) {
+      console.error('장바구니 수량 변경 실패:', error);
+      
+      // EXCEEDS_DISCOUNT_AMOUNT 에러 처리
+      const errorMessage = error?.response?.data?.message;
+      if (errorMessage === 'EXCEEDS_DISCOUNT_AMOUNT') {
+        try {
+          // 장바구니를 다시 조회해서 최신 재고 반영
+          const refreshedCartData = await getCart(userId);
+          setCartData(refreshedCartData);
+          
+          // 해당 아이템의 최신 재고 수량 찾기
+          const updatedItem = refreshedCartData.cartItems.find(
+            (item) => item.cartItemId === cartItemId
+          );
+          
+          if (updatedItem) {
+            setStockAlertMessage('재고가 부족합니다');
+            setStockAlertSubText(`현재 남은 수량: ${updatedItem.discountMenuAmount}개`);
+            setIsStockAlertOpen(true);
+          }
+        } catch (refreshError) {
+          console.error('장바구니 재조회 실패:', refreshError);
+          alert('수량 변경에 실패했습니다.');
+        }
+      } else {
+        alert('수량 변경에 실패했습니다.');
+      }
+    }
   };
 
   const handleRemove = async (cartItemId: number) => {
@@ -267,6 +305,15 @@ export default function Cart() {
           </div>
         </BottomSheet>
       )}
+
+      {/* 재고 부족 알림 모달 */}
+      <AlertModal
+        isOpen={isStockAlertOpen}
+        mainText={stockAlertMessage}
+        subText={stockAlertSubText}
+        buttonText="확인"
+        onClose={() => setIsStockAlertOpen(false)}
+      />
     </>
   );
 }

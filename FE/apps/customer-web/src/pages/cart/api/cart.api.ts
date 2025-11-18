@@ -76,3 +76,23 @@ export const removeFromCart = async (
   return response.data.data;
 };
 
+/**
+ * 장바구니 상품 수량 변경
+ * PATCH /api/cart/{userId}
+ * 
+ * @param userId - 사용자 ID
+ * @param cartItemId - 수량을 변경할 장바구니 아이템 ID
+ * @param cartItemAmount - 변경할 수량 (최종 수량)
+ */
+export const updateCartItemQuantity = async (
+  userId: number,
+  cartItemId: number,
+  cartItemAmount: number
+): Promise<CartData> => {
+  const response = await apiClient.patch<ApiResponseWrapper<CartData>>(
+    `/api/cart/${userId}`,
+    { cartItemId, cartItemAmount }
+  );
+  return response.data.data;
+};
+
