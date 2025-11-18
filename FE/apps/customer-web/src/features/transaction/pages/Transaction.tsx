@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/shared/components';
 import { Tab } from '@shared/components/Tab';
 import { TransactionCard } from '../component';
@@ -13,38 +12,50 @@ type TransactionTab = 'discount' | 'foocketing';
 export default function Transaction() {
   const userId = useAuthStore((state) => state.userId);
   const [activeTab, setActiveTab] = useState<TransactionTab>('discount');
+  
+  // 마감세일 거래 내역 상태
+  const [discountTransactions, setDiscountTransactions] = useState<DiscountTransaction[] | null>(null);
+  const [isLoadingDiscount, setIsLoadingDiscount] = useState(false);
+  const [discountError, setDiscountError] = useState<Error | null>(null);
+  
+  // 푸켓팅 거래 내역 상태
+  const [foocketingTransactions, setFoocketingTransactions] = useState<FoocketingTransaction[] | null>(null);
+  const [isLoadingFoocketing, setIsLoadingFoocketing] = useState(false);
+  const [foocketingError, setFoocketingError] = useState<Error | null>(null);
 
   // 마감세일 거래 내역 조회
-  const {
-    data: discountTransactions,
-    isLoading: isLoadingDiscount,
-    error: discountError,
-  } = useQuery({
-    queryKey: ['transaction', 'discount', userId],
-    queryFn: () => {
-      if (!userId) {
-        throw new Error('로그인이 필요합니다.');
-      }
-      return getDiscountTransactions(userId);
-    },
-    enabled: activeTab === 'discount' && !!userId,
-  });
+  useEffect(() => {
+    if (activeTab === 'discount' && userId) {
+      setIsLoadingDiscount(true);
+      setDiscountError(null);
+      getDiscountTransactions(userId)
+        .then((data) => {
+          setDiscountTransactions(data);
+          setIsLoadingDiscount(false);
+        })
+        .catch((error) => {
+          setDiscountError(error instanceof Error ? error : new Error('알 수 없는 에러'));
+          setIsLoadingDiscount(false);
+        });
+    }
+  }, [activeTab, userId]);
 
   // 푸켓팅 거래 내역 조회
-  const {
-    data: foocketingTransactions,
-    isLoading: isLoadingFoocketing,
-    error: foocketingError,
-  } = useQuery({
-    queryKey: ['transaction', 'foocketing', userId],
-    queryFn: () => {
-      if (!userId) {
-        throw new Error('로그인이 필요합니다.');
-      }
-      return getFoocketingTransactions(userId);
-    },
-    enabled: activeTab === 'foocketing' && !!userId,
-  });
+  useEffect(() => {
+    if (activeTab === 'foocketing' && userId) {
+      setIsLoadingFoocketing(true);
+      setFoocketingError(null);
+      getFoocketingTransactions(userId)
+        .then((data) => {
+          setFoocketingTransactions(data);
+          setIsLoadingFoocketing(false);
+        })
+        .catch((error) => {
+          setFoocketingError(error instanceof Error ? error : new Error('알 수 없는 에러'));
+          setIsLoadingFoocketing(false);
+        });
+    }
+  }, [activeTab, userId]);
 
   const handleTabChange = (index: number) => {
     setActiveTab(index === 0 ? 'discount' : 'foocketing');
