@@ -169,6 +169,12 @@ public class CartService {
             throw new CartException(CartErrorCode.INVALID_ITEM_QUANTITY);
         }
 
+		// 요청 수량이 할인 가능 수량을 초과하는지 검증
+		int maxDiscountAmount = cartItem.getDiscount().getDiscountMenuAmount();
+		if (request.getCartItemAmount() > maxDiscountAmount) {
+			throw new CartException(CartErrorCode.EXCEEDS_DISCOUNT_AMOUNT);
+		}
+
         CartItem updatedItem = CartItem.builder()
                 .cartItemId(cartItem.getCartItemId())
                 .cart(cart)
