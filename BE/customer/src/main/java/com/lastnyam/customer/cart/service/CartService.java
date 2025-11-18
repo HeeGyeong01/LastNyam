@@ -169,11 +169,11 @@ public class CartService {
             throw new CartException(CartErrorCode.INVALID_ITEM_QUANTITY);
         }
 
-		// 요청 수량이 할인 가능 수량을 초과하는지 검증
-		int maxDiscountAmount = cartItem.getDiscount().getDiscountMenuAmount();
-		if (request.getCartItemAmount() > maxDiscountAmount) {
-			throw new CartException(CartErrorCode.EXCEEDS_DISCOUNT_AMOUNT);
-		}
+        // 요청 수량이 할인 가능 수량을 초과하는지 검증
+        int maxDiscountAmount = cartItem.getDiscount().getDiscountMenuAmount();
+        if (request.getCartItemAmount() > maxDiscountAmount) {
+                throw new CartException(CartErrorCode.EXCEEDS_DISCOUNT_AMOUNT);
+        }
 
         CartItem updatedItem = CartItem.builder()
                 .cartItemId(cartItem.getCartItemId())
@@ -365,6 +365,18 @@ public class CartService {
                         .build())
                 .collect(Collectors.toList());
         discountTransactionItemRepository.saveAll(transactionItems);
+
+        // 결제 승인 시 구매한 수량만큼 마감세일 수량 차감
+        cartItems.forEach(item -> {
+            Discount discount = item.getDiscount();
+            int updatedAmount = Math.max(0, discount.getDiscountMenuAmount() - item.getCartItemAmount());
+            discount.setDiscountMenuAmount(updatedAmount);
+        });
+        discountRepository.saveAll(
+                cartItems.stream()
+                        .map(CartItem::getDiscount)
+                        .collect(Collectors.toList())
+        );
 
         // 주문 생성 후 장바구니 비우기
         cartItemRepository.deleteAll(cartItems);
