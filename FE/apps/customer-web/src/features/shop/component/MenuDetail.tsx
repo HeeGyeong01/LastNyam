@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@shared/components/Badge';
 import type { ShopDetailDiscount } from '@/features/shop/type';
 import { Stepper } from '@/shared/components';
@@ -7,6 +8,7 @@ import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 import { useAuthStore } from '@/store/useAuthStore';
 import { addToCart } from '@/pages/cart/api/cart.api';
 import LoadingModal from '@/shared/components/LoadingModal';
+import AlertModal from '@/shared/components/AlertModal';
 import { useLayout } from '@/contexts/LayoutContext';
 
 interface MenuDetailProps {
@@ -16,9 +18,11 @@ interface MenuDetailProps {
 export default function MenuDetail({ detail }: MenuDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDifferentShopModal, setShowDifferentShopModal] = useState(false);
   const requireAuth = useRequireAuth();
   const userId = useAuthStore((state) => state.userId);
   const { closeMenuDetail, setCartTotalPrice } = useLayout();
+  const navigate = useNavigate();
   
   const formattedPrice = detail.price.toLocaleString('ko-KR');
   const formattedOriginalPrice = detail.originalPrice.toLocaleString('ko-KR');
@@ -57,17 +61,28 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
         console.log('💰 장바구니 총 가격 업데이트:', newTotalPrice);
         
         closeMenuDetail();
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ 장바구니 추가 실패:', error);
         console.error('에러 상세:', {
           message: error instanceof Error ? error.message : '알 수 없는 에러',
           error
         });
+
+        // DIFFERENT_SHOP_ITEMS 에러 처리
+        if (error?.response?.data?.message === 'DIFFERENT_SHOP_ITEMS') {
+          setShowDifferentShopModal(true);
+        }
       } finally {
         setIsLoading(false);
         console.log('🏁 로딩 종료');
       }
     });
+  };
+
+  const handleGoToCart = () => {
+    setShowDifferentShopModal(false);
+    closeMenuDetail();
+    navigate('/cart');
   };
 
   return (
@@ -122,6 +137,16 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
       </div>
 
       <LoadingModal isOpen={isLoading} />
+      
+      {/* DIFFERENT_SHOP_ITEMS 에러 모달 */}
+      <AlertModal
+        isOpen={showDifferentShopModal}
+        mainText="현재 장바구니에 다른 가게의 물품이 있어 추가하지 못했습니다."
+        subText="한 번에 하나의 가게 물품만 담을 수 있습니다. 장바구니로 이동하시겠습니까?"
+        buttonText="장바구니로 이동"
+        onConfirm={handleGoToCart}
+        onClose={() => setShowDifferentShopModal(false)}
+      />
     </div>
   );
 }
