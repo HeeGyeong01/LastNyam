@@ -8,7 +8,7 @@ import {
   getFoocketingResult,
 } from '@/features/foocketing/api';
 import { Badge } from '@shared/components/Badge';
-import { PageHeader, LoadingModal } from '@/shared/components';
+import { PageHeader, LoadingModal, AlertModal } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
 import { BottomSheet } from '@/shared/components';
 import NaverMap from '@/shared/components/NaverMap';
@@ -26,6 +26,7 @@ export default function FoocketingDetail() {
   const currentTime = useServerTime(30000);
   const [isWaitingEntry, setIsWaitingEntry] = useState(false);
   const [isWaitingResult, setIsWaitingResult] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
   const userId = useAuthStore((state) => state.userId); // userId를 store에서 가져오기
@@ -81,6 +82,17 @@ export default function FoocketingDetail() {
       if (!id) {
         return;
       }
+
+      // 시간 체크: 현재 시간과 오픈 시간이 같지 않으면 알림 모달 표시
+      if (detail?.openTime) {
+        const currentTimeStr = formatTimeToKorean(currentTime);
+        const openTimeStr = formatISOStringToKorean(detail.openTime);
+        
+        if (currentTimeStr !== openTimeStr) {
+          setIsAlertOpen(true);
+          return;
+        }
+      }
       
       try {
         setIsWaitingEntry(true);
@@ -125,6 +137,14 @@ export default function FoocketingDetail() {
         isOpen={isWaitingResult}
         title="결과 확인 중입니다"
         message="잠시만 기다려주세요"
+      />
+
+      {/* 알림 모달 - 참여 가능한 시간이 아닐 때 */}
+      <AlertModal
+        isOpen={isAlertOpen}
+        mainText="참여 가능한 시간이 아닙니다."
+        subText="푸켓팅 오픈 시간을 확인해주세요"
+        onClose={() => setIsAlertOpen(false)}
       />
 
       {/* Header - 화면 최상단에 고정, 이미지 위에 겹쳐서 표시 */}
