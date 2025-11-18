@@ -12,6 +12,7 @@ import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.shop.exception.ShopErrorCode;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import com.lastnyam.owner.shop.repository.ShopRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FoocketingService {
@@ -64,6 +66,11 @@ public class FoocketingService {
 		LocalDateTime closeTime = toBusinessDateTime(now, shop.getShopCloses());
 		LocalDateTime pickupEndTime = toBusinessDateTime(now, shop.getShopPickupEndTime());
 		LocalDateTime foocketingTime = toBusinessDateTime(now, foocketingTimeInput);
+
+		log.info("closeTime: {}", closeTime);
+		log.info("foocketingTime: {}", foocketingTime);
+		log.info("pickupEndTime: {}", pickupEndTime);
+		log.info("foocketingTimeInput: {}", foocketingTimeInput);
 
 		// 픽업 마감 시간이 현재 시간보다 이전이면 주문 불가
 		if (pickupEndTime.isBefore(now) || pickupEndTime.isEqual(now)) {
