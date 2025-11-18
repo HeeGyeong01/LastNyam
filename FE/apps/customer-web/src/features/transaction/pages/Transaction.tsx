@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PageHeader } from '@/shared/components';
+import { PageHeader, EmptyState } from '@/shared/components';
 import { Tab } from '@shared/components/Tab';
 import { TransactionCard, QrModal } from '../component';
 import {
@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import type { DiscountTransaction } from '../type/discountTransaction';
 import type { FoocketingTransaction } from '../type/foocketingTransaction';
+import catImage from '@/shared/assets/lastnyam-cat-sad.png';
 
 type TransactionTab = 'discount' | 'foocketing';
 
@@ -126,7 +127,10 @@ export default function Transaction() {
               !discountError &&
               discountTransactions &&
               discountTransactions.length === 0 && (
-                <p className="py-4 text-center text-gray-500">거래 내역이 없습니다.</p>
+                <EmptyState 
+                  message="아직 주문 내역이 없다냥…🐾"
+                  imageUrl={catImage}
+                />
               )}
             {!isLoadingDiscount &&
               !discountError &&
@@ -164,7 +168,7 @@ export default function Transaction() {
               !foocketingError &&
               foocketingTransactions &&
               foocketingTransactions.length === 0 && (
-                <p className="py-4 text-center text-gray-500">거래 내역이 없습니다.</p>
+                <EmptyState />
               )}
             {!isLoadingFoocketing &&
               !foocketingError &&

@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { clearLocationCache } from '@/shared/lib/geolocation';
 import { useDiscountList } from '@/features/discount/hook';
 import NaverMap from '@/shared/components/NaverMap';
-import { PageHeader, DraggableBottomSheet } from '@/shared/components';
+import { PageHeader, DraggableBottomSheet, EmptyState } from '@/shared/components';
 import { DiscountList, DiscountListHeader } from '@/features/discount/component';
 import { Tab } from '@shared/components/Tab';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import type { DiscountCategory, DiscountItem, DiscountSortType } from '@/features/discount/type';
+import catImage from '@/shared/assets/lastnyam-cat-nothing.png';
 
 export default function Discount() {
   const navigate = useNavigate();
@@ -122,6 +123,13 @@ export default function Discount() {
         <div className="h-full overflow-y-auto px-4 pb-28">
           {loading && <p>로딩 중...</p>}
           {error && <p>에러: {error.message}</p>}
+          
+          {!loading && !error && discounts.length === 0 && (
+            <EmptyState 
+              message="여긴 아직 조용하다냥…"
+              imageUrl={catImage}
+            />
+          )}
           
           {discounts.length > 0 && (
             <>

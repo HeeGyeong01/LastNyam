@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { clearLocationCache } from '@/shared/lib/geolocation';
 import { useFoocketingList } from '@/features/foocketing/hook';
 import NaverMap from '@/shared/components/NaverMap';
-import { PageHeader, DraggableBottomSheet } from '@/shared/components';
+import { PageHeader, DraggableBottomSheet, EmptyState } from '@/shared/components';
 import { FoocketingList, FoocketingListHeader } from '@/features/foocketing/component';
 import { Tab } from '@shared/components/Tab';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import type { FoocketingCategory, FoocketingItem, FoocketingSortType } from '@/features/foocketing/type';
+import catImage from '@/shared/assets/lastnyam-cat-nothing.png';
 
 export default function Foocketing() {
   const navigate = useNavigate();
@@ -121,6 +122,13 @@ export default function Foocketing() {
         <div className="h-full overflow-y-auto px-4 pb-28">
           {loading && <p>로딩 중...</p>}
           {error && <p>에러: {error.message}</p>}
+          
+          {!loading && !error && foocketings.length === 0 && (
+            <EmptyState 
+              message="여긴 아직 조용하다냥…"
+              imageUrl={catImage}
+            />
+          )}
           
           {foocketings.length > 0 && (
             <>

@@ -9,4 +9,5 @@ export { default as Stepper } from './Stepper';
 export { default as NaverMap } from './NaverMap';
 export { default as LoadingModal } from './LoadingModal';
 export { default as AlertModal } from './AlertModal';
+export { default as EmptyState } from './EmptyState';
 
