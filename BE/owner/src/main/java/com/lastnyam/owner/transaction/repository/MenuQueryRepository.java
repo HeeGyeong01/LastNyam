@@ -48,6 +48,7 @@ public class MenuQueryRepository {
                     UPDATE food_categories fc
                     SET category_survived = fc.category_survived + v.delta
                     FROM (
+                        VALUES
                 """);
 
         List<Object> params = new ArrayList<>();
