@@ -18,6 +18,17 @@ export interface TransactionShop {
 }
 
 /**
+ * 거래 상태
+ */
+export type TransactionStatus =
+  | 'PENDING_APPROVAL'
+  | 'REJECTED'
+  | 'PREPARING_FOOD'
+  | 'WAITING_PICKUP'
+  | 'COMPLETED_PICKUP'
+  | 'NO_SHOW';
+
+/**
  * 거래 내역 기본 구조
  */
 export interface BaseTransaction {
@@ -25,5 +36,5 @@ export interface BaseTransaction {
   shop: TransactionShop;
   menus: TransactionMenu[];
   totalAmount: number;
+  transactionStatus: TransactionStatus;
 }
-
