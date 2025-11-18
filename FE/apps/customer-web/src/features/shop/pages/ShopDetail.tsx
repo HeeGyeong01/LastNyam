@@ -254,7 +254,7 @@ export default function ShopDetail() {
             onClick={() => navigate('/cart')}
           >
             장바구니 보기
-            <span className="p1"> | {cartTotalPrice.toLocaleString('ko-KR')}원</span>
+            <span className="p1">    |    {cartTotalPrice.toLocaleString('ko-KR')}원</span>
           </Button>
         </BottomSheet>
       )}
