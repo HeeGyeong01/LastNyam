@@ -83,12 +83,16 @@ export default function FoocketingDetail() {
         return;
       }
 
-      // 시간 체크: 현재 시간과 오픈 시간이 같지 않으면 알림 모달 표시
+      // 시간 체크: 현재 시간이 오픈 시간보다 이전이면 알림 모달 표시
       if (detail?.openTime) {
-        const currentTimeStr = formatTimeToKorean(currentTime);
-        const openTimeStr = formatISOStringToKorean(detail.openTime);
+        const openTimeDate = new Date(detail.openTime);
         
-        if (currentTimeStr !== openTimeStr) {
+        // 시간, 분, 초를 초 단위로 변환하여 비교
+        const currentSeconds = currentTime.getHours() * 3600 + currentTime.getMinutes() * 60 + currentTime.getSeconds();
+        const openSeconds = openTimeDate.getHours() * 3600 + openTimeDate.getMinutes() * 60 + openTimeDate.getSeconds();
+        
+        // 현재 시간이 오픈 시간보다 이전이면 모달 표시
+        if (currentSeconds < openSeconds) {
           setIsAlertOpen(true);
           return;
         }
