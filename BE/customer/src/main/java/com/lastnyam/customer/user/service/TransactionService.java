@@ -90,6 +90,7 @@ public class TransactionService {
                 .shop(shopInfo)
                 .menus(menuInfos)
                 .totalAmount(totalAmount)
+                .transactionStatus(transaction.getTransactionStatus())
                 .build();
     }
 
@@ -109,7 +110,7 @@ public class TransactionService {
         log.info("마감할인 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
         TransactionQrResponse response = TransactionQrResponse.fromDiscount(transaction);
-        
+
         // QR 이미지가 있으면 presigned URL로 변환
         if (response.getTransactionQrImage() != null) {
             String presignedUrl = s3Service.generatePresignedGetUrl(response.getTransactionQrImage());
@@ -122,7 +123,7 @@ public class TransactionService {
                     .shopName(response.getShopName())
                     .build();
         }
-        
+
         return response;
     }
 
@@ -178,6 +179,7 @@ public class TransactionService {
                 .menus(List.of(menuInfo))
                 .totalAmount(totalAmount)
                 .foocketingTime(transaction.getCreatedAt())
+                .transactionStatus(transaction.getTransactionStatus())
                 .build();
     }
 
@@ -197,7 +199,7 @@ public class TransactionService {
         log.info("푸케팅 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
         TransactionQrResponse response = TransactionQrResponse.fromFoocketing(transaction);
-        
+
         // QR 이미지가 있으면 presigned URL로 변환
         if (response.getTransactionQrImage() != null) {
             String presignedUrl = s3Service.generatePresignedGetUrl(response.getTransactionQrImage());
@@ -210,7 +212,7 @@ public class TransactionService {
                     .shopName(response.getShopName())
                     .build();
         }
-        
+
         return response;
     }
 }
