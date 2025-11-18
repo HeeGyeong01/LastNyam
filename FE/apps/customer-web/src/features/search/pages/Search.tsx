@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { PageHeader } from '@/shared/components';
+import { PageHeader, EmptyState } from '@/shared/components';
 import { Tab } from '@shared/components/Tab';
 import { Input } from '@shared/components/Input';
 import { DiscountList } from '@/features/discount/component';
@@ -16,6 +16,7 @@ import type { FoocketingSearchItem, FoocketingSortType } from '@/features/foocke
 // Note: SearchTab type is defined locally in this file
 import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Button } from '@shared/components/Button';
+import catImage from '@/shared/assets/lastnyam-cat-nothing.png';
 
 type SearchTab = 'discount' | 'foocketing';
 
@@ -292,7 +293,10 @@ export default function Search() {
               </p>
             )}
             {!isLoadingDiscount && !discountError && discounts.length === 0 && (
-              <p className="py-4 text-center text-gray-500">검색 결과가 없습니다.</p>
+              <EmptyState 
+                message="검색 결과가 없다냥…🐾"
+                imageUrl={catImage}
+              />
             )}
             {!isLoadingDiscount && !discountError && discounts.length > 0 && (
               <>
@@ -315,7 +319,10 @@ export default function Search() {
               </p>
             )}
             {!isLoadingFoocketing && !foocketingError && foocketings.length === 0 && (
-              <p className="py-4 text-center text-gray-500">검색 결과가 없습니다.</p>
+              <EmptyState 
+                message="검색 결과가 없다냥…🐾"
+                imageUrl={catImage}
+              />
             )}
             {!isLoadingFoocketing && !foocketingError && foocketings.length > 0 && (
               <>

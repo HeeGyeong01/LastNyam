@@ -21,7 +21,16 @@ const Tab = React.forwardRef<HTMLDivElement, TabProps>(
     };
 
     return (
-      <div ref={ref} className={cn('flex px-4 py-2 gap-2 bg-bg-0', className)}>
+      <div 
+        ref={ref} 
+        className={cn(
+          'flex flex-nowrap px-4 py-2 gap-2 bg-bg-0 overflow-x-auto overflow-y-hidden',
+          '[&::-webkit-scrollbar]:hidden', // Webkit 브라우저 스크롤바 숨기기
+          '[-ms-overflow-style:none]', // IE/Edge 스크롤바 숨기기
+          '[scrollbar-width:none]', // Firefox 스크롤바 숨기기
+          className
+        )}
+      >
         {tabLabels.map((label, index) => (
           <Button
             key={index}

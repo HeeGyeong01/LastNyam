@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { PageHeader } from '@/shared/components';
+import { PageHeader, EmptyState } from '@/shared/components';
 import { ShopList } from '@/features/shop/component';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import { getFavoriteShops } from '@/features/favorite/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { FavoriteShop } from '@/features/favorite/type';
+import catImage from '@/shared/assets/lastnyam-cat-sad.png';
 
 export default function Favorite() {
   const userId = useAuthStore((state) => state.userId);
@@ -69,7 +70,10 @@ export default function Favorite() {
           </p>
         )}
         {!isLoading && !error && shops.length === 0 && (
-          <p className="py-4 text-center text-gray-500">찜한 가게가 없습니다.</p>
+          <EmptyState 
+            message="찜한 가게가 아직 없다냥…🐾"
+            imageUrl={catImage}
+          />
         )}
         {!isLoading && !error && shops.length > 0 && (
           <>
