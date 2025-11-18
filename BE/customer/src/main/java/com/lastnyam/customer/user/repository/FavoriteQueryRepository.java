@@ -158,7 +158,7 @@ public class FavoriteQueryRepository {
                                 AND d.discount_pickup_end_time > CURRENT_TIMESTAMP
                             ),
                             ARRAY[]::text[]
-                        ) as on_sale_menus
+                        ) as on_sale_menus,
                     FROM favorites f
                     INNER JOIN shops s ON f.shop_id = s.shop_id
                     LEFT JOIN shop_ratings sr ON s.shop_id = sr.shop_id
