@@ -64,7 +64,7 @@ public class CartService {
                     return cartRepository.save(newCart);
                 });
 
-        List<CartItem> cartItems = cartItemRepository.findByCartCartId(cart.getCartId());
+        List<CartItem> cartItems = cartItemRepository.findByCartCartIdOrderByCartItemIdAsc(cart.getCartId());
 
         List<CartItemResponseDto> cartItemDtos = cartItems.stream()
                 .map(cartItem -> {
@@ -136,6 +136,11 @@ public class CartService {
 
         if (existingCartItem != null) {
             // 이미 있으면 개수만 증가
+                int newAmount = existingCartItem.getCartItemAmount() + request.getCartItemAmount();
+                int maxDiscountAmount = discount.getDiscountMenuAmount();
+                if (newAmount > maxDiscountAmount) {
+                        throw new CartException(CartErrorCode.EXCEEDS_DISCOUNT_AMOUNT);
+                }
             CartItem updatedItem = CartItem.builder()
                     .cartItemId(existingCartItem.getCartItemId())
                     .cart(cart)
@@ -145,6 +150,10 @@ public class CartService {
             cartItemRepository.save(updatedItem);
         } else {
             // 없으면 새로 추가
+                int maxDiscountAmount = discount.getDiscountMenuAmount();
+                if (request.getCartItemAmount() > maxDiscountAmount) {
+                        throw new CartException(CartErrorCode.EXCEEDS_DISCOUNT_AMOUNT);
+                }
             CartItem newCartItem = CartItem.builder()
                     .cart(cart)
                     .discount(discount)
