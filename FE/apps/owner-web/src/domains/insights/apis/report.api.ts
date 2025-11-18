@@ -34,6 +34,40 @@ export interface MenuDistribution {
   count: number;
 }
 
+// 일간 통계 응답 타입
+export interface DailyStatisticsResponse {
+  shopId: number;
+  statistics: DailyStat[];
+  summary: DailySummary | null;
+  correlationAnalysis: CorrelationAnalysis | null;
+}
+
+export interface DailyStat {
+  date: string;
+  foocketingCount: number;
+  viewCount: number;
+  orderCount: number;
+  orderRevenue: number;
+}
+
+export interface DailySummary {
+  totalFoocketingCount: number;
+  totalViewCount: number;
+  totalOrderCount: number;
+  totalOrderRevenue: number;
+  averageFoocketingCount: number | null;
+  averageViewCount: number | null;
+  averageOrderCount: number | null;
+  averageOrderRevenue: number | null;
+}
+
+export interface CorrelationAnalysis {
+  foocketingToOrder: number | null;
+  viewToOrder: number | null;
+  foocketingToView: number | null;
+  insights: string | null;
+}
+
 interface ApiResponse<T> {
   status: string;
   message: string;
@@ -62,6 +96,46 @@ export const reportApi = {
 
     if (response.status !== "SUCCESS" || !response.data) {
       throw new Error(response.message || "주간 리포트 조회에 실패했습니다.");
+    }
+
+    return response.data;
+  },
+
+  /**
+   * 일간 통계 조회
+   * @param ownerId 점주 ID
+   * @param shopId 가게 ID
+   * @param startDate 시작 날짜 (YYYY-MM-DD, 선택)
+   * @param endDate 종료 날짜 (YYYY-MM-DD, 선택)
+   * @returns 일간 통계 데이터
+   */
+  getDailyStatistics: async (
+    ownerId: number,
+    shopId: number,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DailyStatisticsResponse> => {
+    const params = new URLSearchParams();
+    params.append("shopId", shopId.toString());
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+
+    const url = `${OWNER_API_BASE_URL.replace(
+      /\/$/,
+      ""
+    )}/api/owner/${ownerId}/report/daily?${params.toString()}`;
+
+    const response = await fetchWithAuthJSON<ApiResponse<DailyStatisticsResponse>>(
+      url,
+      {
+        method: "GET",
+      }
+    );
+
+    if (response.status !== "SUCCESS" || !response.data) {
+      throw new Error(
+        response.message || "일간 통계 조회에 실패했습니다."
+      );
     }
 
     return response.data;
