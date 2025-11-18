@@ -667,7 +667,7 @@ const AddMenuModal = React.forwardRef<HTMLDivElement, AddMenuModalProps>(
                       value={formData.foocketingTime}
                       onChange={(value) => setFormData((prev) => ({ ...prev, foocketingTime: value }))}
                       variant="filled"
-                      interval30={true}
+                      interval30={false}
                       className="flex-1"
                     />
                   </div>
