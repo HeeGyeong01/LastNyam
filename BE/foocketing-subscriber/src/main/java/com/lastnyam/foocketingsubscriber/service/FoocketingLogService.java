@@ -52,21 +52,21 @@ public class FoocketingLogService {
 
         Integer currentRank = increaseRank(entry.getFoocketingId());
 
-        FoocketingLog log = FoocketingLog.builder()
+        FoocketingLog foocketingLog = FoocketingLog.builder()
                 .foocketing(foocketing)
                 .logUserRank(currentRank)
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        logRepository.save(log);
+        logRepository.save(foocketingLog);
 
         // 일자별 통계 업데이트 (푸켓팅 참여 수 증가)
         try {
             Integer shopId = foocketing.getMenu().getShop().getShopId();
             dailyStatisticsService.incrementFoocketingCount(shopId);
         } catch (Exception e) {
-            log.warn("일자별 통계 업데이트 실패 - shopId: {}, error: {}", 
+            log.warn("일자별 통계 업데이트 실패 - shopId: {}, error: {}",
                     foocketing.getMenu().getShop().getShopId(), e.getMessage());
         }
 
