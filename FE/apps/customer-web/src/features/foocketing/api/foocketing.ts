@@ -15,11 +15,12 @@ import type { ApiResponseWrapper } from '@/shared/types/common';
 
 /**
  * 1. 푸켓팅 목록 조회
- * GET /api/foocketing?sort={sortType}&lat={latitude}&lng={longitude}
+ * GET /api/foocketing?sort={sortType}&lat={latitude}&lng={longitude}&cursor={cursor}
  * 
  * @param params.sort - 정렬 타입 (선택)
  * @param params.lat - 위도 (선택, 없으면 자동으로 가져옴)
  * @param params.lng - 경도 (선택, 없으면 자동으로 가져옴)
+ * @param params.cursor - 커서 값 (무한 스크롤용, 선택)
  */
 export const getFoocketingList = async (
   params: {
@@ -27,6 +28,7 @@ export const getFoocketingList = async (
     sort?: FoocketingSortType;
     lat?: number;
     lng?: number;
+    cursor?: string | null;
   } = {}
 ): Promise<FoocketingListData> => {
   // 위치 정보가 없으면 자동으로 가져오기
@@ -40,6 +42,7 @@ export const getFoocketingList = async (
       ...(params.sort ? { sort: params.sort } : {}),
       lat: location.lat,
       lng: location.lng,
+      ...(params.cursor ? { cursor: params.cursor } : {}),
     },
   });
   // 응답 구조: { data: { content: [], nextCursor, hasNextPage }, status, code, message }

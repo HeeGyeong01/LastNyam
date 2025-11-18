@@ -6,6 +6,7 @@ import NaverMap from '@/shared/components/NaverMap';
 import { PageHeader, DraggableBottomSheet } from '@/shared/components';
 import { DiscountList, DiscountListHeader } from '@/features/discount/component';
 import { Tab } from '@shared/components/Tab';
+import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import type { DiscountCategory, DiscountItem, DiscountSortType } from '@/features/discount/type';
 
 export default function Discount() {
@@ -29,12 +30,22 @@ export default function Discount() {
     category,
     discounts,
     loading,
+    isLoadingMore,
     error,
     changeCategory,
+    hasNextPage,
+    loadMore,
   } = useDiscountList({
     sort,
     lat: mapCenter?.lat,
     lng: mapCenter?.lng,
+  });
+
+  // 무한스크롤 훅
+  const observerTarget = useInfiniteScroll({
+    hasNextPage,
+    isLoading: isLoadingMore,
+    onLoadMore: loadMore,
   });
 
   // 지도 중심 변경 핸들러
@@ -121,6 +132,9 @@ export default function Discount() {
               <DiscountList
                 discounts={discounts}
               />
+              {/* 무한스크롤 감지용 요소 */}
+              <div ref={observerTarget} className="h-4" />
+              {isLoadingMore && <p className="text-center py-4">더 불러오는 중...</p>}
             </>
           )}
         </div>

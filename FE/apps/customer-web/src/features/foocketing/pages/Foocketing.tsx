@@ -6,6 +6,7 @@ import NaverMap from '@/shared/components/NaverMap';
 import { PageHeader, DraggableBottomSheet } from '@/shared/components';
 import { FoocketingList, FoocketingListHeader } from '@/features/foocketing/component';
 import { Tab } from '@shared/components/Tab';
+import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import type { FoocketingCategory, FoocketingItem, FoocketingSortType } from '@/features/foocketing/type';
 
 export default function Foocketing() {
@@ -29,12 +30,22 @@ export default function Foocketing() {
     category,
     foocketings,
     loading,
+    isLoadingMore,
     error,
     changeCategory,
+    hasNextPage,
+    loadMore,
   } = useFoocketingList({
     sort,
     lat: mapCenter?.lat,
     lng: mapCenter?.lng,
+  });
+
+  // 무한스크롤 훅
+  const observerTarget = useInfiniteScroll({
+    hasNextPage,
+    isLoading: isLoadingMore,
+    onLoadMore: loadMore,
   });
 
   // 지도 중심 변경 핸들러
@@ -120,6 +131,9 @@ export default function Foocketing() {
               <FoocketingList
                 foocketings={foocketings}
               />
+              {/* 무한스크롤 감지용 요소 */}
+              <div ref={observerTarget} className="h-4" />
+              {isLoadingMore && <p className="text-center py-4">더 불러오는 중...</p>}
             </>
           )}
         </div>

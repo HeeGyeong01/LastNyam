@@ -12,10 +12,11 @@ import type { ApiResponseWrapper } from '@/shared/types/common';
 
 /**
  * 마감세일 목록 조회
- * GET /api/discount?category={category}&sort={sortType}&lat={latitude}&lng={longitude}
+ * GET /api/discount?category={category}&sort={sortType}&lat={latitude}&lng={longitude}&cursor={cursor}
  * 
  * @param params.lat - 위도 (선택, 없으면 자동으로 가져옴)
  * @param params.lng - 경도 (선택, 없으면 자동으로 가져옴)
+ * @param params.cursor - 커서 값 (무한 스크롤용, 선택)
  */
 export const getDiscountList = async (
   params: {
@@ -23,6 +24,7 @@ export const getDiscountList = async (
     sort?: DiscountSortType;
     lat?: number;
     lng?: number;
+    cursor?: string | null;
   } = {}
 ): Promise<DiscountListData> => {
   // 위치 정보가 없으면 자동으로 가져오기
@@ -39,6 +41,7 @@ export const getDiscountList = async (
       sort,
       lat: location.lat,
       lng: location.lng,
+      ...(params.cursor ? { cursor: params.cursor } : {}),
     },
   });
   // 응답 구조: { data: { content: [], nextCursor, hasNextPage }, status, code, message }

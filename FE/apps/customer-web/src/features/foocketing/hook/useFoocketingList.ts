@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import type { FoocketingCategory, FoocketingSortType } from '../type/foocketing';
+import type { FoocketingCategory, FoocketingSortType, FoocketingItem } from '../type/foocketing';
 import { getFoocketingList } from '../api/foocketing';
 
 interface UseFoocketingListOptions {
@@ -30,6 +30,12 @@ export function useFoocketingList(options: UseFoocketingListOptions = {}) {
 
   // 현재 선택된 푸켓팅 카테고리 (베이커리, 회/초밥, 김밥/분식, 샐러드/포케, 기타)
   const [category, setCategory] = useState<FoocketingCategory>(initialCategoryValue);
+  
+  // 무한스크롤을 위한 누적 데이터
+  const [allFoocketings, setAllFoocketings] = useState<FoocketingItem[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // URL 쿼리 파라미터 변경 시 category 동기화 (브라우저 뒤로가기/앞으로가기 대응)
   useEffect(() => {
@@ -83,6 +89,45 @@ export function useFoocketingList(options: UseFoocketingListOptions = {}) {
     enabled: true,
   });
 
+  // 초기 데이터 로드 시 누적 데이터 초기화 및 업데이트
+  useEffect(() => {
+    if (data) {
+      setAllFoocketings(data.content);
+      setNextCursor(data.nextCursor);
+      setHasNextPage(data.hasNextPage);
+    }
+  }, [data]);
+
+  // category, sort, debouncedLat, debouncedLng 변경 시 누적 데이터 초기화
+  useEffect(() => {
+    setAllFoocketings([]);
+    setNextCursor(null);
+    setHasNextPage(false);
+  }, [category, sort, debouncedLat, debouncedLng]);
+
+  // 다음 페이지 로드 함수
+  const loadMore = useCallback(async () => {
+    if (!hasNextPage || isLoadingMore || !nextCursor) return;
+
+    setIsLoadingMore(true);
+    try {
+      const moreData = await getFoocketingList({
+        category,
+        sort,
+        ...(debouncedLat && debouncedLng ? { lat: debouncedLat, lng: debouncedLng } : {}),
+        cursor: nextCursor,
+      });
+      
+      setAllFoocketings((prev) => [...prev, ...moreData.content]);
+      setNextCursor(moreData.nextCursor);
+      setHasNextPage(moreData.hasNextPage);
+    } catch (error) {
+      console.error('Failed to load more foocketings:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasNextPage, isLoadingMore, nextCursor, category, sort, debouncedLat, debouncedLng]);
+
   // 푸켓팅 카테고리 변경 핸들러
   // category가 변경되면 queryKey가 변경되어 자동으로 새로운 데이터를 가져옴
   // URL 쿼리 파라미터도 함께 업데이트하여 뒤로가기 시 카테고리 유지
@@ -98,11 +143,14 @@ export function useFoocketingList(options: UseFoocketingListOptions = {}) {
 
   return {
     category,        // 현재 선택된 푸켓팅 카테고리
-    foocketings: data?.content ?? [], // 푸켓팅 목록 데이터
-    loading,         // 로딩 상태
+    foocketings: allFoocketings, // 누적된 푸켓팅 목록 데이터
+    loading,         // 초기 로딩 상태
+    isLoadingMore,   // 추가 데이터 로딩 상태
     error: error as Error | null, // 에러 정보
     changeCategory,  // 푸켓팅 카테고리 변경 함수
     refetch,         // 수동 리페칭 함수
+    hasNextPage,     // 다음 페이지 존재 여부
+    loadMore,        // 다음 페이지 로드 함수
   };
 }
 
