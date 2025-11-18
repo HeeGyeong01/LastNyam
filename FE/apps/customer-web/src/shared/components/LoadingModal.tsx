@@ -13,14 +13,12 @@ export default function LoadingModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] max-w-[500px] mx-auto">
-      <div className="bg-white rounded-2xl p-6">
-        <div className="w-full flex flex-col items-center gap-4 py-8">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-subtle border-t-transparent"></div>
+      <div className="bg-bg-0 w-80 rounded-2xl flex flex-col items-center mx-4 p-6 py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-subtle border-t-transparent"></div>
           <div className="text-center mt-4">
             <div className="h5-b text-primary">{title}</div>
             <div className="p2 text-tertiary">{message}</div>
           </div>
-        </div>
       </div>
     </div>
   );

@@ -8,4 +8,5 @@ export { default as DraggableBottomSheet } from './DraggableBottomSheet';
 export { default as Stepper } from './Stepper';
 export { default as NaverMap } from './NaverMap';
 export { default as LoadingModal } from './LoadingModal';
+export { default as AlertModal } from './AlertModal';
 
