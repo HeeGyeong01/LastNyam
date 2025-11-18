@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useOwnerStore } from '@/store/useOwnerStore';
 import { authApi } from '@/domains/auth/apis/auth.api';
 import './App.css';
 
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
+  const location = useLocation();
   const { 
     isAuthenticated, 
     accessToken, 
@@ -13,6 +14,15 @@ function App() {
     logout,
     setLastTokenValidation 
   } = useOwnerStore();
+
+  // PWA 상태바 색상 동적 변경 (Header의 bg-brand/bg-bg-0에 맞춤)
+  useEffect(() => {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      const isQRScanPage = location.pathname === '/orders/qr-scan';
+      metaThemeColor.setAttribute('content', isQRScanPage ? '#F0531A' : '#FFFFFF');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const initializeAuth = async () => {
