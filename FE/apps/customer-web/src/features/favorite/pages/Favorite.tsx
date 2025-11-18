@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/shared/components';
 import { ShopList } from '@/features/shop/component';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
@@ -13,26 +12,27 @@ export default function Favorite() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // 첫 페이지 데이터 가져오기
-  const {
-    data: initialData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['favorite', 'shops', userId],
-    queryFn: () => getFavoriteShops(),
-    enabled: !!userId, // userId가 있을 때만 쿼리 실행
-  });
-
-  // 초기 데이터 설정
   useEffect(() => {
-    if (initialData) {
-      setShops(initialData.content);
-      setNextCursor(initialData.nextCursor);
-      setHasNextPage(initialData.hasNextPage);
+    if (userId) {
+      setIsLoading(true);
+      setError(null);
+      getFavoriteShops()
+        .then((data) => {
+          setShops(data.content);
+          setNextCursor(data.nextCursor);
+          setHasNextPage(data.hasNextPage);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err : new Error('알 수 없는 에러'));
+          setIsLoading(false);
+        });
     }
-  }, [initialData]);
+  }, [userId]);
 
   // 다음 페이지 데이터 가져오기
   const loadMore = useCallback(async () => {
