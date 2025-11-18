@@ -31,12 +31,13 @@ export default function Header() {
   const shouldHideSettingsButton = ['/orders/qr-scan', '/catalog/menu', '/settings', '/settings/shop'].includes(location.pathname);
 
   return (
-    <header className={cn("fixed top-0 left-0 right-0 z-50 w-full", isQRScanPage ? "bg-brand" : "bg-bg-0")}>
+    <header className={cn("fixed top-0 left-0 right-0 z-50 w-full", isQRScanPage ? "bg-brand text-inverse" : "bg-bg-0")}>
       <div className="w-full grid grid-cols-3 items-center px-4 py-3">
         <div className="flex justify-start">
           <IconButton
             icon={ChevronLeftIcon}
             onClick={handleBack}
+            iconClassName={isQRScanPage ? "text-inverse" : ""}
             aria-label="뒤로가기"
           />
         </div>
