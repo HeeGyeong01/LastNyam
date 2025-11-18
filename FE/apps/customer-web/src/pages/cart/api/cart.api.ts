@@ -58,3 +58,21 @@ export const addToCart = async (
   return response.data.data;
 };
 
+/**
+ * 장바구니에서 상품 제거
+ * DELETE /api/cart/{userId}
+ * 
+ * @param userId - 사용자 ID
+ * @param cartItemId - 제거할 장바구니 아이템 ID
+ */
+export const removeFromCart = async (
+  userId: number,
+  cartItemId: number
+): Promise<CartData> => {
+  const response = await apiClient.delete<ApiResponseWrapper<CartData>>(
+    `/api/cart/${userId}`,
+    { data: { cartItemId } }
+  );
+  return response.data.data;
+};
+

@@ -5,7 +5,7 @@ import { Button } from '@shared/components/Button';
 import CartMenuCard from './component/cartMenuCard';
 import { useAuthStore } from '@/store/useAuthStore';
 import { orderCart } from '@/features/cart/api/cart';
-import { getCart } from './api/cart.api';
+import { getCart, removeFromCart } from './api/cart.api';
 import { useLayout } from '@/contexts/LayoutContext';
 
 // API 응답 타입
@@ -87,14 +87,23 @@ export default function Cart() {
     });
   };
 
-  const handleRemove = (cartItemId: number) => {
-    setCartData((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        cartItems: prev.cartItems.filter((item) => item.cartItemId !== cartItemId),
-      };
-    });
+  const handleRemove = async (cartItemId: number) => {
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      // API 호출로 장바구니에서 제거
+      const updatedCartData = await removeFromCart(userId, cartItemId);
+      console.log('장바구니 아이템 제거 성공:', updatedCartData);
+      
+      // 서버 응답으로 받은 데이터로 상태 업데이트
+      setCartData(updatedCartData);
+    } catch (error) {
+      console.error('장바구니 아이템 제거 실패:', error);
+      alert('장바구니에서 제거하는데 실패했습니다.');
+    }
   };
 
   const handleAddMore = () => {
