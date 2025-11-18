@@ -1,5 +1,6 @@
 package com.lastnyam.customer.user.dto;
 
+import com.lastnyam.database.entity.enums.TransactionStatus;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,4 +16,5 @@ public class DiscountTransactionInfo {
     private ShopInfoInTransaction shop;
     private List<MenuItemInfo> menus;
     private Integer totalAmount;
+    private TransactionStatus transactionStatus;
 }
