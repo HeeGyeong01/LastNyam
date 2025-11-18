@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class statistics {
+public class Statistics {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "statistics_id")

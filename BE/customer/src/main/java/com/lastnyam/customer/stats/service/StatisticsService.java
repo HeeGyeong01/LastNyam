@@ -3,7 +3,7 @@ package com.lastnyam.customer.stats.service;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
 import com.lastnyam.customer.stats.dto.FootstepResponse;
 import com.lastnyam.customer.stats.repository.StatisticsRepository;
-import com.lastnyam.database.entity.statistics;
+import com.lastnyam.database.entity.Statistics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class StatisticsService {
     public FootstepResponse getLatestFootstep() {
         log.info("가장 최근 탄소발자국 통계 조회");
 
-        statistics latestStats = statisticsRepository.findLatest()
+        Statistics latestStats = statisticsRepository.findLatest()
                 .orElseThrow(() -> ResourceNotFoundException.ofStatistics());
 
         return FootstepResponse.from(latestStats);
