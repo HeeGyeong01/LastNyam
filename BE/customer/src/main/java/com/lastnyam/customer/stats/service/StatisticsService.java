@@ -1,9 +1,11 @@
 package com.lastnyam.customer.stats.service;
 
-import com.lastnyam.customer.exception.ResourceNotFoundException;
-import com.lastnyam.customer.stats.dto.FootstepResponse;
-import com.lastnyam.customer.stats.repository.StatisticsRepository;
-import com.lastnyam.database.entity.Statistics;
+import com.lastnyam.customer.stats.dto.SurvivedResponse;
+import com.lastnyam.customer.stats.repository.CategoryRepository;
+import com.lastnyam.database.entity.FoodCategory;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,20 +16,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class StatisticsService {
 
-    private final StatisticsRepository statisticsRepository;
+    private final CategoryRepository categoryRepository;
 
-    /**
-     * 가장 최근 탄소발자국 통계 조회
-     *
-     * @return 최근 통계 정보
-     */
     @Transactional(readOnly = true)
-    public FootstepResponse getLatestFootstep() {
-        log.info("가장 최근 탄소발자국 통계 조회");
+    public SurvivedResponse getLatestFootstep() {
 
-        Statistics latestStats = statisticsRepository.findLatest()
-                .orElseThrow(() -> ResourceNotFoundException.ofStatistics());
+        List<FoodCategory> categories = categoryRepository.findAll();
+        Map<String, Integer> survivedStats = new HashMap<>();
+        for (FoodCategory category : categories) {
+            survivedStats.put(category.getCategoryName(), category.getCategorySurvived());
+        }
 
-        return FootstepResponse.from(latestStats);
+        return SurvivedResponse.builder()
+                .survivedStats(survivedStats)
+                .build();
     }
 }

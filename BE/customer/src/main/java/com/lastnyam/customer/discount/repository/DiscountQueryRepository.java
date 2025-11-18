@@ -34,7 +34,7 @@ public class DiscountQueryRepository {
         queryBuilder.buildBaseQuery(lat, lng);
         queryBuilder.addCategoryCondition(categoryId);
         if (cursor != null) {
-            queryBuilder.buildCursorQuery(parseCursor(cursor), sort);
+            queryBuilder.buildCursorQuery(parseCursor(cursor), sort, lat, lng);
         }
 
         queryBuilder.addSortCondition(sort);
@@ -54,7 +54,7 @@ public class DiscountQueryRepository {
         queryBuilder.buildSearchQuery(keyword);
 
         if (cursor != null) {
-            queryBuilder.buildCursorQuery(parseCursor(cursor), sort);
+            queryBuilder.buildCursorQuery(parseCursor(cursor), sort, lat, lng);
         }
 
         queryBuilder.addSortCondition(sort);
@@ -207,7 +207,7 @@ public class DiscountQueryRepository {
             return sql.toString();
         }
 
-        public void buildCursorQuery(DiscountCursorInfo cursor, DiscountSortType type) {
+        public void buildCursorQuery(DiscountCursorInfo cursor, DiscountSortType type, Double lat, Double lng) {
             sql.append(" AND (");
 
             switch (type) {
@@ -227,7 +227,23 @@ public class DiscountQueryRepository {
                     params.add(cursor.getDiscountRate());
                 }
                 case CLOSEST -> {
-                    sql.append("distance > ? OR (distance = ? AND discount_id < ?)");
+                    sql.append("""
+                            ST_Distance(
+                                   ST_Point(?, ?)::geography,
+                                   ST_Point(s.shop_lng, s.shop_lat)::geography
+                                ) > ?
+                                OR (
+                                   ST_Distance(
+                                      ST_Point(?, ?)::geography,
+                                      ST_Point(s.shop_lng, s.shop_lat)::geography
+                                   ) = ?
+                                   AND discount_id < ?
+                                )
+                            """);
+                    params.add(lng);
+                    params.add(lat);
+                    params.add(lng);
+                    params.add(lat);
                     params.add(cursor.getDistance());
                     params.add(cursor.getDistance());
                 }
@@ -252,7 +268,7 @@ public class DiscountQueryRepository {
             switch (type) {
                 case RATING -> sql.append(" sr.shop_rating_avg DESC");
                 case CLOSEST -> sql.append(" distance ASC");
-                case PRICE -> sql.append(" d.discount_price DESC");
+                case PRICE -> sql.append(" d.discount_price ASC");
                 case DISCOUNT -> sql.append(" d.discount_rate DESC");
                 default -> sql.append(" sr.shop_favorite_count DESC");
             }

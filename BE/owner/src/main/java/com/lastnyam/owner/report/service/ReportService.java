@@ -1,5 +1,6 @@
 package com.lastnyam.owner.report.service;
 
+import com.lastnyam.database.entity.DailyStatistics;
 import com.lastnyam.database.entity.Report;
 import com.lastnyam.database.entity.Shop;
 import com.lastnyam.database.entity.ShopView;
@@ -9,6 +10,7 @@ import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.report.dto.ReportResponse;
 import com.lastnyam.owner.report.dto.ReportResponse.MenuDistribution;
 import com.lastnyam.owner.report.dto.ReportResponse.MenuStats;
+import com.lastnyam.owner.report.repository.DailyStatisticsRepository;
 import com.lastnyam.owner.report.repository.MenuStatRepository;
 import com.lastnyam.owner.report.repository.ReportRepository;
 import com.lastnyam.owner.report.repository.ShopViewRepository;
@@ -35,55 +37,86 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final MenuStatRepository menuStatRepository;
     private final ShopViewRepository shopViewRepository;
+    private final DailyStatisticsRepository dailyStatisticsRepository;
 
+    /**
+     * 리포트 조회
+     * daily_statistics 테이블에서 전주 일주일치 데이터를 합산하여 사용
+     */
     public ReportResponse getReport(Integer userId, Integer ownerId, Integer shopId) {
         checkPermission(userId, ownerId);
 
         Report report = reportRepository.findByShopId(shopId);
-        List<MenuStats> statsList = menuStatRepository.getStats(shopId);
-        ShopView shopView = shopViewRepository.findByShopId(shopId);
-
+        
         // 날짜 범위 계산 (저번주 월요일 ~ 일요일)
         LocalDate[] dateRange = calculatePreviousWeekRange();
         LocalDate startDate = dateRange[0];
         LocalDate endDate = dateRange[1];
 
-        // 총 판매 개수 계산
-        int totalSalesCount = statsList.stream()
-                .mapToInt(MenuStats::getWeeklySold)
+        // 전주 일주일치 데이터 합산 (daily_statistics에서 조회)
+        List<DailyStatistics> prevWeekStats = dailyStatisticsRepository
+                .findByShopIdAndStatDateBetween(shopId, startDate, endDate);
+        
+        int totalSalesCount = prevWeekStats.stream()
+                .mapToInt(DailyStatistics::getOrderCount)
+                .sum();
+        
+        int totalRevenue = prevWeekStats.stream()
+                .mapToInt(DailyStatistics::getOrderRevenue)
+                .sum();
+        
+        int pocketingCount = prevWeekStats.stream()
+                .mapToInt(DailyStatistics::getFoocketingCount)
+                .sum();
+        
+        int visitorCount = prevWeekStats.stream()
+                .mapToInt(DailyStatistics::getViewCount)
                 .sum();
 
-        // 총 판매액 계산 (price * weeklySold)
-        int totalRevenue = statsList.stream()
-                .mapToInt(stat -> stat.getPrice() * stat.getWeeklySold())
-                .sum();
+        // 전전주 날짜 범위 계산 (변화율 계산용)
+        LocalDate[] prevPrevWeekRange = calculatePreviousPreviousWeekRange();
+        LocalDate prevPrevStartDate = prevPrevWeekRange[0];
+        LocalDate prevPrevEndDate = prevPrevWeekRange[1];
 
-        // 푸켓팅 횟수 계산
-        int pocketingCount = statsList.stream()
-                .mapToInt(MenuStats::getWeeklyFoocketingEntry)
-                .sum();
+        // 전전주 일주일치 데이터 합산
+        List<DailyStatistics> prevPrevWeekStats = dailyStatisticsRepository
+                .findByShopIdAndStatDateBetween(shopId, prevPrevStartDate, prevPrevEndDate);
 
-        // 방문자수 및 변화율 계산
-        int visitorCount = shopView.getShopViewCount();
-        int prevVisitorCount = shopView.getShopViewPrevCount();
-        Double visitorChangeRate = calculateChangeRate(visitorCount, prevVisitorCount);
+        Double totalSalesChangeRate = null;
+        Double totalRevenueChangeRate = null;
+        Double pocketingChangeRate = null;
+        Double visitorChangeRate = null;
 
-        // 전주 데이터를 ShopView에서 가져와서 변화율 계산
-        Integer prevTotalSalesCount = shopView.getShopTotalSalesPrevCount();
-        Integer prevTotalRevenue = shopView.getShopTotalRevenuePrev();
-        Integer prevPocketingCount = shopView.getShopPocketingPrevCount();
+        // 전전주 데이터가 있으면 변화율 계산
+        if (!prevPrevWeekStats.isEmpty()) {
+            int prevPrevSalesCount = prevPrevWeekStats.stream()
+                    .mapToInt(DailyStatistics::getOrderCount)
+                    .sum();
+            
+            int prevPrevRevenue = prevPrevWeekStats.stream()
+                    .mapToInt(DailyStatistics::getOrderRevenue)
+                    .sum();
+            
+            int prevPrevPocketingCount = prevPrevWeekStats.stream()
+                    .mapToInt(DailyStatistics::getFoocketingCount)
+                    .sum();
+            
+            int prevPrevVisitorCount = prevPrevWeekStats.stream()
+                    .mapToInt(DailyStatistics::getViewCount)
+                    .sum();
 
-        Double totalSalesChangeRate = prevTotalSalesCount != null 
-                ? calculateChangeRate(totalSalesCount, prevTotalSalesCount) 
-                : null;
-        Double totalRevenueChangeRate = prevTotalRevenue != null 
-                ? calculateChangeRate(totalRevenue, prevTotalRevenue) 
-                : null;
-        Double pocketingChangeRate = prevPocketingCount != null 
-                ? calculateChangeRate(pocketingCount, prevPocketingCount) 
-                : null;
+            totalSalesChangeRate = calculateChangeRate(totalSalesCount, prevPrevSalesCount);
+            totalRevenueChangeRate = calculateChangeRate(totalRevenue, prevPrevRevenue);
+            pocketingChangeRate = calculateChangeRate(pocketingCount, prevPrevPocketingCount);
+            visitorChangeRate = calculateChangeRate(visitorCount, prevPrevVisitorCount);
+        }
 
+        // 메뉴별 통계는 현재 주간 통계를 보여줌 (실시간 데이터)
+        // 리포트 생성 시점의 전주 데이터는 리포트의 advice에만 반영됨
+        List<MenuStats> statsList = menuStatRepository.getStats(shopId);
+        
         // 메뉴 분포 그래프 데이터 생성 (카테고리별 판매 비중)
+        // 전주 데이터 기준으로 생성하려면 별도 저장이 필요하지만, 현재는 현재 주간 통계 사용
         List<MenuDistribution> menuDistribution = generateMenuDistribution(statsList);
 
         return ReportResponse.builder()
@@ -113,6 +146,16 @@ public class ReportService {
         LocalDate prevWeekMonday = thisWeekMonday.minusWeeks(1);
         LocalDate prevWeekSunday = prevWeekMonday.plusDays(6);
         return new LocalDate[]{prevWeekMonday, prevWeekSunday};
+    }
+
+    /**
+     * 전전주 월요일 ~ 일요일 날짜 범위 계산 (변화율 계산용)
+     */
+    private LocalDate[] calculatePreviousPreviousWeekRange() {
+        LocalDate[] prevWeekRange = calculatePreviousWeekRange();
+        LocalDate prevPrevWeekMonday = prevWeekRange[0].minusWeeks(1);
+        LocalDate prevPrevWeekSunday = prevPrevWeekMonday.plusDays(6);
+        return new LocalDate[]{prevPrevWeekMonday, prevPrevWeekSunday};
     }
 
     /**
@@ -150,16 +193,42 @@ public class ReportService {
         return distribution;
     }
 
+    /**
+     * 주간 리포트 생성 및 통계 초기화
+     * 매주 월요일 오전 4시에 실행
+     * 1. 전주 데이터를 기준으로 리포트 생성 (통계 초기화 전)
+     * 2. 주간 통계 초기화
+     * 
+     * 주의: 리포트 데이터는 daily_statistics에서 합산하므로 별도 shift 불필요
+     */
     @Transactional
     @Scheduled(cron = "0 0 4 * * MON")
+    public void generateReportsAndRenewStats() {
+        log.info("주간 리포트 생성 및 통계 초기화 시작");
+        
+        // 1단계: 전주 데이터를 기준으로 리포트 생성 (통계 초기화 전)
+        generateReports();
+        
+        // 2단계: 메뉴 통계 초기화
+        int rowCount = menuStatRepository.initializeStats();
+        log.info("주간 통계 초기화 완료 : {}개", rowCount);
+    }
+
+    /**
+     * 전주 데이터를 기준으로 리포트 생성
+     * 통계 초기화 전에 실행되므로 현재 weekly 데이터가 전주 데이터임
+     */
+    @Transactional
     public void generateReports() {
         Set<Shop> activeShops = findActiveShops();
         List<Report> reports = new ArrayList<>();
 
         for (Shop shop : activeShops) {
             log.debug("active shop found : {}", shop.getShopName());
+            // 통계 초기화 전이므로 현재 weekly 데이터가 전주 데이터임
             List<MenuStats> statsList = menuStatRepository.getStats(shop.getShopId());
-            String result = GMSService.generateReport(statsList);
+            ShopView shopView = shopViewRepository.findByShopId(shop.getShopId());
+            String result = GMSService.generateReport(statsList, shopView);
 
             // 기존 리포트가 있으면 업데이트, 없으면 새로 생성
             Report existingReport = reportRepository.findByShopId(shop.getShopId());
@@ -184,69 +253,11 @@ public class ReportService {
         }
 
         reportRepository.saveAll(reports);
+        log.info("리포트 생성 완료 : {}개", reports.size());
     }
 
     private Set<Shop> findActiveShops() {
         return menuStatRepository.getTargetIds();
-    }
-
-    @Transactional
-    @Scheduled(cron = "0 0 5 * * MON")
-    public void renewStats() {
-        log.debug("주간 통계 초기화 시작");
-        
-        // ShopView의 전주 데이터 shift (통계 초기화 전에 현재 주간 데이터를 전주로 저장)
-        // 통계 초기화 전이므로 현재 weekly 데이터가 전주 데이터임
-        shiftShopViewStats();
-        
-        // 메뉴 통계 초기화
-        int rowCount = menuStatRepository.initializeStats();
-        log.info("주간 통계 초기화 완료 : {}개", rowCount);
-    }
-
-    /**
-     * ShopView의 전주 통계 데이터를 shift
-     * 현재 주간 데이터를 전주로, 전주를 전전주로 이동
-     */
-    @Transactional
-    public void shiftShopViewStats() {
-        log.debug("ShopView 통계 데이터 shift 시작");
-        
-        // 모든 ShopView 조회
-        List<ShopView> shopViews = shopViewRepository.findAll();
-        
-        for (ShopView shopView : shopViews) {
-            // 현재 주간 통계 계산
-            List<MenuStats> statsList = menuStatRepository.getStats(shopView.getShopId());
-            
-            int currentTotalSalesCount = statsList.stream()
-                    .mapToInt(MenuStats::getWeeklySold)
-                    .sum();
-            
-            int currentTotalRevenue = statsList.stream()
-                    .mapToInt(stat -> stat.getPrice() * stat.getWeeklySold())
-                    .sum();
-            
-            int currentPocketingCount = statsList.stream()
-                    .mapToInt(MenuStats::getWeeklyFoocketingEntry)
-                    .sum();
-            
-            // 전주 데이터를 전전주로 shift하고, 현재 데이터를 전주로 저장
-            ShopView updatedShopView = ShopView.builder()
-                    .shopId(shopView.getShopId())
-                    .shopViewCount(shopView.getShopViewCount())
-                    .shopFavoriteCount(shopView.getShopFavoriteCount())
-                    .shopViewPrevCount(shopView.getShopViewCount()) // 현재를 전주로
-                    .shopFavoritePrevCount(shopView.getShopFavoriteCount()) // 현재를 전주로
-                    .shopTotalSalesPrevCount(currentTotalSalesCount) // 현재 주간 데이터를 전주로
-                    .shopTotalRevenuePrev(currentTotalRevenue) // 현재 주간 데이터를 전주로
-                    .shopPocketingPrevCount(currentPocketingCount) // 현재 주간 데이터를 전주로
-                    .build();
-            
-            shopViewRepository.save(updatedShopView);
-        }
-        
-        log.info("ShopView 통계 데이터 shift 완료 : {}개", shopViews.size());
     }
 
     private static void checkPermission(Integer userId, Integer ownerId) {

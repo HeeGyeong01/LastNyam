@@ -1,5 +1,6 @@
 package com.lastnyam.customer.user.dto;
 
+import com.lastnyam.database.entity.enums.TransactionStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -17,4 +18,5 @@ public class FoocketingTransactionInfo {
     private List<MenuItemInfo> menus;
     private Integer totalAmount;
     private LocalDateTime foocketingTime;
+    private TransactionStatus transactionStatus;
 }

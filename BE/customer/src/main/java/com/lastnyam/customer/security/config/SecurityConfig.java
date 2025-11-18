@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/**",
                                 "/api/login/**",
+                                "/api/stats/survived",
                                 "/api/auth/social/kakao",
                                 "/api/auth/token/refresh",
                                 "/api/cart/**",

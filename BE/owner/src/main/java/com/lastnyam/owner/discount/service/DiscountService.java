@@ -19,6 +19,7 @@ import com.lastnyam.owner.shop.repository.ShopRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -64,7 +65,7 @@ public class DiscountService {
         // 할인율 계산 (소수점 버림)
         Integer discountRate = (int) (((double) (originalPrice - discountPrice) / originalPrice) * 100);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         
         // 영업일 기준 시간 계산 (오전 6시 기준)
         LocalDateTime closeTime = toBusinessDateTime(now, shop.getShopCloses());
@@ -105,7 +106,7 @@ public class DiscountService {
         }
 
         // 활성화된 마감세일 조회 (픽업 마감 시간이 현재 이후인 것만)
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         List<Discount> discounts = discountRepository.findActiveByShopId(shopId, now);
 
         // DTO로 변환

@@ -15,6 +15,7 @@ import com.lastnyam.database.entity.Foocketing;
 import com.lastnyam.database.entity.FoocketingTransaction;
 import com.lastnyam.database.entity.Menu;
 import com.lastnyam.database.entity.Shop;
+import com.lastnyam.database.entity.enums.TransactionStatus;
 import com.lastnyam.s3.service.S3Service;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -90,6 +91,7 @@ public class TransactionService {
                 .shop(shopInfo)
                 .menus(menuInfos)
                 .totalAmount(totalAmount)
+                .transactionStatus(transaction.getTransactionStatus())
                 .build();
     }
 
@@ -109,7 +111,7 @@ public class TransactionService {
         log.info("마감할인 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
         TransactionQrResponse response = TransactionQrResponse.fromDiscount(transaction);
-        
+
         // QR 이미지가 있으면 presigned URL로 변환
         if (response.getTransactionQrImage() != null) {
             String presignedUrl = s3Service.generatePresignedGetUrl(response.getTransactionQrImage());
@@ -122,7 +124,7 @@ public class TransactionService {
                     .shopName(response.getShopName())
                     .build();
         }
-        
+
         return response;
     }
 
@@ -172,12 +174,20 @@ public class TransactionService {
         // 총 결제 금액 (푸케팅은 1개이므로 foocketingAmount)
         Integer totalAmount = menu.getMenuPrice();
 
+        // transactionStatus가 null인 경우 로깅 (기존 데이터 대응)
+        TransactionStatus status = transaction.getTransactionStatus();
+        if (status == null) {
+            log.warn("Transaction ID {}의 transactionStatus가 null입니다.",
+                    transaction.getTransactionId());
+        }
+
         return FoocketingTransactionInfo.builder()
                 .transactionId(transaction.getTransactionId())
                 .shop(shopInfo)
                 .menus(List.of(menuInfo))
                 .totalAmount(totalAmount)
                 .foocketingTime(transaction.getCreatedAt())
+                .transactionStatus(status)
                 .build();
     }
 
@@ -197,7 +207,7 @@ public class TransactionService {
         log.info("푸케팅 QR 조회: userId={}, transactionId={}", userId, transactionId);
 
         TransactionQrResponse response = TransactionQrResponse.fromFoocketing(transaction);
-        
+
         // QR 이미지가 있으면 presigned URL로 변환
         if (response.getTransactionQrImage() != null) {
             String presignedUrl = s3Service.generatePresignedGetUrl(response.getTransactionQrImage());
@@ -210,7 +220,7 @@ public class TransactionService {
                     .shopName(response.getShopName())
                     .build();
         }
-        
+
         return response;
     }
 }

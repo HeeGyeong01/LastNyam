@@ -240,6 +240,7 @@ pipeline {
                             cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
                             cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
                             cp -v \$MESSAGING_YML \${TARGET_DIR}/application-messaging.yml
+                            cp -v \$S3_YML \${TARGET_DIR}/application-s3.yml
                             echo "✅ Foocketing-Subscriber 설정 파일 복사 완료"
                         fi
                         
