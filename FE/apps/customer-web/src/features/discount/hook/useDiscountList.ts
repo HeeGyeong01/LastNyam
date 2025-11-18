@@ -75,13 +75,14 @@ export function useDiscountList(options: UseDiscountListOptions = {}) {
   // queryKey에는 디바운싱된 좌표만 포함하여 불필요한 API 호출 방지
   // sort는 기본값 'FAVORITES'를 명시적으로 전달하여 백엔드 기본값(RATING) 사용 방지
   const finalSort = sort ?? 'FAVORITES';
+  const queryKey = ['discount', 'list', category, finalSort, debouncedLat, debouncedLng];
   const {
     data,
     isLoading: loading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['discount', 'list', category, finalSort, debouncedLat, debouncedLng],
+    queryKey,
     queryFn: () => getDiscountList({
       category,
       sort: finalSort,
@@ -91,21 +92,31 @@ export function useDiscountList(options: UseDiscountListOptions = {}) {
     enabled: true,
   });
 
-  // 초기 데이터 로드 시 누적 데이터 초기화 및 업데이트
+  // queryKey가 변경될 때만 누적 데이터 초기화 (React Query 캐시와 동기화)
+  const prevQueryKeyRef = useRef<string>('');
+  const currentQueryKey = JSON.stringify(queryKey);
+  
   useEffect(() => {
-    if (data) {
+    // queryKey가 변경되었을 때만 초기화
+    if (prevQueryKeyRef.current !== currentQueryKey) {
+      prevQueryKeyRef.current = currentQueryKey;
+      // data가 있으면 즉시 업데이트, 없으면 초기화만
+      if (data) {
+        setAllDiscounts(data.content);
+        setNextCursor(data.nextCursor);
+        setHasNextPage(data.hasNextPage);
+      } else {
+        setAllDiscounts([]);
+        setNextCursor(null);
+        setHasNextPage(false);
+      }
+    } else if (data) {
+      // queryKey가 같고 data가 있으면 업데이트 (캐시된 데이터 반영)
       setAllDiscounts(data.content);
       setNextCursor(data.nextCursor);
       setHasNextPage(data.hasNextPage);
     }
-  }, [data]);
-
-  // category, sort, debouncedLat, debouncedLng 변경 시 누적 데이터 초기화
-  useEffect(() => {
-    setAllDiscounts([]);
-    setNextCursor(null);
-    setHasNextPage(false);
-  }, [category, sort, debouncedLat, debouncedLng]);
+  }, [data, currentQueryKey]);
 
   // 다음 페이지 로드 함수
   const loadMore = useCallback(async () => {
