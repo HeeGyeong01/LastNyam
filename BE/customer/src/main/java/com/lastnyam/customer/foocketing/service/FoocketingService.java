@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FoocketingService {
 
     private static final String VIEW_PREFIX = "FoocketingViewingCount:";
+    private static final long VIEW_WINDOW_MILLIS = 30_000L;
     private final RedisService redisService;
     private final FoocketingRepository foocketingRepository;
     private final FoocketingRankRepository foocketingRankRepository;
@@ -39,18 +40,32 @@ public class FoocketingService {
             userId = 0;
         }
         FoocketingDetail result = detailRepository.getDetailOf(lng, lat, userId, foocketingId);
+        Long count = updateAndGetCurrentViewing(foocketingId, userId);
 
+        result.setCurrentViewing(Math.toIntExact(count));
+
+        return result;
+    }
+
+    private Long updateAndGetCurrentViewing(Integer foocketingId, Integer userId) {
         String key = VIEW_PREFIX + foocketingId;
 
-        Integer viewingCount = (Integer) redisService.get(key);
-
-        if (viewingCount != null) {
-            result.setCurrentViewing(viewingCount);
-            return result;
+        if (userId != null && userId > 0) {
+            long now = System.currentTimeMillis();
+            redisService.addZSet(key, userId, now);
         }
+        return getCurrentViewerCount(key);
+    }
 
-        redisService.add(key, 1);
-        return result;
+    private Long getCurrentViewerCount(String key) {
+        long now = System.currentTimeMillis();
+        long maxExpiredScore = now - VIEW_WINDOW_MILLIS;
+
+        redisService.removeRangeByScore(key, 0, maxExpiredScore);
+
+        Long count = redisService.getCountFromZCard(key);
+
+        return count != null ? count : 0;
     }
 
 
