@@ -1,7 +1,7 @@
 package com.lastnyam.customer.stats.controller;
 
 import com.lastnyam.common.dto.ApiResponse;
-import com.lastnyam.customer.stats.dto.FootstepResponse;
+import com.lastnyam.customer.stats.dto.SurvivedResponse;
 import com.lastnyam.customer.stats.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +26,9 @@ public class StatisticsController {
      *
      * @return 최근 통계 정보
      */
-    @GetMapping("/footstep")
-    public ResponseEntity<ApiResponse<FootstepResponse>> getLatestFootstep() {
-        FootstepResponse result = statisticsService.getLatestFootstep();
+    @GetMapping("/survived")
+    public ResponseEntity<ApiResponse<SurvivedResponse>> getLatestFootstep() {
+        SurvivedResponse result = statisticsService.getLatestFootstep();
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
     }
 }
