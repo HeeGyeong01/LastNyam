@@ -219,7 +219,7 @@ public class FoocketingQueryRepository {
             switch (type) {
                 case CLOSEST -> sql.append(" distance ASC");
                 case PRICE -> sql.append(" m.menu_price DESC");
-                default -> sql.append(" f.foocketing_close_time ASC");
+                default -> sql.append(" f.foocketing_time ASC");
             }
         }
 
