@@ -252,7 +252,7 @@ public class DiscountQueryRepository {
             switch (type) {
                 case RATING -> sql.append(" sr.shop_rating_avg DESC");
                 case CLOSEST -> sql.append(" distance ASC");
-                case PRICE -> sql.append(" d.discount_price DESC");
+                case PRICE -> sql.append(" d.discount_price ASC");
                 case DISCOUNT -> sql.append(" d.discount_rate DESC");
                 default -> sql.append(" sr.shop_favorite_count DESC");
             }
