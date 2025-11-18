@@ -130,6 +130,7 @@ export default function Transaction() {
                       menus={transaction.menus}
                       totalAmount={transaction.totalAmount}
                       transactionType="discount"
+                      transactionStatus={transaction.transactionStatus}
                       onQrClick={() => handleDiscountQrClick(transaction.transactionId)}
                     />
                   ))}
@@ -167,6 +168,7 @@ export default function Transaction() {
                       menus={transaction.menus}
                       totalAmount={transaction.totalAmount}
                       transactionType="foocketing"
+                      transactionStatus={transaction.transactionStatus}
                       onQrClick={() => handleFoocketingQrClick(transaction.transactionId)}
                     />
                   ))}

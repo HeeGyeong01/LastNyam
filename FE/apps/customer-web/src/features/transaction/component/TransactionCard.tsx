@@ -1,7 +1,23 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@shared/components/Button';
+import { Badge } from '@shared/components/Badge';
 import { getShopBannerUrl } from '@/shared/lib/image';
 import type { TransactionMenu } from '../type/transaction';
+
+/**
+ * 거래 상태를 한글로 변환
+ */
+const getTransactionStatusLabel = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    PENDING_APPROVAL: '승인 대기',
+    REJECTED: '승인 거부',
+    PREPARING_FOOD: '음식 준비 중',
+    WAITING_PICKUP: '픽업 대기',
+    COMPLETED_PICKUP: '픽업 완료',
+    NO_SHOW: '노쇼',
+  };
+  return statusMap[status] || status;
+};
 
 export type TransactionType = 'discount' | 'foocketing';
 
@@ -11,10 +27,10 @@ export interface TransactionCardProps {
   menus: TransactionMenu[];
   totalAmount: number;
   transactionType?: TransactionType;
+  transactionStatus?: string;
   onQrClick?: () => void;
   className?: string;
 }
-
 
 export default function TransactionCard({
   shopImageUrl,
@@ -22,11 +38,13 @@ export default function TransactionCard({
   menus,
   totalAmount,
   transactionType = 'discount',
+  transactionStatus,
   onQrClick,
   className,
 }: TransactionCardProps) {
   const formattedTotalAmount = totalAmount.toLocaleString('ko-KR');
   const isFoocketing = transactionType === 'foocketing';
+  const isWaitingPickup = transactionStatus === 'WAITING_PICKUP';
 
   return (
     <div
@@ -35,6 +53,15 @@ export default function TransactionCard({
         className
       )}
     >
+      {/* 거래 상태 Badge */}
+      {transactionStatus && (
+        <div className="w-full flex justify-start">
+          <Badge badgeStyle={isWaitingPickup ? 'red' : 'gray'} size="default">
+            {getTransactionStatusLabel(transactionStatus)}
+          </Badge>
+        </div>
+      )}
+
       {/* 가게 정보 */}
       <div className="w-full py-1 flex justify-start items-start gap-1.5">
         <div className="w-7 h-7 relative bg-bg-2 rounded-lg overflow-hidden flex-shrink-0">
@@ -44,9 +71,7 @@ export default function TransactionCard({
             alt={shopName}
           />
         </div>
-        <div className="text-primary text-lg font-bold leading-7 line-clamp-1">
-          {shopName}
-        </div>
+        <div className="text-primary text-lg font-bold leading-7 line-clamp-1">{shopName}</div>
       </div>
 
       {/* 주문 항목들 */}
@@ -54,7 +79,10 @@ export default function TransactionCard({
         {menus.map((menu, index) => {
           const formattedPrice = menu.price.toLocaleString('ko-KR');
           return (
-            <div key={`${menu.menuName}-${index}-${menu.price}-${menu.quantity}`} className="w-full flex flex-col gap-0.5">
+            <div
+              key={`${menu.menuName}-${index}-${menu.price}-${menu.quantity}`}
+              className="w-full flex flex-col gap-0.5"
+            >
               <div className="w-full flex justify-start items-center gap-1">
                 <div className="text-primary text-sm font-normal leading-5 line-clamp-1">
                   {menu.menuName}
@@ -92,10 +120,10 @@ export default function TransactionCard({
         size="lg"
         className="w-full"
         onClick={onQrClick}
+        disabled={transactionStatus !== 'WAITING_PICKUP'}
       >
         QR 확인하기
       </Button>
     </div>
   );
 }
-
