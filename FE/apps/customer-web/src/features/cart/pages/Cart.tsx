@@ -102,7 +102,6 @@ export default function Cart() {
         try {
           // 장바구니를 다시 조회해서 최신 재고 반영
           const refreshedCartData = await getCart(userId);
-          setCartData(refreshedCartData);
           
           // 해당 아이템의 최신 재고 수량 찾기
           const updatedItem = refreshedCartData.cartItems.find(
@@ -110,6 +109,18 @@ export default function Cart() {
           );
           
           if (updatedItem) {
+            // 장바구니 수량이 실제 재고를 초과하면 강제로 맞춰줌
+            if (updatedItem.cartItemAmount > updatedItem.discountMenuAmount) {
+              const correctedCartData = await updateCartItemQuantity(
+                userId,
+                cartItemId,
+                updatedItem.discountMenuAmount
+              );
+              setCartData(correctedCartData);
+            } else {
+              setCartData(refreshedCartData);
+            }
+            
             setStockAlertMessage('재고가 부족합니다');
             setStockAlertSubText(`현재 남은 수량: ${updatedItem.discountMenuAmount}개`);
             setIsStockAlertOpen(true);
