@@ -12,7 +12,7 @@ import FoocketingSuccess from '@/features/foocketing/pages/FoocketingSuccess';
 import FoocketingFail from '@/features/foocketing/pages/FoocketingFail';
 import Discount from '@/features/discount/pages/Discount';
 import ShopDetail from '@/features/shop/pages/ShopDetail';
-import { Cart, PaymentSuccess } from '../pages/cart';
+import { Cart, PaymentSuccess } from '../features/cart';
 import Favorite from '@/features/favorite/pages/Favorite';
 import Search from '@/features/search/pages/Search';
 import OrderList from '@/features/transaction/pages/Transaction';

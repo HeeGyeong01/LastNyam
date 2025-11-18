@@ -96,3 +96,23 @@ export const updateCartItemQuantity = async (
   return response.data.data;
 };
 
+/**
+ * 장바구니 주문 결제
+ * POST /api/order/cart/{userId}
+ * 
+ * @param userId - 사용자 ID
+ * @returns 결제 페이지 리다이렉트 URL
+ */
+export interface OrderCartResponse {
+  nextRedirectMobileUrl: string;
+  nextRedirectAppUrl: string;
+  nextRedirectPcUrl: string;
+}
+
+export const orderCart = async (userId: number): Promise<OrderCartResponse> => {
+  const response = await apiClient.post<ApiResponseWrapper<OrderCartResponse>>(
+    `/api/order/cart/${userId}`
+  );
+  return response.data.data;
+};
+

@@ -230,3 +230,4 @@ if (isTokenExpiringSoon(accessToken)) {
 - 자동으로 재발급되어 끊김 없는 경험 제공
 - 정말 만료됐을 때만 로그아웃됨
 
+

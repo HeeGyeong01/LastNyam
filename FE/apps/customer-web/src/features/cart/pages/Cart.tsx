@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader, BottomSheet } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import AlertModal from '@/shared/components/AlertModal';
-import CartMenuCard from './component/cartMenuCard';
+import CartMenuCard from '../component/cartMenuCard';
 import { useAuthStore } from '@/store/useAuthStore';
-import { orderCart } from '@/features/cart/api/cart';
-import { getCart, removeFromCart, updateCartItemQuantity } from './api/cart.api';
+import { getCart, removeFromCart, updateCartItemQuantity, orderCart } from '../api/cart.api';
 import { useLayout } from '@/contexts/LayoutContext';
 
 // API 응답 타입

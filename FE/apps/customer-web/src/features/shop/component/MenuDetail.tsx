@@ -6,7 +6,7 @@ import { Stepper } from '@/shared/components';
 import { Button } from '@shared/components/Button';
 import { useRequireAuth } from '@/shared/hooks/useRequireAuth';
 import { useAuthStore } from '@/store/useAuthStore';
-import { addToCart } from '@/pages/cart/api/cart.api';
+import { addToCart } from '@/features/cart/api/cart.api';
 import LoadingModal from '@/shared/components/LoadingModal';
 import AlertModal from '@/shared/components/AlertModal';
 import { useLayout } from '@/contexts/LayoutContext';
