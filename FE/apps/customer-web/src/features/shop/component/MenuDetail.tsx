@@ -141,8 +141,8 @@ export default function MenuDetail({ detail }: MenuDetailProps) {
       {/* DIFFERENT_SHOP_ITEMS 에러 모달 */}
       <AlertModal
         isOpen={showDifferentShopModal}
-        mainText="현재 장바구니에 다른 가게의 물품이 있어 추가하지 못했습니다."
-        subText="한 번에 하나의 가게 물품만 담을 수 있습니다. 장바구니로 이동하시겠습니까?"
+        mainText="이미 다른 가게 물품이 담겨있어요"
+        subText="같은 가게 물품만 장바구니에 담을 수 있습니다. 장바구니로 이동하시겠습니까?"
         buttonText="장바구니로 이동"
         onConfirm={handleGoToCart}
         onClose={() => setShowDifferentShopModal(false)}
