@@ -14,15 +14,6 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLe
 import { Bar, BarChart, Line, LineChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { MenuDistributionChart, type MenuData } from "@/components/ui/menuDistributionChart";
 
-// 상수
-const CHART_COLORS = [
-  "#3B82F6", // 파란색
-  "#60A5FA",
-  "#93C5FD",
-  "#DBEAFE",
-  "#E5E7EB", // 회색
-];
-
 const PIE_CHART_COLORS = [
   "#3B82F6", // 파란색
   "#9CA3AF", // 회색
@@ -691,7 +682,7 @@ export default function ReportPage() {
     // 실제로는 API에서 주간별 데이터를 받아와야 하지만, 여기서는 예시 데이터 생성
     const weeks = ["01.19", "01.26", "02.02"];
     const baseValue = reportData.totalRevenue / 3;
-    return weeks.map((week, index) => ({
+    return weeks.map((week) => ({
       label: week,
       value: Math.floor(baseValue * (0.8 + Math.random() * 0.4)),
     }));
