@@ -298,7 +298,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                   handleHourSelect(h)
                 }}
                 className={cn(
-                  "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
+                  "w-full px-4 py-2 text-sm text-center transition-colors w-[3.5rem]",
                   "hover:bg-bg-2",
                   selectedHour === h && "bg-brand-bg-3 text-brand"
                 )}
@@ -320,7 +320,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                   handleMinuteSelect(m)
                 }}
                 className={cn(
-                  "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
+                  "w-full px-4 py-2 text-sm text-center transition-colors w-[3.5rem]",
                   "hover:bg-bg-2",
                   selectedMinute === m && "bg-brand-bg-3 text-brand"
                 )}
@@ -340,7 +340,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 handlePeriodSelect("AM")
               }}
               className={cn(
-                "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
+                "w-full px-3 py-2 text-sm text-center transition-colors w-[3rem]",
                 "hover:bg-bg-2",
                 selectedPeriod === "AM" && "bg-brand-bg-3 text-brand"
               )}
@@ -354,7 +354,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 handlePeriodSelect("PM")
               }}
               className={cn(
-                "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
+                "w-full px-3 py-2 text-sm text-center transition-colors w-[3rem]",
                 "hover:bg-bg-2",
                 selectedPeriod === "PM" && "bg-brand-bg-3 text-brand"
               )}
@@ -424,7 +424,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
             onTouchCancel={() => endTouchEdit()}
             disabled={isDisabled}
             className={cn(
-              "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
+              "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center w-[3.5rem]",
               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
               "disabled:cursor-not-allowed disabled:opacity-50",
               variant === "filled" && "bg-bg-1 border-subtle",
@@ -495,7 +495,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
             onTouchCancel={() => endTouchEdit()}
               disabled={isDisabled}
               className={cn(
-                "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3.5rem]",
+                "relative h-9 px-4 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center w-[3.5rem]",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                 "disabled:cursor-not-allowed disabled:opacity-50",
                 variant === "filled" && "bg-bg-1 border-subtle",
@@ -564,7 +564,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
               onTouchCancel={() => endTouchEdit()}
               disabled={isDisabled}
               className={cn(
-                "relative h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3rem]",
+                "relative h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center w-[3rem]",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                 "disabled:cursor-not-allowed disabled:opacity-50",
                 variant === "filled" && "bg-bg-1 border-subtle",
