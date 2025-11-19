@@ -104,7 +104,7 @@ public class FoocketingDetailRepository {
                                ST_Point(?, ?)::geography,
                                ST_Point(s.shop_lng, s.shop_lat)::geography
                             ) as distance,
-                            COALESCE(sr.shop_rating_sum, 0) as shop_rating_sum,
+                            COALESCE(sr.shop_rating_avg, 0) as shop_rating_avg,
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count,
                             EXISTS (
                                SELECT 1
