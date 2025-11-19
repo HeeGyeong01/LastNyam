@@ -7,12 +7,14 @@ import { persist } from 'zustand/middleware';
  * - userId: 사용자 ID (로그인 시에만 값이 있음)
  * - accessToken: API 요청 시 사용하는 액세스 토큰
  * - refreshToken: accessToken 만료 시 새로 발급받기 위한 리프레시 토큰
+ * - nickname: 사용자 닉네임
  */
 interface AuthState {
   isAuthenticated: boolean;
   userId: number | null;
   accessToken: string | null;
   refreshToken: string | null;
+  nickname: string | null;
 }
 
 /**
@@ -27,6 +29,7 @@ interface AuthActions {
   logout: () => void;
   updateTokens: (accessToken: string, refreshToken?: string) => void;
   syncFromLocalStorage: () => void;
+  setNickname: (nickname: string) => void;
 }
 
 /**
@@ -47,6 +50,7 @@ export const useAuthStore = create<AuthStore>()(
       userId: null,            // 로그인 전 기본값: null
       accessToken: null,       // 로그인 전 기본값: null
       refreshToken: null,      // 로그인 전 기본값: null
+      nickname: null,          // 로그인 전 기본값: null
 
       // ========== 액션 함수들 ==========
 
@@ -96,6 +100,7 @@ export const useAuthStore = create<AuthStore>()(
           userId: null,
           accessToken: null,
           refreshToken: null,
+          nickname: null,
         });
       },
 
@@ -158,8 +163,20 @@ export const useAuthStore = create<AuthStore>()(
             userId: null,
             accessToken: null,
             refreshToken: null,
+            nickname: null,
           });
         }
+      },
+
+      /**
+       * 닉네임 설정 함수
+       * 
+       * 사용자 정보 조회 후 닉네임을 저장할 때 사용됩니다.
+       * 
+       * @param nickname - 사용자 닉네임
+       */
+      setNickname: (nickname) => {
+        set({ nickname });
       },
     }),
     {
@@ -182,6 +199,7 @@ export const useAuthStore = create<AuthStore>()(
         userId: state.userId,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        nickname: state.nickname,
       }),
     }
   )
