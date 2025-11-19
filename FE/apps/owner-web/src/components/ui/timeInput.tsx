@@ -437,6 +437,8 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
               <input
                 ref={hourInputRef}
                 type="text"
+                inputMode="numeric"
+                enterKeyHint="next"
                 value={editValue}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, "")
@@ -446,6 +448,9 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleEditComplete("hour")
+                    setTimeout(() => {
+                      triggerInlineEdit("minute")
+                    }, 100)
                   } else if (e.key === "Escape") {
                     setEditMode(null)
                     setEditValue("")
@@ -508,6 +513,8 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 <input
                   ref={minuteInputRef}
                   type="text"
+                  inputMode="numeric"
+                  enterKeyHint={format24h ? "done" : "next"}
                   value={editValue}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, "")
@@ -517,6 +524,11 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleEditComplete("minute")
+                      if (!format24h) {
+                        setTimeout(() => {
+                          triggerInlineEdit("period")
+                        }, 100)
+                      }
                     } else if (e.key === "Escape") {
                       setEditMode(null)
                       setEditValue("")
@@ -576,6 +588,8 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
               {editMode === "period" ? (
                 <input
                   type="text"
+                  inputMode="text"
+                  enterKeyHint="done"
                   value={editValue}
                   onChange={(e) => {
                     const val = e.target.value.toUpperCase().replace(/[^AMP]/g, "")
