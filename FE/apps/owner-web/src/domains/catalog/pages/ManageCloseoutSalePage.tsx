@@ -253,7 +253,7 @@ export default function ManageCloseoutSalePage() {
                 <div className="space-y-1">
                   <p className="h3-b text-brand">마감세일 관리</p>
                   <p className="p2 text-secondary">
-                    마감세일 메뉴를 등록하고 편집하세요
+                    마감세일 메뉴를 등록하세요
                   </p>
                 </div>
                 <Button

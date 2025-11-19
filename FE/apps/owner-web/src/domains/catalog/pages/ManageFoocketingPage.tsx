@@ -231,7 +231,7 @@ export default function ManageFoocketingPage() {
                 <div className="space-y-1">
                   <p className="h3-b text-brand">푸켓팅 관리</p>
                   <p className="p2 text-secondary">
-                    푸켓팅 메뉴를 등록하고 편집하세요
+                    푸켓팅 메뉴를 등록하세요
                   </p>
                 </div>
                 <Button

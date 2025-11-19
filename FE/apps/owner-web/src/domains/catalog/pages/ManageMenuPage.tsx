@@ -201,7 +201,7 @@ export default function ManageMenuPage() {
                 <div className="space-y-1">
                   <p className="h3-b text-brand">메뉴관리</p>
                   <p className="p2 text-secondary">
-                    판매가 메뉴를 등록하고 편집하세요
+                    판매가 메뉴를 등록하세요
                   </p>
                 </div>
                 <Button
