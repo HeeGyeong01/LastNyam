@@ -233,7 +233,7 @@ public class DiscountQueryRepository {
                                    ST_Point(s.shop_lng, s.shop_lat)::geography
                                 )::numeric,0) > ?
                                 OR (
-                                   (ST_Distance(
+                                   ROUND(ST_Distance(
                                       ST_Point(?, ?)::geography,
                                       ST_Point(s.shop_lng, s.shop_lat)::geography
                                    )::numeric,0) = ?
