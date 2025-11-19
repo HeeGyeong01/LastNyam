@@ -7,7 +7,6 @@ import {
   enterFoocketing,
   getFoocketingResult,
 } from '@/features/foocketing/api';
-import type { FoocketingResult } from '@/features/foocketing/type/foocketing';
 import { Badge } from '@shared/components/Badge';
 import { PageHeader, LoadingModal, AlertModal } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
@@ -145,17 +144,14 @@ export default function FoocketingDetail() {
         if (entryResponse.success) {
           setIsWaitingResult(true);
           
-          // 폴링 함수: 결과가 나올 때까지 1초마다 API 호출
+          // 폴링 함수: 결과가 나올 때까지 0.3초마다 API 호출
           const pollResult = async () => {
             try {
               const result = await getFoocketingResult(Number(id));
               
-              // 타입 단언을 사용하여 status 필드 확인 (API 응답에 status 필드가 있음)
-              const resultWithStatus = result as FoocketingResult & { status?: string };
-              
               // WAITING 상태면 계속 폴링
-              if (resultWithStatus.status === 'WAITING') {
-                pollingIntervalRef.current = setTimeout(pollResult, 1000);
+              if (result.status === 'WAITING') {
+                pollingIntervalRef.current = setTimeout(pollResult, 300);
                 return;
               }
               
@@ -166,10 +162,10 @@ export default function FoocketingDetail() {
                 pollingIntervalRef.current = null;
               }
               
-              // 결과에 따라 성공/실패 페이지로 이동
-              if (result.success) {
+              // status에 따라 성공/실패 페이지로 이동
+              if (result.status === 'SUCCESS') {
                 navigate(`/foocketing-success/${id}`);
-              } else {
+              } else if (result.status === 'FAIL') {
                 navigate(`/foocketing-fail/${id}`);
               }
             } catch (error) {
