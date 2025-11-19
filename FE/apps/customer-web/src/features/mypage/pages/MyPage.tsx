@@ -4,17 +4,10 @@ import { Button } from '@shared/components/Button';
 import { queryClient } from '@/lib/queryClient';
 import { logout as logoutApi } from '@/features/auth/api';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/shared/api/client';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { ApiResponseWrapper } from '@/shared/types/common';
+import { getUserInfo } from '../api';
+import type { UserInfo } from '../type';
 import lastnyamCatImage from '@/shared/assets/lastnyam-cat.png';
-
-interface UserInfo {
-  userId: number;
-  nickname: string;
-  email?: string;
-  name?: string;
-}
 
 export default function MyPage() {
   const userId = useAuthStore((state) => state.userId);
@@ -24,15 +17,7 @@ export default function MyPage() {
   // 사용자 정보 조회 (nickname이 없을 때만)
   const { data: userInfo } = useQuery<UserInfo>({
     queryKey: ['userInfo', userId],
-    queryFn: async () => {
-      if (!userId) {
-        throw new Error('로그인이 필요합니다.');
-      }
-      const response = await apiClient.get<ApiResponseWrapper<UserInfo>>(
-        `/api/user/${userId}`
-      );
-      return response.data.data;
-    },
+    queryFn: () => getUserInfo(userId ?? undefined),
     enabled: !!userId && !nickname, // nickname이 없을 때만 호출
   });
 
