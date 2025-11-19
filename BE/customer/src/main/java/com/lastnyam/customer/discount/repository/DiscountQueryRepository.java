@@ -227,15 +227,15 @@ public class DiscountQueryRepository {
                 }
                 case CLOSEST -> {
                     sql.append("""
-                            ROUND(ST_Distance(
+                            ROUND((ST_Distance(
                                    ST_Point(?, ?)::geography,
                                    ST_Point(s.shop_lng, s.shop_lat)::geography
-                                )/1000::numeric,3) > ?
+                                )/1000)::numeric,3) > ?
                                 OR (
-                                   ROUND(ST_Distance(
+                                   ROUND((ST_Distance(
                                       ST_Point(?, ?)::geography,
                                       ST_Point(s.shop_lng, s.shop_lat)::geography
-                                   )/1000::numeric,3) = ?
+                                   )/1000)::numeric,3) = ?
                                    AND discount_id < ?
                                 )
                             """);
