@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DiscountCursorInfo {
     private Integer id;
-    private Double distance;
+    private Integer distance;
     private Double rating;
     private Integer price;
     private Integer discountRate;

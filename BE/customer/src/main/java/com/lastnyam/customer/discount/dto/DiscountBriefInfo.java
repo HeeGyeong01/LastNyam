@@ -1,5 +1,6 @@
 package com.lastnyam.customer.discount.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lastnyam.customer.global.dto.MenuInfo;
 import com.lastnyam.customer.global.dto.ShopInfo;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,9 @@ public class DiscountBriefInfo {
     Integer discountAmount;
     Integer discountRate;
     Integer discountPrice;
+
+    @JsonIgnore
+    private Integer distanceM;
 
     private MenuInfo menuInfo;
     private ShopInfo shopInfo;

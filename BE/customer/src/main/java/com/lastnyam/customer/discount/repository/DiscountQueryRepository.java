@@ -104,7 +104,7 @@ public class DiscountQueryRepository {
         double shopLng = rs.getDouble("shop_lng");
 
         // ST_Distance는 미터 단위로 반환되므로 Km로 변환 (소숫점 첫째자리)
-        double distanceM = rs.getDouble("distance");
+        int distanceM = rs.getInt("distance");
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
         double shopRating = rs.getDouble("shop_rating_avg");
@@ -138,13 +138,14 @@ public class DiscountQueryRepository {
                 .discountPrice(discountPrice)
                 .discountAmount(discountAmount)
                 .discountRate(discountRate)
+                .distanceM(distanceM)
                 .menuInfo(menuInfo)
                 .shopInfo(shopInfo)
                 .build();
     }
 
     private String createCursor(DiscountBriefInfo info) {
-        String cursorData = info.getDiscountId() + "," + info.getShopInfo().getDistance() + "," + info.getShopInfo()
+        String cursorData = info.getDiscountId() + "," + info.getDistanceM() + "," + info.getShopInfo()
                 .getRating() + "," + info.getDiscountPrice() + "," + info.getDiscountRate();
         return Base64.getEncoder().encodeToString(cursorData.getBytes(StandardCharsets.UTF_8));
     }
@@ -158,7 +159,7 @@ public class DiscountQueryRepository {
         }
 
         Integer id = Integer.parseInt(splitted[0]);
-        Double distance = Double.parseDouble(splitted[1]);
+        Integer distance = Integer.parseInt(splitted[1]);
         Double rating = Double.parseDouble(splitted[2]);
         Integer price = Integer.parseInt(splitted[3]);
         Integer discountRate = Integer.parseInt(splitted[4]);
@@ -227,15 +228,15 @@ public class DiscountQueryRepository {
                 }
                 case CLOSEST -> {
                     sql.append("""
-                            ROUND((ST_Distance(
+                            ROUND(ST_Distance(
                                    ST_Point(?, ?)::geography,
                                    ST_Point(s.shop_lng, s.shop_lat)::geography
-                                )/1000)::numeric,3) > ?
+                                )::numeric,0) > ?
                                 OR (
-                                   ROUND((ST_Distance(
+                                   (ST_Distance(
                                       ST_Point(?, ?)::geography,
                                       ST_Point(s.shop_lng, s.shop_lat)::geography
-                                   )/1000)::numeric,3) = ?
+                                   )::numeric,0) = ?
                                    AND discount_id < ?
                                 )
                             """);
