@@ -77,7 +77,7 @@ export function getLocation(forceRefresh: boolean = false): Promise<{ lat: numbe
         
         // 디버깅: 위치 정보 로그 출력
         // 참고: accuracy가 1000m 이상이면 IP 기반 위치 추정일 가능성이 높음
-        const isLikelyIPBased = accuracy > 1000;
+        // const isLikelyIPBased = accuracy > 1000;
         // console.log('[Geolocation] 위치 정보 가져옴:', {
         //   lat: location.lat,
         //   lng: location.lng,
@@ -110,7 +110,8 @@ export function getLocation(forceRefresh: boolean = false): Promise<{ lat: numbe
         };
         resolve(location);
       },
-      (error) => {
+      // (error) => {
+      () => {
         // 위치 권한 거부 또는 에러 발생 시 기본 위치(서울) 사용
         // 하지만 기본 위치는 캐시하지 않음 (매번 다시 시도하도록)
         // console.warn('[Geolocation] 위치 정보를 가져올 수 없어 기본 위치(서울)를 사용합니다:', {
