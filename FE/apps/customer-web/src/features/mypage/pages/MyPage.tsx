@@ -65,24 +65,22 @@ export default function MyPage() {
   return (
     <>
       <PageHeader title="마이페이지" variant="light" />
-      <div className="px-4 mt-16 pb-24">
-        <div className="w-72 inline-flex flex-col justify-start items-center gap-9 mx-auto">
-          <img
-            className="w-48 h-48 object-contain"
-            src={lastnyamCatImage}
-            alt="프로필"
-          />
-          <div className="self-stretch flex flex-col justify-start items-center gap-3">
-            <div className="justify-start">
-              <p className="text-primary h3">안녕하세요, </p>
-              <p className="text-primary h3-b">
-                {nickname || '사용자'}
-              </p>
-              <p className="text-primary h3">님</p>
-            </div>
-            <div className="justify-start text-brand font-kr-h2 kr-h2">
-              🐾🐾 환영한다냥!! 🐾🐾
-            </div>
+      <div className="w-full flex flex-col px-4 mt-16 items-center">
+        <img
+          className="w-48 h-48 object-contain mb-6"
+          src={lastnyamCatImage}
+          alt="프로필"
+        />
+        <div className="flex flex-col justify-start items-center gap-3">
+          <div className="flex justify-start">
+            <p className="text-primary h3 mr-1">안녕하세요,</p>
+            <p className="text-primary h3-b">
+              {nickname || '사용자'}
+            </p>
+            <p className="text-primary h3">님</p>
+          </div>
+          <div className="justify-start text-brand font-kr-h2 kr-h2">
+            🐾🐾 환영한다냥!! 🐾🐾
           </div>
         </div>
       </div>
