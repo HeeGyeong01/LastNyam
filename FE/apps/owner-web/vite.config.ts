@@ -37,6 +37,19 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // base URL을 포함한 fallback 경로 설정
+        navigateFallback: "/owner/index.html",
+        navigateFallbackAllowlist: [
+          // /owner/로 시작하는 경로만 Service Worker가 처리
+          /^\/owner\/.*/,
+        ],
+        navigateFallbackDenylist: [
+          // API 경로는 Service Worker가 처리하지 않음
+          /^\/api\/.*/,
+          /^\/owner\/api\/.*/,
+          // 외부 도메인도 제외
+          /^https:\/\/.*/,
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
