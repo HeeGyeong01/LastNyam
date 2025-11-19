@@ -245,7 +245,6 @@ public class DiscountQueryRepository {
                     params.add(lng);
                     params.add(lat);
                     params.add(cursor.getDistance());
-                    params.add(cursor.getId());
                 }
                 default -> {
                     sql.append("discount_id < ?");
