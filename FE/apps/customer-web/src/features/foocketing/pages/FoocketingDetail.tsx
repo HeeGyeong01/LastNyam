@@ -166,11 +166,18 @@ export default function FoocketingDetail() {
                 pollingIntervalRef.current = null;
               }
               
-              // 결과에 따라 성공/실패 페이지로 이동
-              if (result.success) {
+              // status에 따라 성공/실패 페이지로 이동
+              if (resultWithStatus.status === 'SUCCESS') {
                 navigate(`/foocketing-success/${id}`);
-              } else {
+              } else if (resultWithStatus.status === 'FAIL') {
                 navigate(`/foocketing-fail/${id}`);
+              } else {
+                // status가 없거나 예상치 못한 경우 result.success로 fallback
+                if (result.success) {
+                  navigate(`/foocketing-success/${id}`);
+                } else {
+                  navigate(`/foocketing-fail/${id}`);
+                }
               }
             } catch (error) {
               console.error('푸켓팅 결과 조회 실패:', error);
