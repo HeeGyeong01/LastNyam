@@ -1,4 +1,5 @@
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
 type TimePeriod = "AM" | "PM"
@@ -8,19 +9,31 @@ export interface TimeInputProps {
   onChange?: (value: string) => void // HH:MM 형식으로 반환
   variant?: "filled" | "disabled"
   interval30?: boolean // 30분 단위로만 입력 가능
+  format24h?: boolean // true면 24시간 형식, false면 12시간(AM/PM) 형식 (기본값: false)
   className?: string
   disabled?: boolean
 }
 
+interface DropdownPosition {
+  top: number
+  left: number
+  width: number
+}
+
 const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
-  ({ value = "", onChange, variant = "filled", interval30 = false, className, disabled }, ref) => {
+  ({ value = "", onChange, variant = "filled", interval30 = false, format24h = false, className, disabled }, ref) => {
     const [openDropdown, setOpenDropdown] = React.useState<"hour" | "minute" | "period" | null>(null)
     const [editMode, setEditMode] = React.useState<"hour" | "minute" | "period" | null>(null)
     const [editValue, setEditValue] = React.useState("")
+    const [dropdownPosition, setDropdownPosition] = React.useState<DropdownPosition>({ top: 0, left: 0, width: 0 })
     
     const containerRef = React.useRef<HTMLDivElement>(null)
     const hourInputRef = React.useRef<HTMLInputElement>(null)
     const minuteInputRef = React.useRef<HTMLInputElement>(null)
+    const hourButtonRef = React.useRef<HTMLButtonElement>(null)
+    const minuteButtonRef = React.useRef<HTMLButtonElement>(null)
+    const periodButtonRef = React.useRef<HTMLButtonElement>(null)
+    const dropdownRef = React.useRef<HTMLDivElement>(null)
     
     // 외부 ref와 내부 ref 연결
     React.useImperativeHandle(ref, () => containerRef.current as HTMLDivElement)
@@ -39,6 +52,12 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
         return { hour: null, minute: null, period: null as TimePeriod | null }
       }
 
+      // 24시간 형식일 때는 그대로 반환
+      if (format24h) {
+        return { hour: hour24, minute, period: null }
+      }
+
+      // 12시간 형식 변환
       let hour12 = hour24
       let period: TimePeriod = "AM"
 
@@ -66,7 +85,9 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
     const ignoreEmptyEffectRef = React.useRef(false)
     
     // 시간, 분 옵션 생성
-    const hours = Array.from({ length: 12 }, (_, i) => i + 1)
+    const hours = format24h 
+      ? Array.from({ length: 24 }, (_, i) => i) // 0-23
+      : Array.from({ length: 12 }, (_, i) => i + 1) // 1-12
     const minutes = interval30 
       ? [0, 30] 
       : Array.from({ length: 60 }, (_, i) => i)
@@ -87,17 +108,21 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
       setSelectedMinute(minuteValue)
       setSelectedPeriod(periodValue)
 
-      const isComplete = hourValue !== null && minuteValue !== null && periodValue !== null
+      const isComplete = format24h 
+        ? (hourValue !== null && minuteValue !== null)
+        : (hourValue !== null && minuteValue !== null && periodValue !== null)
 
       if (isComplete) {
         ignoreEmptyEffectRef.current = false
-        const timeString = to24Hour(hourValue!, minuteValue!, periodValue!)
+        const timeString = format24h
+          ? `${hourValue!.toString().padStart(2, "0")}:${minuteValue!.toString().padStart(2, "0")}`
+          : to24Hour(hourValue!, minuteValue!, periodValue!)
         onChange?.(timeString)
       } else {
         ignoreEmptyEffectRef.current = true
         onChange?.("")
       }
-    }, [onChange])
+    }, [onChange, format24h])
 
     const handleHourSelect = (hourValue: number) => {
       updateTime(hourValue, selectedMinute, selectedPeriod)
@@ -114,11 +139,27 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
       setOpenDropdown(null)
     }
 
+    // 드롭다운 위치 계산
+    const updateDropdownPosition = (type: "hour" | "minute" | "period") => {
+      const buttonRef = type === "hour" ? hourButtonRef : type === "minute" ? minuteButtonRef : periodButtonRef
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect()
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+          width: rect.width
+        })
+      }
+    }
+
     // 텍스트 입력 완료 처리
     const handleEditComplete = React.useCallback((type: "hour" | "minute" | "period") => {
       if (type === "hour") {
         const num = parseInt(editValue, 10)
-        if (!isNaN(num) && num >= 1 && num <= 12) {
+        const isValid = format24h 
+          ? (!isNaN(num) && num >= 0 && num <= 23)
+          : (!isNaN(num) && num >= 1 && num <= 12)
+        if (isValid) {
           updateTime(num, selectedMinute, selectedPeriod)
         }
       } else if (type === "minute") {
@@ -140,12 +181,16 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
 
       setEditMode(null)
       setEditValue("")
-    }, [editValue, interval30, updateTime, selectedHour, selectedMinute, selectedPeriod])
+    }, [editValue, interval30, updateTime, selectedHour, selectedMinute, selectedPeriod, format24h])
 
     // 외부 클릭 시 드롭다운 닫기
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        const target = event.target as Node
+        const isInsideContainer = containerRef.current?.contains(target)
+        const isInsideDropdown = dropdownRef.current?.contains(target)
+        
+        if (!isInsideContainer && !isInsideDropdown) {
           setOpenDropdown(null)
           if (editMode) {
             handleEditComplete(editMode)
@@ -235,6 +280,110 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
       ignoreEmptyEffectRef.current = false
     }, [value])
 
+    // Portal로 렌더링할 드롭다운 컴포넌트
+    const renderDropdown = () => {
+      if (!openDropdown || editMode || isDisabled) return null
+
+      let content: React.ReactNode = null
+
+      if (openDropdown === "hour") {
+        content = (
+          <>
+            {hours.map((h) => (
+              <button
+                key={h}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleHourSelect(h)
+                }}
+                className={cn(
+                  "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
+                  "hover:bg-bg-2",
+                  selectedHour === h && "bg-brand-bg-3 text-brand"
+                )}
+              >
+                {h.toString().padStart(2, "0")}
+              </button>
+            ))}
+          </>
+        )
+      } else if (openDropdown === "minute") {
+        content = (
+          <>
+            {minutes.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleMinuteSelect(m)
+                }}
+                className={cn(
+                  "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
+                  "hover:bg-bg-2",
+                  selectedMinute === m && "bg-brand-bg-3 text-brand"
+                )}
+              >
+                {m.toString().padStart(2, "0")}
+              </button>
+            ))}
+          </>
+        )
+      } else if (openDropdown === "period") {
+        content = (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                handlePeriodSelect("AM")
+              }}
+              className={cn(
+                "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
+                "hover:bg-bg-2",
+                selectedPeriod === "AM" && "bg-brand-bg-3 text-brand"
+              )}
+            >
+              AM
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                handlePeriodSelect("PM")
+              }}
+              className={cn(
+                "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
+                "hover:bg-bg-2",
+                selectedPeriod === "PM" && "bg-brand-bg-3 text-brand"
+              )}
+            >
+              PM
+            </button>
+          </>
+        )
+      }
+
+      return createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'absolute',
+            top: `${dropdownPosition.top + 4}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+            zIndex: 9999
+          }}
+          className="bg-white border border-subtle rounded-md shadow-lg max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {content}
+        </div>,
+        document.body
+      )
+    }
+
     return (
       <div ref={containerRef} className={cn("flex items-center", className)}>
         {/* 기본 time input (숨김) */}
@@ -251,6 +400,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
           {/* 시 드롭다운 */}
           <div className="relative">
           <button
+            ref={hourButtonRef}
             type="button"
             onClick={(e) => {
               e.stopPropagation()
@@ -262,6 +412,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 if (openDropdown === "hour") {
                   setOpenDropdown(null)
                 } else {
+                  updateDropdownPosition("hour")
                   setOpenDropdown("hour")
                   setEditMode(null)
                 }
@@ -311,31 +462,6 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
               <span>{isHourEmpty ? "HH" : selectedHour?.toString().padStart(2, "0")}</span>
             )}
           </button>
-
-          {openDropdown === "hour" && editMode !== "hour" && !isDisabled && (
-            <div
-              className="absolute left-0 z-50 mt-1 bg-white border border-subtle rounded-md shadow-lg max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {hours.map((h) => (
-                <button
-                  key={h}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleHourSelect(h)
-                  }}
-                  className={cn(
-                    "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
-                    "hover:bg-bg-2",
-                    selectedHour === h && "bg-brand-bg-3 text-brand"
-                  )}
-                >
-                  {h.toString().padStart(2, "0")}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
           <span className={cn("text-base", variant === "disabled" ? "text-tertiary" : "text-primary")}>
@@ -345,6 +471,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
           {/* 분 드롭다운 */}
           <div className="relative">
             <button
+              ref={minuteButtonRef}
               type="button"
             onClick={(e) => {
                 e.stopPropagation()
@@ -356,6 +483,7 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                   if (openDropdown === "minute") {
                     setOpenDropdown(null)
                   } else {
+                    updateDropdownPosition("minute")
                     setOpenDropdown("minute")
                     setEditMode(null)
                   }
@@ -405,135 +533,81 @@ const TimeInput = React.forwardRef<HTMLDivElement, TimeInputProps>(
                 <span>{isMinuteEmpty ? "MM" : selectedMinute?.toString().padStart(2, "0")}</span>
               )}
             </button>
-
-            {openDropdown === "minute" && editMode !== "minute" && !isDisabled && (
-              <div
-                className="absolute left-0 rounded-md z-50 mt-1 bg-white border border-subtle shadow-lg max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {minutes.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleMinuteSelect(m)
-                    }}
-                    className={cn(
-                      "w-full px-4 py-2 text-sm text-center transition-colors min-w-[3.5rem]",
-                      "hover:bg-bg-2",
-                      selectedMinute === m && "bg-brand-bg-3 text-brand"
-                    )}
-                  >
-                    {m.toString().padStart(2, "0")}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* AM/PM 드롭다운 */}
-        <div className="relative ml-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              if (!isDisabled) {
-                if (touchEditTriggeredRef.current) {
-                  touchEditTriggeredRef.current = false
-                  return
-                }
-                if (openDropdown === "period") {
-                  setOpenDropdown(null)
-                } else {
-                  setOpenDropdown("period")
-                  setEditMode(null)
-                }
-              }
-            }}
-            onDoubleClick={() => triggerInlineEdit("period")}
-            onTouchStart={() => startTouchEdit("period")}
-            onTouchEnd={() => endTouchEdit()}
-            onTouchCancel={() => endTouchEdit()}
-            disabled={isDisabled}
-            className={cn(
-              "relative h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3rem]",
-              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-              variant === "filled" && "bg-bg-1 border-subtle",
-              variant === "filled" && (isPeriodEmpty ? "text-subtle" : "text-primary"),
-              variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
-              openDropdown === "period" && editMode !== "period" && "ring-1 ring-ring"
-            )}
-          >
-            {editMode === "period" ? (
-              <input
-                type="text"
-                value={editValue}
-                onChange={(e) => {
-                  const val = e.target.value.toUpperCase().replace(/[^AMP]/g, "")
-                  if (val.length <= 2) {
-                    setEditValue(val)
+        {/* AM/PM 드롭다운 - 12시간 형식일 때만 표시 */}
+        {!format24h && (
+          <div className="relative ml-2">
+            <button
+              ref={periodButtonRef}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isDisabled) {
+                  if (touchEditTriggeredRef.current) {
+                    touchEditTriggeredRef.current = false
+                    return
                   }
-                }}
-                onBlur={() => handleEditComplete("period")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleEditComplete("period")
-                  } else if (e.key === "Escape") {
+                  if (openDropdown === "period") {
+                    setOpenDropdown(null)
+                  } else {
+                    updateDropdownPosition("period")
+                    setOpenDropdown("period")
                     setEditMode(null)
-                    setEditValue("")
                   }
-                }}
-                className={cn(
-                  "w-full h-full border-none bg-transparent text-base text-center uppercase",
-                  "focus-visible:outline-none focus-visible:ring-0",
-                  variant === "filled" && "text-primary",
-                  variant === "disabled" && "text-tertiary"
-                )}
-              />
-            ) : (
-              <span>{isPeriodEmpty ? "--" : selectedPeriod}</span>
-            )}
-          </button>
-
-          {openDropdown === "period" && editMode !== "period" && !isDisabled && (
-            <div
-              className="absolute left-0 z-50 mt-1 bg-white border border-subtle rounded-md shadow-lg"
-              onClick={(e) => e.stopPropagation()}
+                }
+              }}
+              onDoubleClick={() => triggerInlineEdit("period")}
+              onTouchStart={() => startTouchEdit("period")}
+              onTouchEnd={() => endTouchEdit()}
+              onTouchCancel={() => endTouchEdit()}
+              disabled={isDisabled}
+              className={cn(
+                "relative h-9 px-3 border-b border-input bg-transparent text-base text-center inline-flex items-center justify-center min-w-[3rem]",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                variant === "filled" && "bg-bg-1 border-subtle",
+                variant === "filled" && (isPeriodEmpty ? "text-subtle" : "text-primary"),
+                variant === "disabled" && "bg-bg-3 text-tertiary border-subtle",
+                openDropdown === "period" && editMode !== "period" && "ring-1 ring-ring"
+              )}
             >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handlePeriodSelect("AM")
-                }}
-                className={cn(
-                  "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
-                  "hover:bg-bg-2",
-                  selectedPeriod === "AM" && "bg-brand-bg-3 text-brand"
-                )}
-              >
-                AM
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handlePeriodSelect("PM")
-                }}
-                className={cn(
-                  "w-full px-3 py-2 text-sm text-center transition-colors min-w-[3rem]",
-                  "hover:bg-bg-2",
-                  selectedPeriod === "PM" && "bg-brand-bg-3 text-brand"
-                )}
-              >
-                PM
-              </button>
-            </div>
-          )}
-        </div>
+              {editMode === "period" ? (
+                <input
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase().replace(/[^AMP]/g, "")
+                    if (val.length <= 2) {
+                      setEditValue(val)
+                    }
+                  }}
+                  onBlur={() => handleEditComplete("period")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleEditComplete("period")
+                    } else if (e.key === "Escape") {
+                      setEditMode(null)
+                      setEditValue("")
+                    }
+                  }}
+                  className={cn(
+                    "w-full h-full border-none bg-transparent text-base text-center uppercase",
+                    "focus-visible:outline-none focus-visible:ring-0",
+                    variant === "filled" && "text-primary",
+                    variant === "disabled" && "text-tertiary"
+                  )}
+                />
+              ) : (
+                <span>{isPeriodEmpty ? "--" : selectedPeriod}</span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Portal로 드롭다운 렌더링 */}
+        {renderDropdown()}
       </div>
     )
   }

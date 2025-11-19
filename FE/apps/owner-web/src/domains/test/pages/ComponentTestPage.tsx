@@ -71,6 +71,8 @@ export default function ComponentTestPage() {
   });
   const [timeValue, setTimeValue] = useState('');
   const [timeValue30, setTimeValue30] = useState('');
+  const [timeValue24, setTimeValue24] = useState('');
+  const [timeValue24_30, setTimeValue24_30] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('signature');
   const [menuSelectState, setMenuSelectState] = useState<MenuSelectState>('unselected');
   const [discountInfo, setDiscountInfo] = useState<{ discountPrice?: number; discountRate?: number }>({});
@@ -1139,6 +1141,67 @@ export default function ComponentTestPage() {
               type="datetime-local"
               placeholder="날짜와 시간을 선택하세요"
             />
+          </div>
+
+          {/* TimeInput 테스트 */}
+          <div className="space-y-4 p-4 border border-gray-200 rounded-md">
+            <h3 className="font-bold text-lg">TimeInput 컴포넌트 테스트</h3>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                12시간 형식 (AM/PM)
+              </label>
+              <TimeInput
+                value={timeValue}
+                onChange={(val) => setTimeValue(val)}
+                variant="filled"
+                interval30={false}
+                format24h={false}
+              />
+              <p className="text-xs text-gray-500">현재 값: {timeValue || "없음"}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                24시간 형식
+              </label>
+              <TimeInput
+                value={timeValue24}
+                onChange={(val) => setTimeValue24(val)}
+                variant="filled"
+                interval30={false}
+                format24h={true}
+              />
+              <p className="text-xs text-gray-500">현재 값: {timeValue24 || "없음"}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                30분 단위 (12시간)
+              </label>
+              <TimeInput
+                value={timeValue30}
+                onChange={(val) => setTimeValue30(val)}
+                variant="filled"
+                interval30={true}
+                format24h={false}
+              />
+              <p className="text-xs text-gray-500">현재 값: {timeValue30 || "없음"}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                30분 단위 (24시간)
+              </label>
+              <TimeInput
+                value={timeValue24_30}
+                onChange={(val) => setTimeValue24_30(val)}
+                variant="filled"
+                interval30={true}
+                format24h={true}
+              />
+              <p className="text-xs text-gray-500">현재 값: {timeValue24_30 || "없음"}</p>
+            </div>
           </div>
 
           <button
