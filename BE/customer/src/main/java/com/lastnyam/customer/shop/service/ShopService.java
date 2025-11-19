@@ -20,7 +20,6 @@ import com.lastnyam.database.entity.ShopRating;
 import com.lastnyam.database.entity.User;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +43,7 @@ public class ShopService {
     public ShopDetailResponseDto getShopDetail(Integer shopId, Double currentLat, Double currentLng, Integer userId) {
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
-        
+
         // 일자별 통계 업데이트 (조회수 증가)
         try {
             dailyStatisticsService.incrementViewCount(shopId);
@@ -56,15 +55,14 @@ public class ShopService {
         // 별점 조회
         ShopRating rating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
         int ratingCount = rating != null ? rating.getShopRatingCount() : 0;
-        double ratingAvg =
-                ratingCount > 0 ? (double) Objects.requireNonNull(rating).getShopRatingSum() / ratingCount : 0.0;
-        
+        double ratingAvg = rating != null ? rating.getShopRatingAverage() : 0;
+
         int favoriteCount = rating != null ? rating.getShopFavoriteCount() : 0;
 
         // 즐겨찾기 여부 (userId 있을 때만 계산)
         Boolean favorited = null;
         if (userId != null) {
-                favorited = favoriteRepository.existsByUserUserIdAndShopShopId(userId, shopId);
+            favorited = favoriteRepository.existsByUserUserIdAndShopShopId(userId, shopId);
         }
 
         // 마감세일 (미래만)
@@ -148,26 +146,26 @@ public class ShopService {
         // 즐겨찾기 카운트 +1 (없으면 생성)
         int updated = shopRatingRepository.incrementFavoriteCount(shopId);
         if (updated == 0) {
-                ShopRating newRating = ShopRating.builder()
-                        .shopId(shop.getShopId())
-                        .shop(shop)
-                        .shopRatingSum(0)
-                        .shopRatingCount(0)
-                        .shopFavoriteCount(1)
-                        .shopRatingAverage(0.0)
-                        .build();
-                shopRatingRepository.save(newRating);
+            ShopRating newRating = ShopRating.builder()
+                    .shopId(shop.getShopId())
+                    .shop(shop)
+                    .shopRatingSum(0)
+                    .shopRatingCount(0)
+                    .shopFavoriteCount(1)
+                    .shopRatingAverage(0.0)
+                    .build();
+            shopRatingRepository.save(newRating);
         }
 
         ShopRating currentRating = shopRatingRepository.findByShop_ShopId(shopId).orElse(null);
         Integer favoriteCount = currentRating != null ? currentRating.getShopFavoriteCount() : 0;
 
         return ShopFavoriteResponseDto.builder()
-                        .shopId(shopId)
-                        .userId(userId)
-                        .favorited(true)
-                        .shopFavoriteCount(favoriteCount)
-                        .build();
+                .shopId(shopId)
+                .userId(userId)
+                .favorited(true)
+                .shopFavoriteCount(favoriteCount)
+                .build();
     }
 
     @Transactional
@@ -184,11 +182,11 @@ public class ShopService {
         Integer favoriteCount = currentRating != null ? currentRating.getShopFavoriteCount() : 0;
 
         return ShopFavoriteResponseDto.builder()
-                        .shopId(shopId)
-                        .userId(userId)
-                        .favorited(false)
-                        .shopFavoriteCount(favoriteCount)
-                        .build();
+                .shopId(shopId)
+                .userId(userId)
+                .favorited(false)
+                .shopFavoriteCount(favoriteCount)
+                .build();
     }
 
     private Double haversineDistanceMeters(double lat1, double lon1, double lat2, double lon2) {

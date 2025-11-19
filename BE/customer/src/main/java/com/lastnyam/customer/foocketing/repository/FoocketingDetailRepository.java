@@ -56,11 +56,10 @@ public class FoocketingDetailRepository {
         double distanceKm = Math.round((distanceM / 1000.0) * 10.0) / 10.0;
 
         int shopId = rs.getInt("shop_id");
-        int shopRatingSum = rs.getInt("shop_rating_sum");
         int shopRatingCount = rs.getInt("shop_rating_count");
 
         boolean hasParticipated = rs.getBoolean("has_participated");
-        double shopRating = Math.round(((double) shopRatingSum / shopRatingCount) * 10.0) / 10.0;
+        double shopRating = rs.getDouble("shop_rating_avg");
 
         DetailedMenuInfo menuInfo = DetailedMenuInfo.builder()
                 .name(menuName)
