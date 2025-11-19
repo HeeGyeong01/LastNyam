@@ -1,5 +1,6 @@
 package com.lastnyam.customer.foocketing.dto;
 
+import com.lastnyam.customer.foocketing.enums.FoocketingResultStatus;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,7 +21,7 @@ public class FoocketingFailResult extends FoocketingResult {
     public static FoocketingFailResult of(Integer rank, FoocketingFailInfo failInfo) {
         FoocketingFailResult result = new FoocketingFailResult();
 
-        result.setSuccess(false);
+        result.setStatus(FoocketingResultStatus.FAIL);
         result.setRank(rank);
         result.setOtherFoocketingsOfShop(failInfo.getOtherFoocketingsOfShop());
         result.setRecommendedFoocketings(failInfo.getRecommendedFoocketings());

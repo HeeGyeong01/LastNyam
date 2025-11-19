@@ -1,5 +1,6 @@
 package com.lastnyam.customer.foocketing.dto;
 
+import com.lastnyam.customer.foocketing.enums.FoocketingResultStatus;
 import com.lastnyam.customer.global.dto.ShopInfoWithMenu;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class FoocketingSuccessResult extends FoocketingResult {
     public static FoocketingSuccessResult of(Integer rank, ShopInfoWithMenu menu) {
         FoocketingSuccessResult info = new FoocketingSuccessResult();
 
-        info.setSuccess(true);
+        info.setStatus(FoocketingResultStatus.SUCCESS);
         info.setRank(rank);
         info.setShopInfo(menu);
         return info;

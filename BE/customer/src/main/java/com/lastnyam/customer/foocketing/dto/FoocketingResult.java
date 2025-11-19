@@ -1,5 +1,6 @@
 package com.lastnyam.customer.foocketing.dto;
 
+import com.lastnyam.customer.foocketing.enums.FoocketingResultStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class FoocketingResult {
     @Builder.Default
-    private boolean isSuccess = false;
+    private FoocketingResultStatus status = FoocketingResultStatus.FAIL;
     private Integer rank;
 }

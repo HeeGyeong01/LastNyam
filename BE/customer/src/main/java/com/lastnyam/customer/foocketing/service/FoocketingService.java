@@ -7,6 +7,7 @@ import com.lastnyam.customer.foocketing.dto.FoocketingFailInfo;
 import com.lastnyam.customer.foocketing.dto.FoocketingFailResult;
 import com.lastnyam.customer.foocketing.dto.FoocketingResult;
 import com.lastnyam.customer.foocketing.dto.FoocketingSuccessResult;
+import com.lastnyam.customer.foocketing.enums.FoocketingResultStatus;
 import com.lastnyam.customer.foocketing.repository.FoocketingDetailRepository;
 import com.lastnyam.customer.foocketing.repository.FoocketingFailRepository;
 import com.lastnyam.customer.foocketing.repository.FoocketingRankRepository;
@@ -78,8 +79,8 @@ public class FoocketingService {
 
         Integer rank = foocketingRankRepository.getRankOf(userId, foocketingId);
 
-        if (rank == null) {
-            throw new BadRequestException(CustomerErrorCode.INVALID_QUERY);
+        if (rank == -1) {
+            return buildWaitingResult(rank);
         }
 
         if (rank <= foocketing.getFoocketingAmount()) {
@@ -93,6 +94,13 @@ public class FoocketingService {
         if (!userRepository.existsById(userId)) {
             throw new BadRequestException(CustomerErrorCode.INVALID_QUERY);
         }
+    }
+
+    private FoocketingResult buildWaitingResult(Integer rank) {
+        return FoocketingResult.builder()
+                .status(FoocketingResultStatus.WAITING)
+                .rank(rank)
+                .build();
     }
 
     private FoocketingSuccessResult buildSuccessResult(Foocketing foocketing,
