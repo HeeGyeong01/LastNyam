@@ -25,7 +25,7 @@ export default function BottomNavItem({ icon: Icon, label, path, isActive, strok
         className={`w-7 h-7 ${isActive ? 'text-brand' : 'text-primary'}`}
         strokeWidth={strokeWidth}
       />
-      <span className={`caption2 ${isActive ? 'text-brand-strong' : 'text-primary'}`}>
+      <span className={`caption2 w-12 ${isActive ? 'text-brand-strong' : 'text-primary'}`}>
         {label}
       </span>
     </button>
