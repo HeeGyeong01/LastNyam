@@ -37,15 +37,15 @@ export function getLocation(forceRefresh: boolean = false): Promise<{ lat: numbe
   if (cachedLocation) {
     const age = Date.now() - cachedLocation.timestamp;
     if (age < CACHE_MAX_AGE) {
-      console.log('[Geolocation] 캐시된 위치 정보 사용:', {
-        lat: cachedLocation.lat,
-        lng: cachedLocation.lng,
-        age: Math.round(age / 1000) + '초 전',
-      });
+      // console.log('[Geolocation] 캐시된 위치 정보 사용:', {
+      //   lat: cachedLocation.lat,
+      //   lng: cachedLocation.lng,
+      //   age: Math.round(age / 1000) + '초 전',
+      // });
       return Promise.resolve({ lat: cachedLocation.lat, lng: cachedLocation.lng });
     } else {
       // 캐시가 만료되었으면 무효화
-      console.log('[Geolocation] 캐시 만료, 새로 가져옴');
+      // console.log('[Geolocation] 캐시 만료, 새로 가져옴');
       cachedLocation = null;
     }
   }
@@ -59,7 +59,7 @@ export function getLocation(forceRefresh: boolean = false): Promise<{ lat: numbe
   locationPromise = new Promise((resolve) => {
     // Geolocation API 지원 여부 확인
     if (!navigator.geolocation) {
-      console.warn('Geolocation API를 지원하지 않아 기본 위치(서울)를 사용합니다.');
+      // console.warn('Geolocation API를 지원하지 않아 기본 위치(서울)를 사용합니다.');
       // 기본 위치는 캐시하지 않고 바로 반환
       resolve(DEFAULT_LOCATION);
       return;
@@ -78,27 +78,27 @@ export function getLocation(forceRefresh: boolean = false): Promise<{ lat: numbe
         // 디버깅: 위치 정보 로그 출력
         // 참고: accuracy가 1000m 이상이면 IP 기반 위치 추정일 가능성이 높음
         const isLikelyIPBased = accuracy > 1000;
-        console.log('[Geolocation] 위치 정보 가져옴:', {
-          lat: location.lat,
-          lng: location.lng,
-          accuracy: accuracy,
-          accuracyKm: (accuracy / 1000).toFixed(2) + 'km',
-          likelyIPBased: isLikelyIPBased ? '⚠️ IP 기반 위치 추정 (부정확할 수 있음)' : '✅ GPS/Wi-Fi 기반 (정확함)',
-          altitude: position.coords.altitude,
-          altitudeAccuracy: position.coords.altitudeAccuracy,
-          heading: position.coords.heading,
-          speed: position.coords.speed,
-          timestamp: new Date().toISOString(),
-        });
+        // console.log('[Geolocation] 위치 정보 가져옴:', {
+        //   lat: location.lat,
+        //   lng: location.lng,
+        //   accuracy: accuracy,
+        //   accuracyKm: (accuracy / 1000).toFixed(2) + 'km',
+        //   likelyIPBased: isLikelyIPBased ? '⚠️ IP 기반 위치 추정 (부정확할 수 있음)' : '✅ GPS/Wi-Fi 기반 (정확함)',
+        //   altitude: position.coords.altitude,
+        //   altitudeAccuracy: position.coords.altitudeAccuracy,
+        //   heading: position.coords.heading,
+        //   speed: position.coords.speed,
+        //   timestamp: new Date().toISOString(),
+        // });
         
         // 정확도가 너무 낮으면 (1km 이상 오차) 신뢰하지 않고 기본 위치 사용
         if (accuracy > ACCURACY_THRESHOLD) {
-          console.warn('[Geolocation] 위치 정확도가 낮아 기본 위치를 사용합니다:', {
-            accuracy: accuracy,
-            accuracyKm: (accuracy / 1000).toFixed(2) + 'km',
-            threshold: ACCURACY_THRESHOLD / 1000 + 'km',
-            receivedLocation: location,
-          });
+          // console.warn('[Geolocation] 위치 정확도가 낮아 기본 위치를 사용합니다:', {
+          //   accuracy: accuracy,
+          //   accuracyKm: (accuracy / 1000).toFixed(2) + 'km',
+          //   threshold: ACCURACY_THRESHOLD / 1000 + 'km',
+          //   receivedLocation: location,
+          // });
           // 기본 위치는 캐시하지 않고 바로 반환
           resolve(DEFAULT_LOCATION);
           return;
@@ -113,11 +113,11 @@ export function getLocation(forceRefresh: boolean = false): Promise<{ lat: numbe
       (error) => {
         // 위치 권한 거부 또는 에러 발생 시 기본 위치(서울) 사용
         // 하지만 기본 위치는 캐시하지 않음 (매번 다시 시도하도록)
-        console.warn('[Geolocation] 위치 정보를 가져올 수 없어 기본 위치(서울)를 사용합니다:', {
-          error: error.message,
-          code: error.code,
-          timestamp: new Date().toISOString(),
-        });
+        // console.warn('[Geolocation] 위치 정보를 가져올 수 없어 기본 위치(서울)를 사용합니다:', {
+        //   error: error.message,
+        //   code: error.code,
+        //   timestamp: new Date().toISOString(),
+        // });
         // 기본 위치는 캐시하지 않고 바로 반환
         resolve(DEFAULT_LOCATION);
       },
