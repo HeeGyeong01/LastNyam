@@ -230,12 +230,12 @@ public class DiscountQueryRepository {
                             ROUND(ST_Distance(
                                    ST_Point(?, ?)::geography,
                                    ST_Point(s.shop_lng, s.shop_lat)::geography
-                                )::numeric,0) > ?
+                                )/1000::numeric,3) > ?
                                 OR (
                                    ROUND(ST_Distance(
                                       ST_Point(?, ?)::geography,
                                       ST_Point(s.shop_lng, s.shop_lat)::geography
-                                   )::numeric,0) = ?
+                                   )/1000::numeric,3) = ?
                                    AND discount_id < ?
                                 )
                             """);
