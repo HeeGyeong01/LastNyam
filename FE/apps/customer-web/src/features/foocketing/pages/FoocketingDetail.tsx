@@ -1,12 +1,13 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import {
   getFoocketingDetail,
   enterFoocketing,
   getFoocketingResult,
 } from '@/features/foocketing/api';
+import type { FoocketingResult } from '@/features/foocketing/type/foocketing';
 import { Badge } from '@shared/components/Badge';
 import { PageHeader, LoadingModal, AlertModal } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
@@ -30,6 +31,7 @@ export default function FoocketingDetail() {
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
   const userId = useAuthStore((state) => state.userId); // userId를 store에서 가져오기
+  const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     data: detail,
@@ -76,6 +78,46 @@ export default function FoocketingDetail() {
     return () => target.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 컴포넌트 언마운트 시 폴링 중지
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearTimeout(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // 시간을 초 단위로 변환하는 공통 함수
+  const getTimeInSeconds = (date: Date): number => {
+    return date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+  };
+
+  // 오픈 시간까지 남은 시간 계산 (초 단위)
+  const getTimeDifference = (): number | null => {
+    if (!detail?.openTime) return null;
+    
+    const openTimeDate = new Date(detail.openTime);
+    const currentSeconds = getTimeInSeconds(currentTime);
+    const openSeconds = getTimeInSeconds(openTimeDate);
+    
+    return openSeconds - currentSeconds;
+  };
+
+  // 오픈 시간까지 남은 시간 계산 및 색상 진행률 계산
+  const getTimeColorProgress = () => {
+    const diffSeconds = getTimeDifference();
+    if (diffSeconds === null) return 0;
+    
+    if (diffSeconds <= 0) return 0;// 오픈 시간이거나 지났으면 0 (원래 색으로)
+    if (diffSeconds > 10) return 0; // 10초 전보다 이전이면 0
+    
+    // 10초 전부터 0초까지의 진행률 (0~1)
+    return (10 - diffSeconds) / 10;
+  };
+
+  const colorProgress = getTimeColorProgress();
+
   // 푸켓팅 참여하기 핸들러
   const handleEnterFoocketing = () => {
     requireAuth(async () => {
@@ -85,14 +127,10 @@ export default function FoocketingDetail() {
 
       // 시간 체크: 현재 시간이 오픈 시간보다 이전이면 알림 모달 표시
       if (detail?.openTime) {
-        const openTimeDate = new Date(detail.openTime);
-        
-        // 시간, 분, 초를 초 단위로 변환하여 비교
-        const currentSeconds = currentTime.getHours() * 3600 + currentTime.getMinutes() * 60 + currentTime.getSeconds();
-        const openSeconds = openTimeDate.getHours() * 3600 + openTimeDate.getMinutes() * 60 + openTimeDate.getSeconds();
+        const diffSeconds = getTimeDifference();
         
         // 현재 시간이 오픈 시간보다 이전이면 모달 표시
-        if (currentSeconds < openSeconds) {
+        if (diffSeconds !== null && diffSeconds > 0) {
           setIsAlertOpen(true);
           return;
         }
@@ -106,15 +144,47 @@ export default function FoocketingDetail() {
         // success가 true이면 결과 조회 API 호출
         if (entryResponse.success) {
           setIsWaitingResult(true);
-          const result = await getFoocketingResult(Number(id));
-          setIsWaitingResult(false);
-
-          // 결과에 따라 성공/실패 페이지로 이동
-          if (result.success) {
-            navigate(`/foocketing-success/${id}`);
-          } else {
-            navigate(`/foocketing-fail/${id}`);
-          }
+          
+          // 폴링 함수: 결과가 나올 때까지 1초마다 API 호출
+          const pollResult = async () => {
+            try {
+              const result = await getFoocketingResult(Number(id));
+              
+              // 타입 단언을 사용하여 status 필드 확인 (API 응답에 status 필드가 있음)
+              const resultWithStatus = result as FoocketingResult & { status?: string };
+              
+              // WAITING 상태면 계속 폴링
+              if (resultWithStatus.status === 'WAITING') {
+                pollingIntervalRef.current = setTimeout(pollResult, 1000);
+                return;
+              }
+              
+              // SUCCESS 또는 FAIL 상태면 폴링 중지하고 결과에 따라 이동
+              setIsWaitingResult(false);
+              if (pollingIntervalRef.current) {
+                clearTimeout(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+              }
+              
+              // 결과에 따라 성공/실패 페이지로 이동
+              if (result.success) {
+                navigate(`/foocketing-success/${id}`);
+              } else {
+                navigate(`/foocketing-fail/${id}`);
+              }
+            } catch (error) {
+              console.error('푸켓팅 결과 조회 실패:', error);
+              setIsWaitingResult(false);
+              if (pollingIntervalRef.current) {
+                clearTimeout(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+              }
+              alert('결과를 확인하는 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+          };
+          
+          // 첫 번째 폴링 시작
+          pollResult();
         } else {
           alert('푸켓팅 참여에 실패했습니다.');
         }
@@ -123,6 +193,11 @@ export default function FoocketingDetail() {
         alert('푸켓팅 참여에 실패했습니다. 다시 시도해주세요.');
         setIsWaitingEntry(false);
         setIsWaitingResult(false);
+        // 폴링 중이었다면 중지
+        if (pollingIntervalRef.current) {
+          clearTimeout(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
       }
     });
   };
@@ -254,7 +329,17 @@ export default function FoocketingDetail() {
                 <ClockIcon className="w-4 h-4 text-secondary" />
                 <span className="text-secondary p2-b">현재 시간</span>
               </div>
-              <div className="text-primary h5-b">{formatTimeToKorean(currentTime)}</div>
+              <div className="relative h5-b">
+                {/* 기본 색상 (text-primary) - 항상 렌더링 */}
+                <span className="text-primary">{formatTimeToKorean(currentTime)}</span>
+                {/* 브랜드 색상 (text-brand) - opacity로 점진적 전환 */}
+                <span 
+                  className="absolute inset-0 text-brand"
+                  style={{ opacity: colorProgress }}
+                >
+                  {formatTimeToKorean(currentTime)}
+                </span>
+              </div>
             </div>
             <div className="w-full flex flex-col py-4 bg-brand-bg-2 rounded-2xl items-center gap-0.5">
               <div className="flex items-center gap-">
