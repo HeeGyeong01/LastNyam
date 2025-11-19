@@ -73,7 +73,6 @@ public class DiscountQueryRepository {
             hasNext = true;
             DiscountBriefInfo last = result.removeLast();
             nextCursor = createCursor(last);
-            result.removeLast();
         }
 
         return CursorResponse.<DiscountBriefInfo>builder()
@@ -177,10 +176,10 @@ public class DiscountQueryRepository {
         public void buildBaseQuery(Double lat, Double lon) {
             sql.append("""
                     SELECT s.shop_id, s.shop_name, s.shop_lat, s.shop_lng,s.shop_banner,
-                            ST_Distance(
+                            ROUND(ST_Distance(
                                ST_Point(?, ?)::geography,
                                ST_Point(s.shop_lng, s.shop_lat)::geography
-                            ) as distance,
+                            )::numeric,0) as distance,
                             COALESCE(sr.shop_rating_avg, 0) as shop_rating_avg,
                             COALESCE(sr.shop_rating_count, 0) as shop_rating_count,
                             m.menu_name, m.menu_description, m.menu_price, m.menu_image,
@@ -217,7 +216,7 @@ public class DiscountQueryRepository {
                     params.add(cursor.getRating());
                 }
                 case PRICE -> {
-                    sql.append("discount_price < ? OR (discount_price = ? AND discount_id < ?)");
+                    sql.append("discount_price > ? OR (discount_price = ? AND discount_id < ?)");
                     params.add(cursor.getPrice());
                     params.add(cursor.getPrice());
                 }
@@ -228,15 +227,15 @@ public class DiscountQueryRepository {
                 }
                 case CLOSEST -> {
                     sql.append("""
-                            ST_Distance(
+                            ROUND(ST_Distance(
                                    ST_Point(?, ?)::geography,
                                    ST_Point(s.shop_lng, s.shop_lat)::geography
-                                ) > ?
+                                )::numeric,0) > ?
                                 OR (
-                                   ST_Distance(
+                                   ROUND(ST_Distance(
                                       ST_Point(?, ?)::geography,
                                       ST_Point(s.shop_lng, s.shop_lat)::geography
-                                   ) = ?
+                                   )::numeric,0) = ?
                                    AND discount_id < ?
                                 )
                             """);
