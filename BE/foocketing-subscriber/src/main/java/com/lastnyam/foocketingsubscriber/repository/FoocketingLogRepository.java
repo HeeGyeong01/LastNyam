@@ -24,4 +24,6 @@ public interface FoocketingLogRepository extends JpaRepository<FoocketingLog, In
             """, nativeQuery = true)
     Integer findUserRank(@Param("foocketingId") Integer foocketingId, @Param("userId") Integer userId);
 
+    @Query("select (count(f) > 0) from FoocketingLog f where f.foocketing.foocketingId = ?1 and f.user.userId = ?2")
+    boolean existsByFoocketing_FoocketingIdAndUser_UserId(Integer foocketingId, Integer userId);
 }

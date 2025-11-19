@@ -37,14 +37,22 @@ public class FoocketingLogService {
 
     @Transactional
     public void processFoocketingEntry(FoocketingEntryPayload entry) {
-        Foocketing foocketing = foocketingRepository.findById(entry.getFoocketingId())
+
+        Integer foocketingId = entry.getFoocketingId();
+        Integer userId = entry.getUserId();
+
+        if (logRepository.existsByFoocketing_FoocketingIdAndUser_UserId(foocketingId, userId)) {
+            return;
+        }
+
+        Foocketing foocketing = foocketingRepository.findById(foocketingId)
                 .orElse(null);
 
         if (foocketing == null) {
             throw new FoocketingEntryException(FoocketingEntryErrorCode.FOOCKETING_NOT_FOUND);
         }
 
-        User user = userRepository.findById(entry.getUserId()).orElse(null);
+        User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
             throw new FoocketingEntryException(FoocketingEntryErrorCode.USER_NOT_FOUND);
