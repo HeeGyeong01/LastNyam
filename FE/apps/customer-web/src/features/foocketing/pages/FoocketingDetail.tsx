@@ -7,7 +7,6 @@ import {
   enterFoocketing,
   getFoocketingResult,
 } from '@/features/foocketing/api';
-import type { FoocketingResult } from '@/features/foocketing/type/foocketing';
 import { Badge } from '@shared/components/Badge';
 import { PageHeader, LoadingModal, AlertModal } from '@/shared/components';
 import { ShopCardHorizontal } from '@/features/shop/component';
@@ -145,17 +144,14 @@ export default function FoocketingDetail() {
         if (entryResponse.success) {
           setIsWaitingResult(true);
           
-          // 폴링 함수: 결과가 나올 때까지 1초마다 API 호출
+          // 폴링 함수: 결과가 나올 때까지 0.3초마다 API 호출
           const pollResult = async () => {
             try {
               const result = await getFoocketingResult(Number(id));
               
-              // 타입 단언을 사용하여 status 필드 확인 (API 응답에 status 필드가 있음)
-              const resultWithStatus = result as FoocketingResult & { status?: string };
-              
               // WAITING 상태면 계속 폴링
-              if (resultWithStatus.status === 'WAITING') {
-                pollingIntervalRef.current = setTimeout(pollResult, 1000);
+              if (result.status === 'WAITING') {
+                pollingIntervalRef.current = setTimeout(pollResult, 300);
                 return;
               }
               
@@ -167,17 +163,10 @@ export default function FoocketingDetail() {
               }
               
               // status에 따라 성공/실패 페이지로 이동
-              if (resultWithStatus.status === 'SUCCESS') {
+              if (result.status === 'SUCCESS') {
                 navigate(`/foocketing-success/${id}`);
-              } else if (resultWithStatus.status === 'FAIL') {
+              } else if (result.status === 'FAIL') {
                 navigate(`/foocketing-fail/${id}`);
-              } else {
-                // status가 없거나 예상치 못한 경우 result.success로 fallback
-                if (result.success) {
-                  navigate(`/foocketing-success/${id}`);
-                } else {
-                  navigate(`/foocketing-fail/${id}`);
-                }
               }
             } catch (error) {
               console.error('푸켓팅 결과 조회 실패:', error);

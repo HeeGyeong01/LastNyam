@@ -30,9 +30,9 @@ export default function FoocketingSuccess() {
   });
 
 
-  // 성공하지 않은 경우 (실패 응답) - 실패 페이지로 리다이렉트
+  // 성공하지 않은 경우 (실패 응답 또는 대기 중) - 실패 페이지로 리다이렉트
   useEffect(() => {
-    if (result && !result.success) {
+    if (result && result.status !== 'SUCCESS') {
       navigate(`/foocketing-fail/${id}`, { replace: true });
     }
   }, [result, id, navigate]);
@@ -53,8 +53,8 @@ export default function FoocketingSuccess() {
     );
   }
 
-  // 성공하지 않은 경우 (실패 응답) - 리다이렉트 중
-  if (!result.success) {
+  // 성공하지 않은 경우 (실패 응답 또는 대기 중) - 리다이렉트 중
+  if (result.status !== 'SUCCESS') {
     return null;
   }
 
@@ -64,7 +64,7 @@ export default function FoocketingSuccess() {
   return (
     <>
       {/* 폭죽 애니메이션 - 페이지 진입 시 한 번만 재생 */}
-      {result?.success && <ConfettiFireworks fireOnMount={true} />}
+      {result.status === 'SUCCESS' && <ConfettiFireworks fireOnMount={true} />}
 
       <PageHeader title="푸켓팅"/>
       

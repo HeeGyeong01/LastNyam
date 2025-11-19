@@ -85,8 +85,15 @@ export interface FoocketingResultShopInfo {
   ratingCount: number;
 }
 
+// 푸켓팅 결과 조회 - 대기 중
+export interface FoocketingResultWaiting {
+  status: 'WAITING';
+  rank: -1;
+}
+
 // 푸켓팅 결과 조회 - 성공 시
 export interface FoocketingResultSuccess {
+  status: 'SUCCESS';
   success: true;
   rank: number;
   shopInfo: FoocketingResultShopInfo;
@@ -94,14 +101,15 @@ export interface FoocketingResultSuccess {
 
 // 푸켓팅 결과 조회 - 실패 시
 export interface FoocketingResultFailure {
+  status: 'FAIL';
   success: false;
   rank: number;
   otherFoocketingsOfShop: FoocketingItem[];
   recommendedFoocketings: FoocketingItem[];
 }
 
-// 푸켓팅 참여 결과 (성공/실패 union type)
-export type FoocketingResult = FoocketingResultSuccess | FoocketingResultFailure;
+// 푸켓팅 참여 결과 (대기/성공/실패 union type)
+export type FoocketingResult = FoocketingResultWaiting | FoocketingResultSuccess | FoocketingResultFailure;
 
 
 

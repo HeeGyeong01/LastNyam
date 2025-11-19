@@ -42,12 +42,22 @@ export default function FoocketingFail() {
   }
 
   // 성공 응답인 경우 성공 페이지로 리다이렉트
-  if (result.success) {
+  if (result.status === 'SUCCESS') {
     navigate(`/foocketing-success/${id}`, { replace: true });
     return null;
   }
 
-  // 실패 응답인 경우
+  // 실패 응답인 경우 (WAITING 상태도 포함)
+  if (result.status === 'WAITING') {
+    // 대기 중인 경우는 상세 페이지로 리다이렉트하거나 에러 표시
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>결과를 확인하는 중입니다...</p>
+      </div>
+    );
+  }
+
+  // FAIL 상태인 경우
   const { rank, otherFoocketingsOfShop, recommendedFoocketings } = result;
 
   return (
