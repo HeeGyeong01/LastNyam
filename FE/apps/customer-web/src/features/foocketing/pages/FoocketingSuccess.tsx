@@ -111,7 +111,7 @@ export default function FoocketingSuccess() {
             </p>
           </div>
           <p className="text-brand p3-b">
-            픽업 마감시간 이후에는 당첨이 취소되니 꼭 시간 내 방문해주세요!
+            픽업 마감시간 이후 당첨이 취소되니 꼭 시간 내 방문해주세요!
           </p>
         </div>
 
