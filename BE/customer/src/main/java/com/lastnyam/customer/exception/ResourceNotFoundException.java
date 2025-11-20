@@ -3,6 +3,9 @@ package com.lastnyam.customer.exception;
 import com.lastnyam.common.exception.BusinessException;
 import com.lastnyam.common.exception.code.BaseErrorCode;
 
+import com.lastnyam.common.exception.BusinessException;
+import com.lastnyam.common.exception.code.BaseErrorCode;
+
 public class ResourceNotFoundException extends BusinessException {
 
     public ResourceNotFoundException(BaseErrorCode code) {

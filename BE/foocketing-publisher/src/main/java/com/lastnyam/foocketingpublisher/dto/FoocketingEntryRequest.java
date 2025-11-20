@@ -1,17 +1,12 @@
-package com.lastnyam.foocketingsubscriber.dto;
+package com.lastnyam.foocketingpublisher.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FoocketingEntryPayload {
-    private Integer foocketingId;
+public class FoocketingEntryRequest {
     private Integer userId;
 }
-
-

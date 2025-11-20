@@ -48,15 +48,14 @@ pipeline {
         REGISTRY = '941kjw'
         TAG = "latest"
         GRADLE_OPTS = '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
-        PUB_TAG = ""
+        PUB_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
     }
 
 
     stages {
         stage('브랜치 및 변경사항 감지') {
             steps {
-                script {                
-                    env.PUB_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                script {
                     def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH
                     echo "🌿 현재 브랜치: ${branchName}"
                     
@@ -241,6 +240,7 @@ pipeline {
                             cp -v \$DATABASE_YML \${TARGET_DIR}/application-database.yml
                             cp -v \$REDIS_YML \${TARGET_DIR}/application-redis.yml
                             cp -v \$MESSAGING_YML \${TARGET_DIR}/application-messaging.yml
+                            cp -v \$S3_YML \${TARGET_DIR}/application-s3.yml
                             echo "✅ Foocketing-Subscriber 설정 파일 복사 완료"
                         fi
                         

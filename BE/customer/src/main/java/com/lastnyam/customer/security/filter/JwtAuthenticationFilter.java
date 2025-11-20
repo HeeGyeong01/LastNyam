@@ -25,19 +25,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String VERSION_KEY_PREFIX = "token_version:customer:";
-
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
     private final JwtService jwtService;
     private final JwtProvider jwtProvider;
     private final RedisService redisService;
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-
         // JWT 토큰 추출
         String token = resolveToken(request);
 
@@ -66,8 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 토큰 버전 검증
-     * Redis에 저장된 버전과 토큰의 버전을 비교
+     * 토큰 버전 검증 Redis에 저장된 버전과 토큰의 버전을 비교
      */
     private boolean isValidTokenVersion(String token, Integer userId) {
         String tokenVersion = jwtProvider.extractVersion(token);

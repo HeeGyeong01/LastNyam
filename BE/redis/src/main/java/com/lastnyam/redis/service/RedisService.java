@@ -1,10 +1,11 @@
 package com.lastnyam.redis.service;
 
+import java.time.Duration;
+import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class RedisService {
@@ -17,6 +18,14 @@ public class RedisService {
 
     public void add(String key, Object value) {
         redisTemplate.opsForValue().set(key, value);
+    }
+
+    public Long incr(String key) {
+        return redisTemplate.opsForValue().increment(key);
+    }
+
+    public void add(String key, Object value, Duration timeout) {
+        redisTemplate.opsForValue().set(key, value, timeout);
     }
 
     public Object get(String key) {
@@ -35,4 +44,18 @@ public class RedisService {
         return redisTemplate.execute(script, keys, args);
     }
 
+    public void removeRangeByScore(String key, int minBound, long maxBound) {
+        ZSetOperations<String, Object> zSetOperations = redisTemplate.opsForZSet();
+        zSetOperations.removeRangeByScore(key, minBound, maxBound);
+    }
+
+    public Long getCountFromZCard(String key) {
+        ZSetOperations<String, Object> zSetOperations = redisTemplate.opsForZSet();
+        return zSetOperations.zCard(key);
+    }
+
+    public void addZSet(String key, Integer userId, long now) {
+        ZSetOperations<String, Object> zSetOperations = redisTemplate.opsForZSet();
+        zSetOperations.add(key, userId, now);
+    }
 }

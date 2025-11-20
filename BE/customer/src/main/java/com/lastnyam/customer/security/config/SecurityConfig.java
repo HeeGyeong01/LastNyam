@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,9 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Spring Security 설정
- * - OAuth2 로그인 (카카오)
- * - JWT 토큰 기반 인증
+ * Spring Security 설정 - OAuth2 로그인 (카카오) - JWT 토큰 기반 인증
  */
 @Configuration
 @EnableWebSecurity
@@ -46,24 +45,39 @@ public class SecurityConfig {
                 // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // 세션 정책: OAuth2 흐름에서 세션이 필요하므로 필요 시 생성
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 // Form 로그인 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)
                 // HTTP Basic 인증 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 공개 API (인증 불필요)
+                        // .requestMatchers("/api/foocketing/*/result")
+                        // .hasRole(UserRole.USER.getName())
                         .requestMatchers(
                                 "/",
                                 "/error",
+                                "/api/time",
                                 "/oauth2/**",
                                 "/login/**",
+                                "/api/login/**",
+                                "/api/stats/survived",
                                 "/api/auth/social/kakao",
-                                "/api/auth/token/refresh")
+                                "/api/auth/token/refresh",
+                                "/api/cart/**",
+                                "/api/foocketing/**",
+                                "/api/discount/**",
+                                "/api/shop/*",
+                                "/api/user/*/profile/onboarding")
                         .permitAll()
                         .anyRequest().authenticated())
                 // OAuth2 로그인 설정
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(
+                                auth -> auth.baseUri("/api/oauth2/authorization"))
+                        .redirectionEndpoint(redirection -> redirection
+                                .baseUri("/api/login/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
@@ -82,7 +96,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
+        configuration.setAllowedOrigins(
+                List.of("http://localhost:5173", "https://k13a101.p.ssafy.io",
+                        "https://lastnyam.co.kr"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -92,4 +108,10 @@ public class SecurityConfig {
 
         return source;
     }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers("/watcher/**");
+    }
+
 }

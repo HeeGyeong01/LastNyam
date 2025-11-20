@@ -1,4 +1,4 @@
-package com.lastnyam.foocketingpublisher.dto;
+package com.lastnyam.messaging.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FoocketingEntryPayload {
-    
+
     private Integer foocketingId;
     private Integer userId;
 }

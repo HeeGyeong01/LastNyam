@@ -4,6 +4,7 @@ import com.lastnyam.common.dto.ApiResponse;
 import com.lastnyam.owner.foocketing.dto.FoocketingCreateRequest;
 import com.lastnyam.owner.foocketing.dto.FoocketingCreateResponse;
 import com.lastnyam.owner.foocketing.dto.FoocketingListResponse;
+import com.lastnyam.owner.foocketing.dto.FoocketingUpdateRequest;
 import com.lastnyam.owner.foocketing.service.FoocketingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,29 @@ public class FoocketingController {
             @PathVariable("shopId") Integer shopId) {
         FoocketingListResponse result = foocketingService.getActiveFoocketings(userId, ownerId, shopId);
         return ResponseEntity.ok(ApiResponse.ofSuccess(result));
+    }
+
+    // 푸켓팅 수정
+    @PatchMapping("/{ownerId}/shop/{shopId}/foocketing/{foocketingId}")
+    public ResponseEntity<ApiResponse<Void>> updateFoocketing(
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable("ownerId") Integer ownerId,
+            @PathVariable("shopId") Integer shopId,
+            @PathVariable("foocketingId") Integer foocketingId,
+            @RequestBody FoocketingUpdateRequest request) {
+        foocketingService.updateFoocketing(userId, ownerId, shopId, foocketingId, request);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(null));
+    }
+
+    // 푸켓팅 삭제
+    @DeleteMapping("/{ownerId}/shop/{shopId}/foocketing/{foocketingId}")
+    public ResponseEntity<ApiResponse<Void>> deleteFoocketing(
+            @AuthenticationPrincipal Integer userId,
+            @PathVariable("ownerId") Integer ownerId,
+            @PathVariable("shopId") Integer shopId,
+            @PathVariable("foocketingId") Integer foocketingId) {
+        foocketingService.deleteFoocketing(userId, ownerId, shopId, foocketingId);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(null));
     }
 
 }

@@ -16,7 +16,10 @@ public enum ShopErrorCode implements BaseErrorCode {
 	CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, 404, "카테고리를 찾을 수 없습니다."),
 	NOT_SHOP_OWNER(HttpStatus.FORBIDDEN, 403, "해당 가게의 점주가 아닙니다."),
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, 404, "메뉴를 찾을 수 없습니다."),
-	MENU_NOT_IN_SHOP(HttpStatus.BAD_REQUEST, 400, "해당 가게의 메뉴가 아닙니다.");
+	MENU_NOT_IN_SHOP(HttpStatus.BAD_REQUEST, 400, "해당 가게의 메뉴가 아닙니다."),
+	GEOCODING_FAILED(HttpStatus.BAD_REQUEST, 400, "주소를 위도/경도로 변환할 수 없습니다."),
+	GEOCODING_NO_RESULTS(HttpStatus.BAD_REQUEST, 400, "입력한 주소에 대한 결과를 찾을 수 없습니다."),
+	GEOCODING_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 500, "지오코딩 API 호출 중 오류가 발생했습니다.");
 
 	private final HttpStatus status;
 	private final int code;

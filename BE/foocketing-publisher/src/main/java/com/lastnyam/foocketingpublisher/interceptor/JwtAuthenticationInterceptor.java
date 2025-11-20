@@ -24,37 +24,39 @@ public class JwtAuthenticationInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
-        // HandlerMethod가 아닌 경우 통과 (예: 리소스 핸들러)
-        if (!(handler instanceof HandlerMethod handlerMethod)) {
-            return true;
-        }
-
-        // @UserId 어노테이션이 있는 파라미터가 있는지 확인
-        boolean hasUserIdParameter = hasUserIdParameter(handlerMethod);
-
-        if (!hasUserIdParameter) {
-            return true;
-        }
-
-        // Authorization 헤더에서 토큰 추출
-        String token = extractTokenFromRequest(request);
-
-        if (token == null) {
-            log.warn("JWT 토큰이 없습니다.");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        }
-
-        // 토큰 검증
-        if (!jwtService.validateToken(token)) {
-            log.warn("유효하지 않은 JWT 토큰입니다.");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        }
-
-        log.debug("JWT 토큰 검증 완료");
-
         return true;
+//        // HandlerMethod가 아닌 경우 통과 (예: 리소스 핸들러)
+//        if (!(handler instanceof HandlerMethod handlerMethod)) {
+//            return true;
+//        }
+//
+//
+//        // @UserId 어노테이션이 있는 파라미터가 있는지 확인
+//        boolean hasUserIdParameter = hasUserIdParameter(handlerMethod);
+//
+//        if (!hasUserIdParameter) {
+//            return true;
+//        }
+//
+//        // Authorization 헤더에서 토큰 추출
+//        String token = extractTokenFromRequest(request);
+//
+//        if (token == null) {
+//            log.warn("JWT 토큰이 없습니다.");
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            return false;
+//        }
+//
+//        // 토큰 검증
+//        if (!jwtService.validateToken(token)) {
+//            log.warn("유효하지 않은 JWT 토큰입니다.");
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            return false;
+//        }
+//
+//        log.debug("JWT 토큰 검증 완료");
+//
+//        return true;
     }
 
     /**

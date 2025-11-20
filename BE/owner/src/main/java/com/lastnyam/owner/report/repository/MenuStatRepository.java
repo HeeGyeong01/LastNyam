@@ -14,9 +14,20 @@ import org.springframework.stereotype.Repository;
 public interface MenuStatRepository extends JpaRepository<MenuStatistics, Long> {
 
     @Query("""
-            SELECT new com.lastnyam.owner.report.dto.ReportResponse$MenuStats(m.menuName,m.menuPrice,ms.statisticsSoldCount,ms.statisticsRegisterCount,ms.statisticsWeeklySold,ms.statisticsWeeklyRegister,ms.statisticsWeeklyFoocketingView,ms.statisticsWeeklyFoocketingEntry)
+            SELECT new com.lastnyam.owner.report.dto.ReportResponse$MenuStats(
+                m.menuName,
+                COALESCE(fc.categoryName, '기타'),
+                m.menuPrice,
+                ms.statisticsSoldCount,
+                ms.statisticsRegisterCount,
+                ms.statisticsWeeklySold,
+                ms.statisticsWeeklyRegister,
+                ms.statisticsWeeklyFoocketingView,
+                ms.statisticsWeeklyFoocketingEntry
+            )
             FROM MenuStatistics ms
             JOIN ms.menu m
+            LEFT JOIN m.foodCategory fc
             WHERE ms.shopId = :shopId
             """)
     List<MenuStats> getStats(Integer shopId);

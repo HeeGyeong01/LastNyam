@@ -12,6 +12,7 @@ import com.lastnyam.owner.owner.exception.OwnerException;
 import com.lastnyam.owner.shop.exception.ShopErrorCode;
 import com.lastnyam.owner.shop.repository.MenuRepository;
 import com.lastnyam.owner.shop.repository.ShopRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +26,12 @@ import com.lastnyam.owner.foocketing.dto.FoocketingListResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FoocketingService {
@@ -57,19 +60,23 @@ public class FoocketingService {
 			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
 		}
 
-		// 가게 마감 / 픽업 마감 시간 계산
-		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime closeTime = calculateTargetTime(now, shop.getShopCloses());
-		LocalDateTime pickupEndTime = calculateTargetTime(now, shop.getShopPickupEndTime());
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+		LocalTime foocketingTimeInput = request.getFoocketingTime();
+		
+		// 영업일 기준 시간 계산 (오전 6시 기준)
+		LocalDateTime closeTime = toBusinessDateTime(now, shop.getShopCloses());
+		LocalDateTime pickupEndTime = toBusinessDateTime(now, shop.getShopPickupEndTime());
+		LocalDateTime foocketingTime = toBusinessDateTime(now, foocketingTimeInput);
+
+		log.info("closeTime: {}", closeTime);
+		log.info("foocketingTime: {}", foocketingTime);
+		log.info("pickupEndTime: {}", pickupEndTime);
+		log.info("foocketingTimeInput: {}", foocketingTimeInput);
 
 		// 픽업 마감 시간이 현재 시간보다 이전이면 주문 불가
 		if (pickupEndTime.isBefore(now) || pickupEndTime.isEqual(now)) {
 			throw new FoocketingException(FoocketingErrorCode.PICKUP_TIME_PASSED);
 		}
-
-		// 푸켓팅 시간 계산 (LocalTime -> LocalDateTime)
-		LocalTime foocketingTimeInput = request.getFoocketingTime();
-		LocalDateTime foocketingTime = calculateTargetTime(now, foocketingTimeInput);
 		
 		// 푸켓팅 시간이 현재 시간보다 이전이면 안됨
 		if (foocketingTime.isBefore(now) || foocketingTime.isEqual(now)) {
@@ -109,7 +116,7 @@ public class FoocketingService {
 		}
 
 		// 활성화된 푸켓팅 조회 (픽업 마감 시간이 현재 이후인 것만)
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 		List<Foocketing> foocketings = foocketingRepository.findActiveByShopId(shopId, now);
 
 		// DTO로 변환
@@ -136,18 +143,110 @@ public class FoocketingService {
 	}
 
 	/**
-	 * 현재 시간과 목표 시간(LocalTime)을 비교하여 적절한 LocalDateTime을 반환
-	 * 목표 시간이 현재 시간보다 이전이면 다음날로 설정
+	 * 영업일 기준 "오늘" 날짜를 반환
+	 * 새벽 6시 전이면 전날로 간주 (영업일 개념)
 	 */
-	private LocalDateTime calculateTargetTime(LocalDateTime now, LocalTime targetTime) {
-		LocalDateTime targetDateTime = LocalDateTime.of(now.toLocalDate(), targetTime);
+	private LocalDate getBusinessDate(LocalDateTime now) {
+		LocalTime cutoffTime = LocalTime.of(6, 0); // 오전 6시
 		
-		// 목표 시간이 현재 시간보다 이전이면 다음날로 설정
-		if (targetDateTime.isBefore(now) || targetDateTime.isEqual(now)) {
-			targetDateTime = targetDateTime.plusDays(1);
+		if (now.toLocalTime().isBefore(cutoffTime)) {
+			// 새벽 6시 전이면 전날 영업일로 간주
+			return now.toLocalDate().minusDays(1);
+		} else {
+			return now.toLocalDate();
 		}
+	}
+
+	/**
+	 * 영업일 기준으로 LocalTime을 LocalDateTime으로 변환
+	 * 오전 6시 기준으로 영업일을 구분하여 적절한 날짜와 시간을 조합
+	 * 
+	 * 예시:
+	 * - 현재 23:00, 입력 00:30 → 다음날 00:30 (같은 영업일의 새벽 시간)
+	 * - 현재 01:00, 입력 02:00 → 오늘 02:00 (아직 같은 영업일)
+	 * - 현재 07:00, 입력 20:00 → 오늘 20:00 (새로운 영업일)
+	 */
+	private LocalDateTime toBusinessDateTime(LocalDateTime now, LocalTime targetTime) {
+		LocalDate businessDate = getBusinessDate(now);
+		LocalTime cutoffTime = LocalTime.of(6, 0);
 		
-		return targetDateTime;
+		// 목표 시간이 오전 6시 이전이면 다음날 새벽 시간
+		if (targetTime.isBefore(cutoffTime)) {
+			return LocalDateTime.of(businessDate.plusDays(1), targetTime);
+		} else {
+			return LocalDateTime.of(businessDate, targetTime);
+		}
+	}
+
+	@Transactional
+	public void updateFoocketing(Integer userId, Integer ownerId, Integer shopId, Integer foocketingId,
+			com.lastnyam.owner.foocketing.dto.FoocketingUpdateRequest request) {
+		checkPermission(userId, ownerId);
+
+		// 가게 확인 및 점주 권한 확인
+		Shop shop = shopRepository.findById(shopId)
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
+
+		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
+		}
+
+		// 푸켓팅 확인
+		Foocketing foocketing = foocketingRepository.findById(foocketingId)
+			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.FOOCKETING_NOT_FOUND));
+
+		// 푸켓팅이 해당 가게의 메뉴인지 확인
+		if (!foocketing.getMenu().getShop().getShopId().equals(shopId)) {
+			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
+		}
+
+		LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+
+		// 푸켓팅 시간 수정이 있는 경우
+		if (request.getFoocketingTime() != null) {
+			LocalDateTime newFoocketingTime = toBusinessDateTime(now, request.getFoocketingTime());
+			
+			// 푸켓팅 시간이 현재 시간보다 이전이면 안됨
+			if (newFoocketingTime.isBefore(now) || newFoocketingTime.isEqual(now)) {
+				throw new FoocketingException(FoocketingErrorCode.INVALID_FOOCKETING_TIME);
+			}
+			
+			// 푸켓팅 시간이 픽업 마감 시간 이후면 안됨
+			if (newFoocketingTime.isAfter(foocketing.getFoocketingPickupEndTime())) {
+				throw new FoocketingException(FoocketingErrorCode.FOOCKETING_TIME_AFTER_PICKUP_END);
+			}
+
+			foocketing.setFoocketingTime(newFoocketingTime);
+		}
+
+		// 푸켓팅 수량 수정이 있는 경우
+		if (request.getFoocketingAmount() != null) {
+			foocketing.setFoocketingAmount(request.getFoocketingAmount());
+		}
+	}
+
+	@Transactional
+	public void deleteFoocketing(Integer userId, Integer ownerId, Integer shopId, Integer foocketingId) {
+		checkPermission(userId, ownerId);
+
+		// 가게 확인 및 점주 권한 확인
+		Shop shop = shopRepository.findById(shopId)
+			.orElseThrow(() -> new FoocketingException(ShopErrorCode.SHOP_NOT_FOUND));
+
+		if (!shop.getOwner().getOwnerId().equals(ownerId)) {
+			throw new FoocketingException(ShopErrorCode.NOT_SHOP_OWNER);
+		}
+
+		// 푸켓팅 확인
+		Foocketing foocketing = foocketingRepository.findById(foocketingId)
+			.orElseThrow(() -> new FoocketingException(FoocketingErrorCode.FOOCKETING_NOT_FOUND));
+
+		// 푸켓팅이 해당 가게의 메뉴인지 확인
+		if (!foocketing.getMenu().getShop().getShopId().equals(shopId)) {
+			throw new FoocketingException(ShopErrorCode.MENU_NOT_IN_SHOP);
+		}
+
+		foocketingRepository.delete(foocketing);
 	}
 
 	private static void checkPermission(Integer userId, Integer ownerId) {

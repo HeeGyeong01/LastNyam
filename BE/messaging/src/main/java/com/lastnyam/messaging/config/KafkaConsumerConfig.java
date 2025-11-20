@@ -1,5 +1,6 @@
 package com.lastnyam.messaging.config;
 
+import com.lastnyam.messaging.dto.FoocketingEntryMessage;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -30,7 +31,7 @@ public class KafkaConsumerConfig {
     private String groupId;
 
     @Bean
-    public ConsumerFactory<String, Object> consumerFactory() {
+    public ConsumerFactory<String, FoocketingEntryMessage> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
 
         // 기본 설정
@@ -40,9 +41,10 @@ public class KafkaConsumerConfig {
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
 
         // JSON 역직렬화 설정
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");  // 모든 패키지 신뢰
+        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.lastnyam.messaging.dto");  // 모든 패키지 신뢰
         configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);  // 타입 헤더 미사용
-        configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.lang.Object");  // 기본 타입
+        configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE,
+                "com.lastnyam.messaging.dto.FoocketingEntryMessage");  // 기본 타입
 
         // 오프셋 설정
         configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");  // 처음부터 읽기
@@ -62,8 +64,8 @@ public class KafkaConsumerConfig {
      * Concurrency 설정: - 6개 (파티션 수와 동일) - 기록 서버 1개가 6개 스레드로 병렬 처리
      */
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, FoocketingEntryMessage> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, FoocketingEntryMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory());

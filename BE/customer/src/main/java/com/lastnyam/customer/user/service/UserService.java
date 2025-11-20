@@ -1,15 +1,21 @@
 package com.lastnyam.customer.user.service;
 
 import com.lastnyam.authentication.enums.UserRole;
+import com.lastnyam.authentication.provider.JwtProvider;
 import com.lastnyam.customer.exception.BadRequestException;
 import com.lastnyam.customer.exception.ResourceNotFoundException;
+import com.lastnyam.customer.user.dto.CursorResponse;
+import com.lastnyam.customer.user.dto.FavoriteShopInfo;
 import com.lastnyam.customer.user.dto.UserOnboardingRequestDto;
 import com.lastnyam.customer.user.dto.UserOnboardingResponseDto;
+import com.lastnyam.customer.user.repository.FavoriteQueryRepository;
 import com.lastnyam.customer.user.repository.UserFavoriteRepository;
 import com.lastnyam.customer.user.repository.UserRepository;
 import com.lastnyam.database.entity.FoodCategory;
 import com.lastnyam.database.entity.User;
 import com.lastnyam.database.entity.UserFavorite;
+import com.lastnyam.redis.service.RedisService;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String VERSION_KEY_PREFIX = "token_version:customer:";
+
     private final UserRepository userRepository;
     private final UserFavoriteRepository userFavoriteRepository;
+    private final EntityManager entityManager;
+    private final FavoriteQueryRepository queryRepository;
+    private final JwtProvider jwtProvider;
+    private final RedisService redisService;
 
     @Transactional
     public UserOnboardingResponseDto updateOnboardingProfile(Integer userId, UserOnboardingRequestDto request) {
@@ -39,14 +51,27 @@ public class UserService {
             throw BadRequestException.ofCategory("최대 5개의 카테고리만 선택할 수 있습니다.");
         }
 
-        // 새로운 선호 카테고리 저장
-        List<UserFavorite> userFavorites = request.getCategoryIds().stream()
-                .map(categoryId -> UserFavorite.builder()
-                        .user(user)
-                        .foodCategory(FoodCategory.builder()
-                                .categoryId(categoryId)
-                                .build())
-                        .build())
+        // 프론트엔드 카테고리 ID를 실제 DB 카테고리 ID로 매핑
+        List<Integer> mappedCategoryIds = request.getCategoryIds().stream()
+                .map(this::mapFrontendCategoryIdToDbCategoryId)
+                .distinct() // 중복 제거 (같은 DB 카테고리로 매핑되는 경우)
+                .collect(Collectors.toList());
+
+        // 카테고리 존재 여부 검증 및 새로운 선호 카테고리 저장
+        List<UserFavorite> userFavorites = mappedCategoryIds.stream()
+                .map(dbCategoryId -> {
+                    // FoodCategory 실제 조회 (존재 여부 확인)
+                    FoodCategory foodCategory = entityManager.find(FoodCategory.class, dbCategoryId);
+                    if (foodCategory == null) {
+                        throw BadRequestException.ofCategory(
+                                String.format("존재하지 않는 카테고리 ID입니다: %d", dbCategoryId));
+                    }
+
+                    return UserFavorite.builder()
+                            .user(user)
+                            .foodCategory(foodCategory)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         userFavoriteRepository.saveAll(userFavorites);
@@ -68,9 +93,103 @@ public class UserService {
         // 저장된 카테고리 ID 조회
         List<Integer> savedCategoryIds = userFavoriteRepository.findCategoryIdsByUserId(userId);
 
+        // 업데이트된 사용자 정보 조회 (역할이 USER로 업그레이드되었을 수 있음)
+        User updatedUser = userRepository.findById(userId)
+                .orElseThrow(() -> ResourceNotFoundException.ofUser());
+
+        // JWT 토큰 생성
+        UserRole userRole = UserRole.valueOf(updatedUser.getUserRole());
+        Long tokenVersion = initializeTokenVersion(userId);
+
+        String accessToken = jwtProvider.generateAccessToken(
+                userRole,
+                userId,
+                tokenVersion.toString());
+        String refreshToken = jwtProvider.generateRefreshToken(
+                userRole,
+                userId,
+                tokenVersion.toString());
+
+        log.info("온보딩 완료 및 토큰 생성: userId={}, role={}, version={}", userId, userRole, tokenVersion);
+
         return UserOnboardingResponseDto.builder()
                 .userId(userId)
                 .savedCategoryIds(savedCategoryIds)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     * 프론트엔드 카테고리 ID를 실제 DB 카테고리 ID로 매핑
+     * 
+     * @param frontendCategoryId 프론트엔드에서 받은 카테고리 ID (1~19)
+     * @return 실제 DB 카테고리 ID
+     */
+    private Integer mapFrontendCategoryIdToDbCategoryId(Integer frontendCategoryId) {
+        if (frontendCategoryId == null || frontendCategoryId < 1 || frontendCategoryId > 19) {
+            throw BadRequestException.ofCategory(
+                    String.format("유효하지 않은 카테고리 ID입니다: %d (1~19 범위만 허용)", frontendCategoryId));
+        }
+
+        // 매핑 규칙:
+        // 1~5 -> 1 (빵, 샌드위치, 디저트, 음료, 케이크)
+        // 6~9 -> 2 (회, 초밥, 육회, 해산물)
+        // 10~12 -> 3 (김밥, 떡볶이, 튀김)
+        // 15, 16 -> 4 (샐러드, 포케)
+        // 13, 14, 17, 18, 19 -> 5 (철판·그릴, 떡, 반찬, 국·탕·찌개, 스프)
+        return switch (frontendCategoryId) {
+            case 1, 2, 3, 4, 5 -> 1;
+            case 6, 7, 8, 9 -> 2;
+            case 10, 11, 12 -> 3;
+            case 15, 16 -> 4;
+            case 13, 14, 17, 18, 19 -> 5;
+            default -> throw BadRequestException.ofCategory(
+                    String.format("매핑되지 않은 카테고리 ID입니다: %d", frontendCategoryId));
+        };
+    }
+
+    /**
+     * 사용자별 토큰 버전 초기화
+     * Redis에 버전이 없으면 1로 초기화, 있으면 기존 값 유지
+     */
+    private Long initializeTokenVersion(Integer userId) {
+        String versionKey = VERSION_KEY_PREFIX + userId;
+        Object storedVersion = redisService.get(versionKey);
+
+        if (storedVersion == null) {
+            // 첫 로그인: 버전 1로 초기화
+            redisService.add(versionKey, 1L);
+            log.debug("토큰 버전 초기화: userId={}, version=1", userId);
+            return 1L;
+        } else {
+            // 이미 버전이 있으면 기존 값 사용 (재발급된 경우)
+            try {
+                return Long.parseLong(storedVersion.toString());
+            } catch (NumberFormatException e) {
+                log.error("버전 파싱 실패, 1로 초기화: userId={}", userId);
+                redisService.add(versionKey, 1L);
+                return 1L;
+            }
+        }
+    }
+
+    /**
+     * 사용자가 찜한 가게 목록 조회
+     *
+     * @param userId 사용자 ID
+     * @param lat    위도
+     * @param lng    경도
+     * @param cursor 커서 (페이징용)
+     * @return 찜한 가게 목록 (커서 기반 페이징)
+     */
+    @Transactional(readOnly = true)
+    public CursorResponse<FavoriteShopInfo> getFavoriteShops(Integer userId, Double lat, Double lng,
+            String cursor) {
+        // 사용자 존재 확인
+        userRepository.findById(userId)
+                .orElseThrow(ResourceNotFoundException::ofUser);
+
+        return queryRepository.findFavoriteShop(userId, lat, lng, cursor);
     }
 }

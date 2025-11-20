@@ -3,8 +3,10 @@ package com.lastnyam.customer.exception;
 import com.lastnyam.common.exception.BusinessException;
 import com.lastnyam.common.exception.code.BaseErrorCode;
 
-public class BadRequestException extends BusinessException {
+import com.lastnyam.common.exception.BusinessException;
+import com.lastnyam.common.exception.code.BaseErrorCode;
 
+public class BadRequestException extends BusinessException {
     public BadRequestException(BaseErrorCode code) {
         super(code);
     }
