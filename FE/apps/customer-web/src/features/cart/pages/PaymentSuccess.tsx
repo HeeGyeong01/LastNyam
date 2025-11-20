@@ -55,7 +55,7 @@ export default function PaymentSuccess() {
         </div>
         {/* 경고 문구 */}
         <p className="p3-b text-brand text-center">
-          픽업 마감시간 이후에는 주문이 취소되며, 환불이 불가합니다
+          픽업 마감시간 이후 주문이 취소되며, 환불이 불가합니다
         </p>
       </div>
 
