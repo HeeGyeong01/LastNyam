@@ -1,0 +1,29 @@
+import type { SVGProps } from 'react';
+
+interface HeartIconProps extends Omit<SVGProps<SVGSVGElement>, 'fill' | 'stroke'> {
+  fill?: string;
+  stroke?: string;
+}
+
+export default function HeartIcon({ fill, stroke, ...props }: HeartIconProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="28" 
+      height="28" 
+      viewBox="0 0 28 28" 
+      fill="none"
+      {...props}
+    >
+      <path 
+        d="M3.89959 9.07444C4.16343 8.43748 4.55015 7.85872 5.03767 7.37121C5.52517 6.88369 6.10393 6.49698 6.7409 6.23313C7.37786 5.96929 8.06055 5.8335 8.75 5.8335C9.43945 5.8335 10.1221 5.96929 10.7591 6.23313C11.3961 6.49698 11.9748 6.88369 12.4623 7.37121L14 8.90888L15.5377 7.37121C16.5222 6.38664 17.8576 5.83351 19.25 5.83351C20.6424 5.83351 21.9778 6.38664 22.9623 7.37121C23.9469 8.35578 24.5 9.69115 24.5 11.0835C24.5 12.4759 23.9469 13.8113 22.9623 14.7959L14 23.7582L5.03767 14.7959C4.55015 14.3084 4.16343 13.7296 3.89959 13.0926C3.63575 12.4557 3.49995 11.773 3.49995 11.0835C3.49995 10.3941 3.63575 9.7114 3.89959 9.07444Z" 
+        fill={fill || 'currentColor'} 
+        stroke={stroke || 'currentColor'} 
+        strokeWidth="3" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+

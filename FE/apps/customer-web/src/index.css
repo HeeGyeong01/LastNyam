@@ -1,0 +1,18 @@
+@import '../../../shared/design-tokens.css';
+
+/* 전역 스타일 - 모바일 fixed 포지셔닝 수정 */
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: rgb(var(--color-bg-0));
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}

@@ -1,0 +1,47 @@
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background Colors */
+    --color-bg-0: 255 255 255;
+    --color-bg-1: 248 250 252;
+    --color-bg-2: 239 243 247;
+    --color-bg-3: 225 232 240;
+    --color-bg-dimmed-1: 0 0 0;
+    --color-bg-dimmed-2: 0 0 0;
+    --color-bg-inverse: 15 23 42;
+    
+    /* Brand Colors */
+    --color-brand: 240 83 26;
+    --color-brand-strong: 184 37 0;
+    --color-brand-subtle: 247 150 22;
+    --color-brand-bg-1: 255 249 229;
+    --color-brand-bg-2: 255 241 199;
+    --color-brand-bg-3: 255 233 166;
+    
+    /* Foreground Colors */
+    --color-foreground-primary: 15 23 42;
+    --color-foreground-secondary: 100 116 139;
+    --color-foreground-tertiary: 148 163 184;
+    --color-foreground-subtle: 195 205 217;
+    --color-foreground-inverse: 255 255 255;
+    
+    /* Semantic Colors */
+    --color-error: 240 67 76;
+    --color-success: 52 211 153;
+    --color-warning: 252 211 77;
+    --color-info: 34 153 238;
+    
+    /* Stroke Colors */
+    --color-stroke-1: 51 65 85;
+    --color-stroke-2: 148 163 184;
+    --color-stroke-3: 203 213 225;
+    --color-stroke-subtle: 226 232 240;
+    --color-stroke-inverse: 255 255 255;
+  }
+}
+
