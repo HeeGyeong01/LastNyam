@@ -126,8 +126,8 @@ pipeline {
                     }
                     else if (branchName == 'FE/master' || branchName == 'origin/FE/master') {
                         def isSharedChanged = changes.contains('FE/shared/')
-                        def isOwnerChanged = changes.contains('FE/owner/')
-                        def isCustomerChanged = changes.contains('FE/customer/')
+                        def isOwnerChanged = changes.contains('FE/apps/owner-web/')
+                        def isCustomerChanged = changes.contains('FE/apps/customer-web/')
                         
                         env.BUILD_FE_OWNER = (
                         params.FORCE_BUILD_ALL || 
@@ -400,10 +400,14 @@ pipeline {
                 try {
                     dir('FE/apps/owner-web') {
                     echo '🔨 FE Owner 빌드 중...'
-                    sh 'npm install'
-                    sh 'npm run build'
-                    withCredentials([sshUserPrivateKey(credentialsId: 'master-server-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'master-server-ssh-key', keyFileVariable: 'SSH_KEY'),
+                        file(credentialsId: 'owner-env', variable: 'OWNER_ENV'),
+                    ]) {
                         sh """
+                        npm install
+                        chmod -R 755 .
+                        cp -v \$OWNER_ENV ./.env
+                        npm run build
                         echo "📦 FE Owner 빌드 결과물을 원격 서버로 전송 중..."
                         rsync -avz --delete \
                             -e "ssh -i \$SSH_KEY -o StrictHostKeyChecking=no" \
@@ -436,7 +440,6 @@ pipeline {
                         file(credentialsId: 'customer-env', variable: 'CUSTOMER_ENV'),
                     ]) {
                         sh """
-                        echo "🔨 FE Customer 빌드 중..."
                         npm install
                         cp -v \$CUSTOMER_ENV ./.env
                         npm run build
