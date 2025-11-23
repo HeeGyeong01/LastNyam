@@ -4,15 +4,6 @@ metadata:
   name: foocketing-publisher
   namespace: default
 spec:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kafka-node
-            operator: NotIn
-            values:
-            - "true"
   replicas: 5
   selector:
     matchLabels:
@@ -26,6 +17,13 @@ spec:
         prometheus.io/path: '/watcher/prometheus'
         prometheus.io/port: '9091'
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kafka-node
+                operator: DoesNotExist      
       containers:
       - name: publisher
         image: 941kjw/foocketing-publisher:6a3d7cb
@@ -34,6 +32,7 @@ spec:
           name: http
         - containerPort: 9091
           name: metrics
+        
         env:
         - name: HOST_IP
           valueFrom:
