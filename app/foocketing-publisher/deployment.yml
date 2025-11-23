@@ -4,7 +4,16 @@ metadata:
   name: foocketing-publisher
   namespace: default
 spec:
-  replicas: 2
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kafka-node
+            operator: NotIn
+            values:
+            - "true"
+  replicas: 5
   selector:
     matchLabels:
       app: foocketing-publisher
