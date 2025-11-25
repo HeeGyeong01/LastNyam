@@ -1,7 +1,7 @@
 // Todo: 사업자 등록증 업로드 기능 구현 - 사진 넣으면 바로 OCR 연결
 
 import { useEffect, useRef, useState, type DragEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@shared/src/components/Button";
@@ -217,9 +217,11 @@ export default function StoreInformationStep1DocumentPage() {
 
         <div className="flex items-center gap-2">
           <p className="p2 text-secondary">업로드 없이 입력하고 싶으시다면?</p>
-          <a href="/store-information/step1-input" className="p2-b text-brand hover:underline">
-              직접입력
-          </a>
+          <Link
+          to={"/store-information/step1-input"}
+          className="p2-b text-brand hover:underline">
+          직접입력
+          </Link>
         </div>
       </section>
 
