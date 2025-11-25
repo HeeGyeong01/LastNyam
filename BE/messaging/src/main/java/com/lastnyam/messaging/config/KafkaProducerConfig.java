@@ -13,8 +13,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 /**
- * Kafka Producer 설정
- * KafkaMessageProducer에서 사용하는 KafkaTemplate을 구성합니다.
+ * Kafka Producer 설정 KafkaMessageProducer에서 사용하는 KafkaTemplate을 구성합니다.
  */
 @Configuration
 public class KafkaProducerConfig {
@@ -23,10 +22,7 @@ public class KafkaProducerConfig {
     private String bootstrapServers;
 
     /**
-     * Kafka Producer Factory 설정
-     * - Key: String, Value: Object (JSON 직렬화)
-     * - 멱등성 활성화로 중복 메시지 방지
-     * - acks=all로 모든 복제본 확인
+     * Kafka Producer Factory 설정 - Key: String, Value: Object (JSON 직렬화) - 멱등성 활성화로 중복 메시지 방지 - acks=all로 모든 복제본 확인
      */
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
@@ -41,7 +37,7 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.ACKS_CONFIG, "1");
         // 모든 복제본 확인
         configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);  // 멱등성 (중복 방지)
-        configProps.put(ProducerConfig.RETRIES_CONFIG, 0);  // 재시도 횟수
+        configProps.put(ProducerConfig.RETRIES_CONFIG, 1);  // 재시도 횟수
 
         // 성능 최적화
         configProps.put(ProducerConfig.LINGER_MS_CONFIG, 0);  // 배치 전송 대기 시간
@@ -53,8 +49,7 @@ public class KafkaProducerConfig {
     }
 
     /**
-     * KafkaTemplate Bean
-     * DynamicEventProducer와 KafkaMessageProducer에서 사용
+     * KafkaTemplate Bean DynamicEventProducer와 KafkaMessageProducer에서 사용
      */
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
