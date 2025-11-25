@@ -26,7 +26,7 @@ spec:
                 operator: DoesNotExist      
       containers:
       - name: publisher
-        image: 941kjw/foocketing-publisher:6a3d7cb
+        image: 941kjw/foocketing-publisher:da1b205
         ports:
         - containerPort: 8080
           name: http
