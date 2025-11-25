@@ -34,7 +34,7 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
         // 신뢰성 설정
-        configProps.put(ProducerConfig.ACKS_CONFIG, "1");
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         // 모든 복제본 확인
         configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);  // 멱등성 (중복 방지)
         configProps.put(ProducerConfig.RETRIES_CONFIG, 1);  // 재시도 횟수
