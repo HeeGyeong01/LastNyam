@@ -6,4 +6,4 @@ graphify-out/
 
 # Terraform provider 캐시 (.terraform.lock.hcl은 커밋)
 .terraform/
-.vscode/
+*.tfplan

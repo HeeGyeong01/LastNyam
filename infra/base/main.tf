@@ -27,6 +27,21 @@ provider "aws" {
   }
 }
 
+# CloudFront 인증서는 us-east-1에서만 발급 가능
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project = "lastnyam"
+      Stack   = "base"
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_route53_zone" "main" {
   name = "lastnyam.shop"
 
