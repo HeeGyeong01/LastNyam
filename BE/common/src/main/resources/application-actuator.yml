@@ -1,0 +1,12 @@
+management:
+  # 관리 포트(9092)를 따로 두면 Kafka·다른 서비스와 겹쳐서 메인 포트로 노출
+  endpoints:
+    jmx:
+      exposure:
+        exclude: '*'
+    web:
+      base-path: /watcher
+      exposure:
+        include:
+          - prometheus
+          - health

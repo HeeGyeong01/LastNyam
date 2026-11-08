@@ -36,7 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true)
                 .allowedHeaders("*")
                 .allowedMethods("POST", "OPTIONS")
-                .allowedOrigins("http://localhost:5173", "https://lastnyam.co.kr")
+                .allowedOrigins("http://localhost:5173", "https://lastnyam.shop")
                 .maxAge(3000);
     }
 }

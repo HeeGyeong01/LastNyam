@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: customer-service
+  config:
+    import:
+      - 'classpath:application-authentication.yml'
+      - 'classpath:application-database.yml'
+      - 'classpath:application-redis.yml'
+      - 'classpath:application-actuator.yml'
+      - 'classpath:application-s3.yml'
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: ${API_URL:http://localhost:8083}/api/login/oauth2/code/kakao
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Lastnyam
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+            provider: kakao
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+server.port: 8083
+
+frontend:
+  cors:
+    allowed-origin: ${APP_URL}
+  oauth2:
+    redirect-url: ${APP_URL}/auth/kakao/callback
+
+kakao:
+  pay:
+    secret-key: ${KAKAOPAY_SECRET_KEY}
+    cid: TC0ONETIME # 테스트용 가맹점 코드 (실제 운영 시 발급받은 CID 사용)
+    base-url: https://open-api.kakaopay.com
+    approval-url: ${API_URL}/api/cart/kakao/approve  # 결제 성공 시 redirect URL (GET)
+    cancel-url: ${API_URL}/api/cart/kakao/cancel     # 결제 취소 시 redirect URL (GET)
+    fail-url: ${API_URL}/api/cart/kakao/fail         # 결제 실패 시 redirect URL (GET)

@@ -145,7 +145,7 @@ public class CartController {
         kakaoPayTempStore.remove(partnerOrderId);
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create("https://lastnyam.co.kr/payment-success"))
+                .location(URI.create("https://lastnyam.shop/payment-success"))
                 .build();
     }
 

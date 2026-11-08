@@ -97,8 +97,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173", "https://k13a101.p.ssafy.io",
-                        "https://lastnyam.co.kr"));
+                List.of("http://localhost:5173", "https://lastnyam.shop"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

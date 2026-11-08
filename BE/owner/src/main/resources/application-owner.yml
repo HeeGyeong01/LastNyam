@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: owner-service
+  config:
+    import:
+      - 'classpath:application-authentication.yml'
+      - 'classpath:application-database.yml'
+      - 'classpath:application-redis.yml'
+      - 'classpath:application-actuator.yml'
+      - 'classpath:application-s3.yml'
+  web:
+    resources:
+      add-mappings: false
+
+clova:
+  api:
+    base-url: ${CLOVA_OCR_URL}  
+    secret-key: ${CLOVA_OCR_SECRET}
+
+gms:
+  url: https://api.openai.com/v1/chat/completions
+  api-key: ${OPENAI_API_KEY}
+  
+qr:
+  receipt-confirm: ${APP_URL}/owner/orders/receipt-confirm
+  
+geocoding:
+  url: https://maps.googleapis.com/maps/api/geocode/json
+  api-key: ${GOOGLE_GEOCODING_API_KEY}

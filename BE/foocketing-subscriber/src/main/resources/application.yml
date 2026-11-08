@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: subscriber-service
+  config:
+    import:
+      - 'classpath:application-database.yml'
+      - 'classpath:application-redis.yml'
+      - 'classpath:application-actuator.yml'
+      - 'classpath:application-messaging.yml'
+      - 'classpath:application-s3.yml'
+  output:
+    ansi:
+      enabled: ALWAYS
+  banner:
+    location: 'classpath:banner.txt'
+
+qr:
+  receipt-confirm: ${APP_URL}/owner/orders/receipt-confirm
+
+server:
+  port: 8082

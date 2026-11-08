@@ -15,7 +15,6 @@ public class S3Properties {
 
     private S3Config s3 = new S3Config();
     private RegionConfig region = new RegionConfig();
-    private CredentialsConfig credentials = new CredentialsConfig();
     private PresignedUrlConfig presignedUrl = new PresignedUrlConfig();
     private UploadConfig upload = new UploadConfig();
 
@@ -37,13 +36,6 @@ public class S3Properties {
         public void setStatic(String staticRegion) {
             this.staticRegion = staticRegion;
         }
-    }
-
-    @Getter
-    @Setter
-    public static class CredentialsConfig {
-        private String accessKey;
-        private String secretKey;
     }
 
     @Getter

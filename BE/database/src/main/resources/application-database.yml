@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    
+    # HikariCP Connection Pool 설정
+    hikari:
+      # Connection Pool 크기 설정
+      maximum-pool-size: 20          # 최대 연결 수
+      minimum-idle: 5                # 최소 유휴 연결 수
+      
+      # Connection 타임아웃 설정
+      connection-timeout: 30000       # 연결 대기 시간 (30초)
+      idle-timeout: 600000           # 유휴 연결 타임아웃 (10분)
+      max-lifetime: 1800000          # 연결 최대 생명주기 (30분)
+      
+      # Connection 검증 설정
+      connection-test-query: SELECT 1
+      validation-timeout: 5000       # 검증 타임아웃 (5초)
+      
+      # Connection Pool 이름 (모니터링용)
+      pool-name: LastNyamHikariCP
+      
+      # Connection 설정
+      leak-detection-threshold: 60000 # 연결 누수 감지 (1분)
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${SHOW_SQL:false}   # 운영에서 SQL을 전부 찍으면 로그 비용과 지연이 커짐
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20              # 배치 처리 크기
+          batch_versioned_data: true # 버전 관리된 데이터 배치 처리
+        order_inserts: true           # INSERT 순서 최적화
+        order_updates: true           # UPDATE 순서 최적화
+    open-in-view: false
+    
+  sql:
+    init:
+      mode: never
