@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: s3
+  web:
+    resources:
+      add-mappings: false
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+    region:
+      static: ${AWS_S3_REGION}
+
+    presigned-url:
+      expiration-minutes: 5
+
+    upload:
+      max-file-size: 10485760 # 10MB
+      allowed-extensions:
+        - jpg
+        - jpeg
+        - png
+
+logging:
+  level:
+    root: info

@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: publisher-service
+  config:
+    import:
+      - 'classpath:application-authentication.yml'
+      - 'classpath:application-redis.yml'
+      - 'classpath:application-actuator.yml'
+      - 'classpath:application-messaging.yml'
+
+server:
+  port: 8081
